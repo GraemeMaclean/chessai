@@ -204,7 +204,6 @@ def parse_args(
     base_agent_infos, _, _ = custom_init_from_args(args)
 
     # Parse game arguments.
-
     args = chessai.core.game.init_from_args(args, game_class,
             base_agent_infos = base_agent_infos)
 

@@ -254,13 +254,14 @@ class Game(abc.ABC):
 
     def __init__(self,
             game_info: GameInfo,
+            board: chessai.core.board.Board,
             save_path: str | None = None,
             is_replay: bool = False,
             ) -> None:
         self.game_info: GameInfo = game_info
         """ The core information about this game. """
 
-        self.board = chessai.core.board.Board(game_info.start_fen)
+        self.board = board
         """ The board for the game. """
 
         self._save_path: str | None = save_path
@@ -278,6 +279,7 @@ class Game(abc.ABC):
     @abc.abstractmethod
     def get_initial_state(self,
             rng: random.Random,
+            board: chessai.core.board.Board,
             agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo],
             ) -> chessai.core.gamestate.GameState:
         """ Create the initial state for this game. """
@@ -356,7 +358,7 @@ class Game(abc.ABC):
         isolator.init_agents(self.game_info.agent_infos)
 
         # Create the initial game state (and force it's seed).
-        state = self.get_initial_state(rng, self.game_info.agent_infos)
+        state = self.get_initial_state(rng, self.board, self.game_info.agent_infos)
         state.seed = game_id
         state.game_start()
 
@@ -378,7 +380,7 @@ class Game(abc.ABC):
         state.agents_game_start(records)
 
         while (not self.check_end(state)):
-            logging.trace("Turn %d, agent %s.", state.get_board().get_fullmove_numer(), state.get_player()) # type: ignore[attr-defined]  # pylint: disable=no-member
+            logging.trace("Turn %d, agent %s.", state.get_board().get_fullmove_number(), state.get_player()) # type: ignore[attr-defined]  # pylint: disable=no-member
 
             # Get the next action from the agent.
             action_record = isolator.get_action(state, self.game_info.agent_action_timeout)
@@ -411,9 +413,6 @@ class Game(abc.ABC):
 
         result.outcome = state.get_board().get_outcome()
         result.end_fen = state.get_board().get_fen()
-
-        # TEST(Lucas):
-        print(result.end_fen)
 
         # Notify agents about the end of this game.
         result.agent_complete_records = isolator.game_complete(state, self.game_info.agent_end_timeout)
@@ -611,6 +610,8 @@ def init_from_args(
                 seed = game_seed
         )
 
+        board = chessai.core.board.Board(game_info.start_fen)
+
         # Suffix the save path if there is more than one game.
         save_path = base_save_path
         if ((save_path is not None) and (args.num_games > 1)):
@@ -619,6 +620,7 @@ def init_from_args(
 
         game_args = {
             'game_info': game_info,
+            'board': board,
             'save_path': save_path,
         }
 
