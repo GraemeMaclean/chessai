@@ -16,7 +16,7 @@ import chessai.core.board
 import chessai.core.isolation.level
 import chessai.util.alias
 
-DEFAULT_MAX_TURNS: int = -1
+DEFAULT_MAX_MOVES: int = -1
 DEFAULT_AGENT_START_TIMEOUT: float = 0.0
 DEFAULT_AGENT_END_TIMEOUT: float = 0.0
 DEFAULT_AGENT_ACTION_TIMEOUT: float = 0.0
@@ -32,7 +32,7 @@ class GameInfo(edq.util.json.DictConverter):
             agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo],
             start_fen: str | None = None,
             isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
-            max_turns: int = DEFAULT_MAX_TURNS,
+            max_moves: int = DEFAULT_MAX_MOVES,
             agent_start_timeout: float = DEFAULT_AGENT_START_TIMEOUT,
             agent_end_timeout: float = DEFAULT_AGENT_END_TIMEOUT,
             agent_action_timeout: float = DEFAULT_AGENT_ACTION_TIMEOUT,
@@ -60,7 +60,7 @@ class GameInfo(edq.util.json.DictConverter):
         self.isolation_level: chessai.core.isolation.level.Level = isolation_level
         """ The isolation level to use for this game. """
 
-        self.max_turns: int = max_turns
+        self.max_moves: int = max_moves
         """
         The total number of moves (between all agents) allowed for this game.
         If -1, unlimited moves are allowed.
@@ -96,7 +96,7 @@ class GameInfo(edq.util.json.DictConverter):
             'start_fen': self.start_fen,
             'agent_infos': {id: info.to_dict() for (id, info) in self.agent_infos.items()},
             'isolation_level': self.isolation_level.value,
-            'max_turns': self.max_turns,
+            'max_moves': self.max_moves,
             'agent_start_timeout': self.agent_start_timeout,
             'agent_end_timeout': self.agent_end_timeout,
             'agent_action_timeout': self.agent_action_timeout,
@@ -110,7 +110,7 @@ class GameInfo(edq.util.json.DictConverter):
             start_fen = data.get('start_fen', None),
             agent_infos = {bool(id): chessai.core.agentinfo.AgentInfo.from_dict(raw_info) for (id, raw_info) in data['agent_infos'].items()},
             isolation_level = chessai.core.isolation.level.Level(data.get('isolation_level', chessai.core.isolation.level.Level.NONE.value)),
-            max_turns = data.get('max_turns', DEFAULT_MAX_TURNS),
+            max_moves = data.get('max_moves', DEFAULT_MAX_MOVES),
             agent_start_timeout = data.get('agent_start_timeout', DEFAULT_AGENT_START_TIMEOUT),
             agent_end_timeout = data.get('agent_end_timeout', DEFAULT_AGENT_END_TIMEOUT),
             agent_action_timeout = data.get('agent_action_timeout', DEFAULT_AGENT_ACTION_TIMEOUT),
@@ -323,6 +323,7 @@ class Game(abc.ABC):
 
         state.process_turn_full(action, rng)
 
+    # TODO(Lucas): Fix docstring.
     def check_end(self, state: chessai.core.gamestate.GameState) -> bool:
         """
         Check to see if the game is over.
@@ -331,8 +332,8 @@ class Game(abc.ABC):
         By default, this will just check chessai.core.gamestate.GameState.game_over,
         but child games can override for more complex functionality.
         """
-
-        return ((state.game_over) or (state.get_board().is_game_over()))
+        board = state.get_board()
+        return (state.game_over or board.is_game_over())
 
     def game_complete(self, state: chessai.core.gamestate.GameState, result: GameResult) -> None:
         """
@@ -398,8 +399,8 @@ class Game(abc.ABC):
             if (self.check_end(state)):
                 break
 
-            # Check if this game has ran for the maximum number of turns.
-            if ((self.game_info.max_turns > 0) and (state.get_board().get_fullmove_number() >= self.game_info.max_turns)):
+            # Check if this game has ran for the maximum number of moves.
+            if ((self.game_info.max_moves > 0) and (len(result.history) >= self.game_info.max_moves)):
                 state.process_game_timeout()
                 result.game_timeout = True
                 break
@@ -462,7 +463,7 @@ class Game(abc.ABC):
 
         # Special settings for replays.
         args.num_games = 1
-        args.max_turns = len(replay_info.history)
+        args.max_moves = len(replay_info.history)
 
         # Script the moves for each agent based on the replay's history.
         scripted_actions: dict[bool, list[chess.Move]] = {}
@@ -501,9 +502,9 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
             action = 'store', type = int, default = None,
             help = 'The random seed for the game (will be randomly generated if not set.')
 
-    parser.add_argument('--max-turns', dest = 'max_turns',
-            action = 'store', type = int, default = DEFAULT_MAX_TURNS,
-            help = 'The maximum number of turns/moves (total for all agents) allowed in this game (-1 for unlimited) (default: %(default)s).')
+    parser.add_argument('--max-moves', dest = 'max_moves',
+            action = 'store', type = int, default = DEFAULT_MAX_MOVES,
+            help = 'The maximum number of moves/moves (total for all agents) allowed in this game (-1 for unlimited) (default: %(default)s).')
 
     parser.add_argument('--agent-start-timeout', dest = 'agent_start_timeout',
             action = 'store', type = float, default = DEFAULT_AGENT_START_TIMEOUT,
@@ -603,7 +604,7 @@ def init_from_args(
                 all_agent_infos[-1],
                 start_fen = all_boards[-1],
                 isolation_level = chessai.core.isolation.level.Level(args.isolation_level),
-                max_turns = args.max_turns,
+                max_moves = args.max_moves,
                 agent_start_timeout = args.agent_start_timeout,
                 agent_end_timeout = args.agent_end_timeout,
                 agent_action_timeout = args.agent_action_timeout,

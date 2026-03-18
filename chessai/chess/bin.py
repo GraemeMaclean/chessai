@@ -64,54 +64,53 @@ def log_chess_results(results: list[chessai.core.game.GameResult], winning_agent
     Log the result of running several games.
     """
 
-    outcomes = [result.outcome for result in results]
-    turn_counts = [len(result.history) for result in results]
+    move_counts: list[int] = [len(result.history) for result in results]
 
-    num_white_wins = 0
-    num_black_wins = 0
-    num_ties = 0
-    for outcome in outcomes:
-        if ((outcome is None) or (outcome.winner is None)):
-            num_ties += 1
-        elif (outcome.winner == chess.WHITE):
-            num_white_wins += 1
+    record: list[str] = []
+    scores: list[float] = []
+    for result in results:
+        if ((result.outcome is None) or (result.outcome.winner is None)):
+            record.append('tie')
+            scores.append(0.5)
+        elif (result.outcome.winner == chess.WHITE):
+            record.append('win')
+            scores.append(1)
         else:
-            num_black_wins += 1
+            record.append('loss')
+            scores.append(0)
 
-    logging.info('White Wins: %d, Black Wins: %d, Ties: %d', num_white_wins, num_black_wins, num_ties)
-
-    average_score = (num_white_wins + (0.5 * num_ties)) / len(outcomes)
-    logging.info('Average score: %0.2f.', average_score)
+    average_score: float = (sum(scores)) / len(scores)
+    logging.info('Average Score: %0.2f', average_score)
 
     # Avoid logging long lists (which can be a bit slow in Python's logging module).
-    log_lists_to_info = (len(results) < chessai.util.bin.SCORE_LIST_MAX_INFO_LENGTH)
-    log_lists_to_debug = (logging.getLogger().getEffectiveLevel() <= logging.DEBUG)
+    log_lists_to_info: bool = (len(results) < chessai.util.bin.SCORE_LIST_MAX_INFO_LENGTH)
+    log_lists_to_debug: bool = (logging.getLogger().getEffectiveLevel() <= logging.DEBUG)
 
-    # joined_results = ''
-    # joined_record = ''
-    joined_turn_counts = ''
+    joined_scores: str = ''
+    joined_record: str = ''
+    joined_move_counts: str = ''
 
     if (log_lists_to_info or log_lists_to_debug):
-    #     joined_results = ', '.join([outcome.result() for outcome in outcomes])
-    #     joined_record = ', '.join(record)
-        joined_turn_counts = ', '.join([str(turn_count) for turn_count in turn_counts])
-
-    # if (log_lists_to_info):
-    #     logging.info('%sResults:        %s', prefix, joined_results)
-    # elif (log_lists_to_debug):
-    #     logging.debug('%sResults:        %s', prefix, joined_results)
-
-    # if (log_lists_to_info):
-    #     logging.info('%sRecord:        %s', prefix, joined_record)
-    # elif (log_lists_to_debug):
-    #     logging.debug('%sRecord:        %s', prefix, joined_record)
-
-    logging.info('%sAverage Turns: %s', prefix, sum(turn_counts) / float(len(results)))
+        joined_scores = ', '.join([str(score) for score in scores])
+        joined_record = ', '.join(record)
+        joined_move_counts = ', '.join([str(move_count) for move_count in move_counts])
 
     if (log_lists_to_info):
-        logging.info('%sTurn Counts:   %s', prefix, joined_turn_counts)
+        logging.info('%sScores:        %s', prefix, joined_scores)
     elif (log_lists_to_debug):
-        logging.debug('%sTurn Counts:   %s', prefix, joined_turn_counts)
+        logging.debug('%sScores:        %s', prefix, joined_scores)
+
+    if (log_lists_to_info):
+        logging.info('%sRecord:        %s', prefix, joined_record)
+    elif (log_lists_to_debug):
+        logging.debug('%sRecord:        %s', prefix, joined_record)
+
+    logging.info('%sAverage Moves: %s', prefix, sum(move_counts) / float(len(results)))
+
+    if (log_lists_to_info):
+        logging.info('%sMove Counts:   %s', prefix, joined_move_counts)
+    elif (log_lists_to_debug):
+        logging.debug('%sMove Counts:   %s', prefix, joined_move_counts)
 
 def main(argv: list[str] | None = None,
         ) -> list[chessai.core.game.GameResult]:
