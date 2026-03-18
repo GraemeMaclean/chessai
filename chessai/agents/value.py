@@ -35,7 +35,6 @@ class ValueAgent(chessai.core.agent.Agent):
                 best_move = move
 
         if (best_move is not None):
-            print(f"Found best move: {best_move} at fen: {board.get_fen()}.")
             return best_move
 
         # If we couldn't find a move, return a random move.

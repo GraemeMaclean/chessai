@@ -164,7 +164,7 @@ def run_main(
             custom_init_from_args = custom_init_from_args,
             argv = argv)
 
-    return run_games(args, winning_agent_indexes = winning_agent_indexes)
+    return run_games(args, winning_agent_indexes = winning_agent_indexes, log_results = log_results)
 
 def get_parser(
         description: str,
@@ -209,7 +209,6 @@ def parse_args(
 
     return args
 
-# TODO(Lucas): Add back logging once implemented.
 def run_games(
         args: argparse.Namespace,
         winning_agent_indexes: set[bool] | None = None,

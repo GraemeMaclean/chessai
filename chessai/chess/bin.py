@@ -59,7 +59,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
 
     return base_agent_infos, [], {}
 
-def log_chess_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[int], prefix: str = '') -> None:
+def log_chess_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[bool], prefix: str = '') -> None:
     """
     Log the result of running several games.
     """
@@ -79,6 +79,9 @@ def log_chess_results(results: list[chessai.core.game.GameResult], winning_agent
             num_black_wins += 1
 
     logging.info('White Wins: %d, Black Wins: %d, Ties: %d', num_white_wins, num_black_wins, num_ties)
+
+    average_score = (num_white_wins + (0.5 * num_ties)) / len(outcomes)
+    logging.info('Average score: %0.2f.', average_score)
 
     # Avoid logging long lists (which can be a bit slow in Python's logging module).
     log_lists_to_info = (len(results) < chessai.util.bin.SCORE_LIST_MAX_INFO_LENGTH)
@@ -124,6 +127,7 @@ def main(argv: list[str] | None = None,
         default_board = None,
         custom_set_cli_args = set_cli_args,
         custom_init_from_args = init_from_args,
+        log_results = log_chess_results,
         argv = argv,
     )
 
