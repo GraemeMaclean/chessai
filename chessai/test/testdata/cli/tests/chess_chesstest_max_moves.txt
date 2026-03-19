@@ -2,11 +2,12 @@
     "cli": "chessai.chess.bin",
     "arguments": [
         "--seed", "4",
+        "--max-moves", "100"
     ]
 }
 ---
 <LOG_PREFIX> -- Average Score: 0.50
 <LOG_PREFIX> -- Scores:        0.5
 <LOG_PREFIX> -- Record:        tie
-<LOG_PREFIX> -- Average Moves: 297.0
-<LOG_PREFIX> -- Move Counts:   297
+<LOG_PREFIX> -- Average Moves: 100.0
+<LOG_PREFIX> -- Move Counts:   100
