@@ -19,12 +19,12 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
     This is a sibling to init_from_args(), as the arguments set here can be interpreted there.
     """
 
-    parser.add_argument('--white-team', dest = 'white_team_func', metavar = 'TEAM_CREATION_FUNC',
+    parser.add_argument('--white-team', dest = 'white_team', metavar = 'TEAM_CREATION_FUNC',
             action = 'store', type = str, default = chessai.util.alias.AGENT_RANDOM.short,
             help = ('Select the chess team that will play on the white team (default: %(default)s).'
                     + f' Builtin teams: {chessai.util.alias.AGENT_SHORT_NAMES}.'))
 
-    parser.add_argument('--black-team', dest = 'black_team_func', metavar = 'TEAM_CREATION_FUNC',
+    parser.add_argument('--black-team', dest = 'black_team', metavar = 'TEAM_CREATION_FUNC',
             action = 'store', type = str, default = chessai.util.alias.AGENT_RANDOM.short,
             help = ('Select the chess team that will play on the black team (default: %(default)s).'
                     + f' Builtin teams: {chessai.util.alias.AGENT_SHORT_NAMES}.'))
@@ -38,20 +38,11 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
     Agent infos are supplied via the --white-team and --black-team arguments.
     Missing agents will be filled in with random agents.
     """
-    # TODO(Lucas): Fix base_agent_infos to actually get the agentinfo from the args.
-    # The commented out code below gives dict[bool, Agent], not AgentInfos.
-    # white_team = white_team_func
-    # black_team = black_team_func
 
     base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = {
-        chess.WHITE: chessai.core.agentinfo.AgentInfo(name = args.white_team_func),
-        chess.BLACK: chessai.core.agentinfo.AgentInfo(name = args.black_team_func),
+        chess.WHITE: chessai.core.agentinfo.AgentInfo(name = args.white_team),
+        chess.BLACK: chessai.core.agentinfo.AgentInfo(name = args.black_team),
     }
-
-    # base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = {
-    #     chess.WHITE: white_team_func,
-    #     chess.BLACK: black_team_func,
-    # }
 
     # TODO(Lucas): Expand the board offerings.
     # Check for random boards.
@@ -70,13 +61,13 @@ def log_chess_results(results: list[chessai.core.game.GameResult], winning_agent
     scores: list[float] = []
     for result in results:
         if ((result.outcome is None) or (result.outcome.winner is None)):
-            record.append('tie')
+            record.append('Tie')
             scores.append(0.5)
         elif (result.outcome.winner == chess.WHITE):
-            record.append('win')
+            record.append('Win')
             scores.append(1)
         else:
-            record.append('loss')
+            record.append('Loss')
             scores.append(0)
 
     average_score: float = (sum(scores)) / len(scores)

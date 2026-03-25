@@ -85,60 +85,59 @@ def base_init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.co
 
     return base_agent_infos, [], {}
 
+# TODO(Lucas): Do we need the winning agent teams?
 def base_log_results(results: list[chessai.core.game.GameResult], winning_agent_teams: set[bool], prefix: str = '') -> None:
     """
     Log the result of running several games.
     """
 
-    # TODO(Lucas): How should we log the outcomes in a reasonable scoring method?
-    outcomes = [result.outcome for result in results]
-    wins = [('Tie' if ((outcome is None) or (outcome.winner is None)) else ('Win' if (outcome.winner) else 'Loss')) for outcome in outcomes]
-    turn_counts = [len(result.history) for result in results]
+    move_counts: list[int] = [len(result.history) for result in results]
 
-    num_white_wins = 0
-    num_black_wins = 0
-    num_ties = 0
-    for outcome in outcomes:
-        if ((outcome is None) or (outcome.winner is None)):
-            num_ties += 1
-        elif (outcome.winner == chess.WHITE):
-            num_white_wins += 1
+    record: list[str] = []
+    scores: list[float] = []
+    for result in results:
+        if ((result.outcome is None) or (result.outcome.winner is None)):
+            record.append('Tie')
+            scores.append(0.5)
+        elif (result.outcome.winner == chess.WHITE):
+            record.append('Win')
+            scores.append(1)
         else:
-            num_black_wins += 1
+            record.append('Loss')
+            scores.append(0)
+
+    average_score: float = (sum(scores)) / len(scores)
+    logging.info('Average Score: %0.2f', average_score)
 
     # Avoid logging long lists (which can be a bit slow in Python's logging module).
-    log_lists_to_info = (len(results) < SCORE_LIST_MAX_INFO_LENGTH)
-    log_lists_to_debug = (logging.getLogger().getEffectiveLevel() <= logging.DEBUG)
+    log_lists_to_info: bool = (len(results) < chessai.util.bin.SCORE_LIST_MAX_INFO_LENGTH)
+    log_lists_to_debug: bool = (logging.getLogger().getEffectiveLevel() <= logging.DEBUG)
 
-    # joined_scores = ''
-    joined_record = ''
-    joined_turn_counts = ''
+    joined_scores: str = ''
+    joined_record: str = ''
+    joined_move_counts: str = ''
 
     if (log_lists_to_info or log_lists_to_debug):
-        # joined_scores = ', '.join([str(score) for score in scores])
-        joined_record = ', '.join(wins)
-        joined_turn_counts = ', '.join([str(turn_count) for turn_count in turn_counts])
+        joined_scores = ', '.join([str(score) for score in scores])
+        joined_record = ', '.join(record)
+        joined_move_counts = ', '.join([str(move_count) for move_count in move_counts])
 
-    # logging.info('%sAverage Score: %s', prefix, sum(scores) / float(len(results)))
-
-    # if (log_lists_to_info):
-    #     logging.info('%sScores:        %s', prefix, joined_scores)
-    # elif (log_lists_to_debug):
-    #     logging.debug('%sScores:        %s', prefix, joined_scores)
-
-    logging.info('%sWin Rate:      %d / %d (%0.2f)', prefix, wins.count('Win'), len(wins), (num_white_wins / len(wins)))
+    if (log_lists_to_info):
+        logging.info('%sScores:        %s', prefix, joined_scores)
+    elif (log_lists_to_debug):
+        logging.debug('%sScores:        %s', prefix, joined_scores)
 
     if (log_lists_to_info):
         logging.info('%sRecord:        %s', prefix, joined_record)
     elif (log_lists_to_debug):
         logging.debug('%sRecord:        %s', prefix, joined_record)
 
-    logging.info('%sAverage Turns: %s', prefix, sum(turn_counts) / float(len(results)))
+    logging.info('%sAverage Moves: %s', prefix, sum(move_counts) / float(len(results)))
 
     if (log_lists_to_info):
-        logging.info('%sTurn Counts:   %s', prefix, joined_turn_counts)
+        logging.info('%sMove Counts:   %s', prefix, joined_move_counts)
     elif (log_lists_to_debug):
-        logging.debug('%sTurn Counts:   %s', prefix, joined_turn_counts)
+        logging.debug('%sMove Counts:   %s', prefix, joined_move_counts)
 
 def run_main(
         description: str,
@@ -216,8 +215,8 @@ def run_games(
         ) -> list[chessai.core.game.GameResult]:
     """
     Run one or more standard games using pre-parsed arguments.
-    The arguments are expected to have `_games` and `_uis`,
-    as if `chessai.core.ui.init_from_args()` and `chessai.core.game.init_from_args()` have been called.
+    The arguments are expected to have `_games`,
+    as if `chessai.core.game.init_from_args()` have been called.
 
     Returns the results of the games.
     """

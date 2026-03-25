@@ -10,6 +10,6 @@
 ---
 <LOG_PREFIX> -- Average Score: 0.25
 <LOG_PREFIX> -- Scores:        0, 0.5
-<LOG_PREFIX> -- Record:        loss, tie
+<LOG_PREFIX> -- Record:        Loss, Tie
 <LOG_PREFIX> -- Average Moves: 285.5
 <LOG_PREFIX> -- Move Counts:   68, 503

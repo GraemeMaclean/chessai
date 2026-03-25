@@ -1,12 +1,10 @@
 import typing
 
-# TODO(Lucas): Add this to requirements.txt.
 import edq.util.json
 
 import chessai.util.alias
 import chessai.util.reflection
 
-# TODO(Lucas): Look more into this.
 DEFAULT_STATE_EVAL: str = chessai.util.alias.STATE_EVAL_BASE.long
 
 class AgentInfo(edq.util.json.DictConverter):
@@ -30,7 +28,6 @@ class AgentInfo(edq.util.json.DictConverter):
         self.name: chessai.util.reflection.Reference = name
         """ The name of the agent's class. """
 
-		# TODO(Lucas): Implement the following reflection package.
         self.state_eval_func: chessai.util.reflection.Reference = chessai.util.reflection.Reference(state_eval_func)
         """ The state evaluation function this agent will use. """
 

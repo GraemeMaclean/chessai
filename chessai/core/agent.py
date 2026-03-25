@@ -28,12 +28,10 @@ class Agent(abc.ABC):
     and instead do that work in game_start_full()/game_start() (where they will have access to the game state).
     """
 
-    # TODO(Lucas): Improve the naming semantics.
     def __init__(self,
             name: chessai.util.reflection.Reference | str = chessai.util.alias.AGENT_RANDOM.long,
             state_eval_func: chessai.core.gamestate.AgentStateEvaluationFunction | chessai.util.reflection.Reference | str =
                     chessai.core.agentinfo.DEFAULT_STATE_EVAL) -> None:
-        # TODO(Lucas): Inspect name reflection resolution.
         self.name: chessai.util.reflection.Reference = chessai.util.reflection.Reference(name)
         """ The name of the agent. """
 
@@ -180,7 +178,6 @@ def load(agent_info: chessai.core.agentinfo.AgentInfo) -> Agent:
     The name of the agent will be used as a reference to (e.g., name of) the agent's class.
     """
 
-    # TODO(Lucas): Implement the util.reflection package to be able to create new agents.
     agent = chessai.util.reflection.new_object(agent_info.name, **agent_info.to_flat_dict())
 
     if (not isinstance(agent, Agent)):

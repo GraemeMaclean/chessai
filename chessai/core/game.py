@@ -536,7 +536,7 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
             help = ('Specify arguments directly to agents (may be used multiple times).'
                     + ' The value for this argument must be formatted as "player::key=value",'
                     + ' for example to set `foo = 9` for white and `bar = a` for black, we can use:'
-                    + ' `--agent-arg true::foo=9 --agent-arg false::bar=a`.'))
+                    + ' `--agent-arg white::foo=9 --agent-arg black::bar=a`.'))
 
     parser.add_argument('--save-path', dest = 'save_path',
             action = 'store', type = str, default = None,
@@ -637,12 +637,10 @@ def init_from_args(
     return args
 
 # TODO(Lucas): Should be able to simplify the following for two agents.
-# Also, don't think we need remove_agent_teams.
 def _parse_agent_infos(
         agent_teams: list[bool],
         raw_args: list[str],
         base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo],
-        # remove_agent_teams: list[bool],
         ) -> dict[bool, chessai.core.agentinfo.AgentInfo]:
     # Initialize with random agents.
     agent_info = {agent_team: chessai.core.agentinfo.AgentInfo(name = DEFAULT_AGENT) for agent_team in sorted(agent_teams)}
@@ -662,9 +660,14 @@ def _parse_agent_infos(
         if (len(parts) != 2):
             raise ValueError(f"Improperly formatted CLI agent argument: '{raw_arg}'.")
 
-        team = bool(parts[0])
-        if (team not in agent_info):
-            raise ValueError(f"CLI agent argument has an unknown agent team: {team}.")
+        raw_team = parts[0].strip().lower()
+        team_color: bool | None = None
+        if (raw_team in ('white', 'w')):
+            team_color = chess.WHITE
+        elif (raw_team in ('black', 'b')):
+            team_color = chess.BLACK
+        else:
+            raise ValueError(f"CLI agent argument has an unknown agent team: {parts[0]}.")
 
         raw_pair = parts[1]
 
@@ -675,6 +678,6 @@ def _parse_agent_infos(
         key = parts[0].strip()
         value = parts[1].strip()
 
-        agent_info[team].set_from_string(key, value)
+        agent_info[team_color].set_from_string(key, value)
 
     return agent_info

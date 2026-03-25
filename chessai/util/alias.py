@@ -1,7 +1,6 @@
 """
 This file provides useful aliases/shortcuts or short names for different objects in chessai.
-# TODO(Lucas): Change example.
-For example, the `web` alias can be used to reference `chessai.ui.web.WebUI`.
+For example, the `agent-random` alias can be used to reference `chessai.agents.random.RandomAgent`.
 """
 
 class Alias:

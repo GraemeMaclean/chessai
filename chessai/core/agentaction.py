@@ -17,14 +17,10 @@ class AgentAction(edq.util.json.DictConverter):
 
     def __init__(self,
             action: chess.Move = chess.Move.null(),
-            clear_inputs: bool = False,
             other_info: dict[str, typing.Any] | None = None,
             ) -> None:
         self.action: chess.Move = action
         """ The action returned by the agent (or chess.Move.null() on a crash). """
-
-        self.clear_inputs = clear_inputs
-        """ Instruct the game that the agent has consumed the user inputs and any buffered inputs should be cleared. """
 
         if (other_info is None):
             other_info = {}
