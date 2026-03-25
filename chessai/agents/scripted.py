@@ -1,7 +1,6 @@
 import typing
 
-import chess
-
+import chessai.core.action
 import chessai.core.agent
 import chessai.core.gamestate
 
@@ -17,18 +16,18 @@ class ScriptedAgent(chessai.core.agent.Agent):
     """
 
     def __init__(self,
-            actions: list[chess.Move] | None = None,
+            actions: list[chessai.core.action.Action] | None = None,
             **kwargs: typing.Any) -> None:
         super().__init__(**kwargs)
 
         if (actions is None):
             actions = []
 
-        self._actions: list[chess.Move] = actions
+        self._actions: list[chessai.core.action.Action] = actions
         """ The scripted actions this agent will take. """
 
-    def get_action(self, state: chessai.core.gamestate.GameState) -> chess.Move:
+    def get_action(self, state: chessai.core.gamestate.GameState) -> chessai.core.action.Action:
         if (len(self._actions) > 0):
             return self._actions.pop(0)
 
-        return chess.Move.null()
+        return chessai.core.action.NULL_ACTION

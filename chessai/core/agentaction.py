@@ -7,7 +7,7 @@ import typing
 import edq.util.json
 import edq.util.time
 
-import chess
+import chessai.core.action
 
 class AgentAction(edq.util.json.DictConverter):
     """
@@ -16,11 +16,11 @@ class AgentAction(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-            action: chess.Move = chess.Move.null(),
+            action: chessai.core.action.Action = chessai.core.action.NULL_ACTION,
             other_info: dict[str, typing.Any] | None = None,
             ) -> None:
-        self.action: chess.Move = action
-        """ The action returned by the agent (or chess.Move.null() on a crash). """
+        self.action: chessai.core.action.Action = action
+        """ The action returned by the agent (or chessai.core.action.NULL_ACTION on a crash). """
 
         if (other_info is None):
             other_info = {}
@@ -71,11 +71,11 @@ class AgentActionRecord(edq.util.json.DictConverter):
         self.timeout: bool = timeout
         """ Whether or not the agent timed out when computing this action. """
 
-    def get_action(self) -> chess.Move:
+    def get_action(self) -> chessai.core.action.Action:
         """ Get the agent's action. """
 
         if (self.agent_action is None):
-            return chess.Move.null()
+            return chessai.core.action.NULL_ACTION
 
         return self.agent_action.action
 

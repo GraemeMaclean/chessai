@@ -11,6 +11,7 @@ import edq.util.json
 
 import chess
 
+import chessai.core.action
 import chessai.core.agentinfo
 import chessai.core.board
 import chessai.core.isolation.level
@@ -308,7 +309,7 @@ class Game(abc.ABC):
             return state
 
         action = action_record.get_action()
-        if (action not in list(state.get_board().get_legal_moves())):
+        if (action not in state.get_legal_actions()):
             raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' or type '{type(action)}'.")
 
         self._call_state_process_turn_full(state, action, rng)
@@ -317,7 +318,7 @@ class Game(abc.ABC):
 
     def _call_state_process_turn_full(self,
             state: chessai.core.gamestate.GameState,
-            action: chess.Move,
+            action: chessai.core.action.Action,
             rng: random.Random) -> None:
         """ Call on the game state to process a full turn. """
 
@@ -466,7 +467,7 @@ class Game(abc.ABC):
         args.max_moves = len(replay_info.history)
 
         # Script the moves for each agent based on the replay's history.
-        scripted_actions: dict[bool, list[chess.Move]] = {}
+        scripted_actions: dict[bool, list[chessai.core.action.Action]] = {}
         for item in replay_info.history:
             if (item.player not in scripted_actions):
                 scripted_actions[item.player] = []

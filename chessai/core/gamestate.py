@@ -6,6 +6,7 @@ import edq.util.json
 
 import chess
 
+import chessai.core.action
 import chessai.core.agentaction
 import chessai.core.board
 
@@ -74,7 +75,7 @@ class GameState(edq.util.json.DictConverter):
         return []
 
     def generate_successor(self,
-            action: chess.Move,
+            action: chessai.core.action.Action,
             rng: random.Random | None = None,
             **kwargs: typing.Any) -> 'GameState':
         """
@@ -114,7 +115,7 @@ class GameState(edq.util.json.DictConverter):
 
 
     def process_turn(self,
-            action: chess.Move,
+            action: chessai.core.action.Action,
             rng: random.Random | None = None,
             **kwargs: typing.Any) -> None:
         """
@@ -124,7 +125,7 @@ class GameState(edq.util.json.DictConverter):
         """
 
     def process_turn_full(self,
-            action: chess.Move,
+            action: chessai.core.action.Action,
             rng: random.Random | None = None,
             **kwargs: typing.Any) -> None:
         """
@@ -158,6 +159,15 @@ class GameState(edq.util.json.DictConverter):
         data['board'] = chessai.core.board.Board.from_dict(data['board'])
 
         return cls(**data)
+
+    def get_legal_actions(self) -> list[chessai.core.action.Action]:
+        """ Get the moves that the current agent is allowed to make. """
+
+        actions: list[chessai.core.action.Action] = []
+        for legal_move in self.board.get_legal_moves():
+            actions.append(chessai.core.action.Action(legal_move.uci()))
+
+        return actions
 
 @typing.runtime_checkable
 class AgentStateEvaluationFunction(typing.Protocol):

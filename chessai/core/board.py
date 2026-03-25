@@ -1,10 +1,11 @@
 import io
 import typing
 
-import edq.util.json
-
 import chess
 import chess.pgn
+import edq.util.json
+
+import chessai.core.action
 
 # TODO(Lucas): Continue adding the necessary methods for students to interact with the board.
 class Board(edq.util.json.DictConverter):
@@ -50,13 +51,13 @@ class Board(edq.util.json.DictConverter):
         """ Returns if the game is over. """
         return self._board.is_game_over()
 
-    def is_capture(self, move: chess.Move) -> bool:
+    def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Returns if the move captures a piece. """
-        return self._board.is_capture(move)
+        return self._board.is_capture(action.get_move())
 
-    def _push(self, move: chess.Move) -> None:
+    def _push(self, action: chessai.core.action.Action) -> None:
         """ Updates the position with the given move and puts it onto the move stack. """
-        return self._board.push(move)
+        return self._board.push(action.get_move())
 
     def copy(self) -> 'Board':
         """ Create a deep copy of the board. """

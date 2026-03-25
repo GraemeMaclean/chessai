@@ -1,9 +1,8 @@
 import time
 import typing
 
-import chess
-
 import chessai.agents.random
+import chessai.core.action
 import chessai.core.gamestate
 
 class TimeoutAgent(chessai.agents.random.RandomAgent):
@@ -39,6 +38,6 @@ class TimeoutAgent(chessai.agents.random.RandomAgent):
         time.sleep(self._game_complete_wait)
         super().game_complete(final_state)
 
-    def get_action(self, state: chessai.core.gamestate.GameState) -> chess.Move:
+    def get_action(self, state: chessai.core.gamestate.GameState) -> chessai.core.action.Action:
         time.sleep(self._get_action_wait)
         return super().get_action(state)

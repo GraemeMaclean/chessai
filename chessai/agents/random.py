@@ -1,5 +1,4 @@
-import chess
-
+import chessai.core.action
 import chessai.core.agent
 import chessai.core.gamestate
 
@@ -7,14 +6,10 @@ class RandomAgent(chessai.core.agent.Agent):
     """ An agent that just takes random (legal) action. """
 
     def get_action(self,
-            state: chessai.core.gamestate.GameState) -> chess.Move:
+            state: chessai.core.gamestate.GameState) -> chessai.core.action.Action:
         """
-        Returns a random legal move based on the game state.
+        Returns a random legal action based on the game state.
         """
 
-        board = state.get_board()
-        if (board is None):
-            raise ValueError("Trying to get an action from an agent without a board.")
-
-        legal_moves = list(board.get_legal_moves())
-        return self.rng.choice(legal_moves)
+        legal_actions = state.get_legal_actions()
+        return self.rng.choice(legal_actions)

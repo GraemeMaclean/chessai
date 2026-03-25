@@ -1,15 +1,14 @@
 import random
 import typing
 
-import chess
-
+import chessai.core.action
 import chessai.core.gamestate
 
 class GameState(chessai.core.gamestate.GameState):
     """ A game state specific to a standard Pacman game. """
 
     def process_turn(self,
-            action: chess.Move,
+            action: chessai.core.action.Action,
             rng: random.Random | None = None,
             **kwargs: typing.Any) -> None:
         """

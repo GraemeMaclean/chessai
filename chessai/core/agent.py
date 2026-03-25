@@ -2,8 +2,7 @@ import abc
 import random
 import typing
 
-import chess
-
+import chessai.core.action
 import chessai.core.agentaction
 import chessai.core.agentinfo
 import chessai.core.gamestate
@@ -81,13 +80,13 @@ class Agent(abc.ABC):
 
     def get_action(self,
             state: chessai.core.gamestate.GameState,
-            ) -> chess.Move:
+            ) -> chessai.core.action.Action:
         """
         Get an action for this agent given the current state of the game.
         This is simplified version of get_action_full(),
         see that method for full details.
         """
-        return chess.Move.null()
+        return chessai.core.action.NULL_ACTION
 
     def game_start_full(self,
             player: bool,
@@ -105,7 +104,7 @@ class Agent(abc.ABC):
 
         self.game_start(initial_state)
 
-        return chessai.core.agentaction.AgentAction(chess.Move.null())
+        return chessai.core.agentaction.AgentAction(chessai.core.action.NULL_ACTION)
 
     def game_start(self,
             initial_state: chessai.core.gamestate.GameState) -> None:
@@ -126,7 +125,7 @@ class Agent(abc.ABC):
 
         self.game_complete(final_state)
 
-        return chessai.core.agentaction.AgentAction(chess.Move.null())
+        return chessai.core.agentaction.AgentAction(chessai.core.action.NULL_ACTION)
 
     def game_complete(self,
             final_state: chessai.core.gamestate.GameState) -> None:
@@ -146,7 +145,7 @@ class Agent(abc.ABC):
         return self.evaluation_function(state, agent = self, **kwargs)
 
     def get_minimax_move(self,
-            state: chessai.core.gamestate.GameState) -> chess.Move:
+            state: chessai.core.gamestate.GameState) -> chessai.core.action.Action:
         """
         This function chooses the best move for the given board position, evaluation function, player, and ply.
 
@@ -154,13 +153,13 @@ class Agent(abc.ABC):
         - state: The state of the chess game, including the board and move stack.
 
         Returns:
-        A single chess.Move type object.
+        A single chessai.core.action.Action type object.
         """
-        return chess.Move.null()
+        return chessai.core.action.NULL_ACTION
 
 
     def get_expectimax_move(self,
-            state: chessai.core.gamestate.GameState) -> chess.Move:
+            state: chessai.core.gamestate.GameState) -> chessai.core.action.Action:
         """
         This function chooses the best move for the given board position, evaluation function, player, and ply.
 
@@ -168,9 +167,9 @@ class Agent(abc.ABC):
         - state: The state of the chess game, including the board and move stack.
 
         Returns:
-        A single chess.Move type object.
+        A single chessai.core.action.Action type object.
         """
-        return chess.Move.null()
+        return chessai.core.action.NULL_ACTION
 
 def load(agent_info: chessai.core.agentinfo.AgentInfo) -> Agent:
     """
