@@ -9,7 +9,6 @@ import typing
 import chess
 
 import chessai.chess.game
-import chessai.chess.team
 import chessai.util.alias
 import chessai.util.bin
 
