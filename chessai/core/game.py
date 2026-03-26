@@ -476,7 +476,6 @@ class Game(abc.ABC):
 
         base_agent_infos.clear()
 
-        # TODO(Lucas): Implement scripted agent for replays.
         for (player, actions) in scripted_actions.items():
             base_agent_infos[player] = chessai.core.agentinfo.AgentInfo(
                 name = chessai.util.alias.AGENT_SCRIPTED.short,
