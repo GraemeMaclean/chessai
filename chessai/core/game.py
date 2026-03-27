@@ -584,7 +584,16 @@ def init_from_args(
     logging.debug("Using source seed for games: %d.", seed)
     rng = random.Random(seed)
 
-    # TODO(Lucas): Seems to be overly complicated.
+    # TODO(Lucas): Since args.board stores as a string,
+    # we could write a utility to check if the arg is a valid FEN.
+    # If not, we could try to load from the path.
+
+    # Either take the board as given, or load it from a path.
+    if (isinstance(args.board, chessai.core.board.Board)):
+        board = args.board
+    else:
+        board = chessai.core.board.load_path(args.board)
+
     agent_infos = _parse_agent_infos([chess.WHITE, chess.BLACK], args.raw_agent_args, base_agent_infos)
 
     base_save_path = args.save_path
@@ -598,7 +607,7 @@ def init_from_args(
         game_seed = rng.randint(0, 2**64)
 
         all_agent_infos.append(copy.deepcopy(agent_infos))
-        all_boards.append(args.board)
+        all_boards.append(board)
 
         game_info = GameInfo(
                 all_agent_infos[-1],

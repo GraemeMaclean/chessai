@@ -1,0 +1,3 @@
+"""
+The `chessai.resources.boards` provides default game boards that can be used for this project.
+"""

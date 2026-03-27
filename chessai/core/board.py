@@ -1,4 +1,6 @@
 import io
+import os
+import re
 import typing
 
 import chess
@@ -6,6 +8,17 @@ import chess.pgn
 import edq.util.json
 
 import chessai.core.action
+import chessai.util.reflection
+
+THIS_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)))
+BOARDS_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'boards')
+
+SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
+AGENT_PATTERN: re.Pattern = re.compile(r'^\d$')
+
+FILE_EXTENSION = '.board'
+
+DEFAULT_BOARD_CLASS: str = 'chessai.core.board.Board'
 
 # TODO(Lucas): Continue adding the necessary methods for students to interact with the board.
 class Board(edq.util.json.DictConverter):
@@ -96,3 +109,56 @@ class Board(edq.util.json.DictConverter):
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
         return cls.from_pgn(data.get('pgn', ''))
+
+def load_path(path: str, **kwargs: typing.Any) -> Board:
+    """
+    Load a board from a file.
+    If the given path does not exist,
+    try to prefix the path with the standard board directory and suffix with the standard extension.
+    """
+
+    raw_path = path
+
+    # If the path does not exist, try the boards directory.
+    if (not os.path.exists(path)):
+        path = os.path.join(BOARDS_DIR, path)
+
+        # If this path does not have a good extension, add one.
+        if (os.path.splitext(path)[-1] != FILE_EXTENSION):
+            path = path + FILE_EXTENSION
+
+    if (not os.path.exists(path)):
+        raise ValueError(f"Could not find board, path does not exist: '{raw_path}'.")
+
+    text = edq.util.dirent.read_file(path, strip = False)
+    return load_string(raw_path, text, **kwargs)
+
+def load_string(source: str, text: str, **kwargs: typing.Any) -> Board:
+    """ Load a board from a string. """
+
+    separator_index = -1
+    lines = text.split("\n")
+
+    for (i, line) in enumerate(lines):
+        if (SEPARATOR_PATTERN.match(line)):
+            separator_index = i
+            break
+
+    if (separator_index == -1):
+        # No separator was found.
+        options_text = ''
+        board_text = "\n".join(lines)
+    else:
+        options_text = "\n".join(lines[:separator_index])
+        board_text = "\n".join(lines[(separator_index + 1):])
+
+    options_text = options_text.strip()
+    if (len(options_text) == 0):
+        options = {}
+    else:
+        options = edq.util.json.loads(options_text)
+
+    options.update(kwargs)
+
+    board_class = options.get('class', DEFAULT_BOARD_CLASS)
+    return chessai.util.reflection.new_object(board_class, source, board_text, **options)  # type: ignore[no-any-return]
