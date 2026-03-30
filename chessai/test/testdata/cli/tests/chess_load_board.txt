@@ -1,0 +1,13 @@
+{
+    "cli": "chessai.chess.bin",
+    "arguments": [
+        "--seed", "2",
+        "--board", "chessai/resources/boards/standard.board"
+    ]
+}
+---
+<LOG_PREFIX> -- Average Score: 0.50
+<LOG_PREFIX> -- Scores:        0.5
+<LOG_PREFIX> -- Record:        Tie
+<LOG_PREFIX> -- Average Moves: 366.0
+<LOG_PREFIX> -- Move Counts:   366

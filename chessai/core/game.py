@@ -593,9 +593,9 @@ def init_from_args(
 
     # Either take the board as given, or load it from a path.
     if (args.board is None):
-        board = chessai.core.board.Board()
+        board = chessai.core.board.Board('none')
     elif (chessai.core.board.is_valid_fen(args.board)):
-        board = chessai.core.board.Board(args.board)
+        board = chessai.core.board.Board('FEN', args.board)
     elif (isinstance(args.board, chessai.core.board.Board)):
         board = args.board
     else:

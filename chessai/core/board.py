@@ -30,7 +30,17 @@ class Board(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-                 start_fen: str = chess.STARTING_FEN) -> None:
+                 source: str,
+                 start_fen: str = chess.STARTING_FEN,
+                 **kwargs: typing.Any) -> None:
+        """
+        Construct a board.
+        The board must be a valid board given by the starting FEN.
+        """
+
+        self.source: str = source
+        """ Where this board was loaded from. """
+
         self._board = chess.Board(start_fen)
         """ The current board which stores the current state and the history. """
 
@@ -121,7 +131,7 @@ def is_valid_fen(fen: str) -> bool:
     """ Checks if a FEN is valid. """
 
     try:
-        _ = chessai.core.board.Board(fen)
+        _ = chessai.core.board.Board('TEST', fen)
     except ValueError:
         return False
 
