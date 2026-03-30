@@ -31,7 +31,7 @@ class GameInfo(edq.util.json.DictConverter):
 
     def __init__(self,
             agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo],
-            start_fen: str | None = None,
+            start_board: chessai.core.board.Board | str | None = None,
             isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
             max_moves: int = DEFAULT_MAX_MOVES,
             agent_start_timeout: float = DEFAULT_AGENT_START_TIMEOUT,
@@ -52,10 +52,13 @@ class GameInfo(edq.util.json.DictConverter):
         if (len(self.agent_infos) == 0):
             raise ValueError("No agents provided.")
 
-        if (start_fen is None):
-            start_fen = chess.STARTING_FEN
+        if (start_board is None):
+            start_board = chess.STARTING_FEN
 
-        self.start_fen: str = start_fen
+        if (isinstance(start_board, chessai.core.board.Board)):
+            start_board = start_board.get_fen()
+
+        self.start_board: str = start_board
         """ The starting fen for this game. """
 
         self.isolation_level: chessai.core.isolation.level.Level = isolation_level
@@ -94,7 +97,7 @@ class GameInfo(edq.util.json.DictConverter):
     def to_dict(self) -> dict[str, typing.Any]:
         return {
             'seed': self.seed,
-            'start_fen': self.start_fen,
+            'start_board': self.start_board,
             'agent_infos': {id: info.to_dict() for (id, info) in self.agent_infos.items()},
             'isolation_level': self.isolation_level.value,
             'max_moves': self.max_moves,
@@ -108,7 +111,7 @@ class GameInfo(edq.util.json.DictConverter):
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
         return cls(
             seed = data.get('seed', None),
-            start_fen = data.get('start_fen', None),
+            start_board = data.get('start_board', None),
             agent_infos = {bool(id): chessai.core.agentinfo.AgentInfo.from_dict(raw_info) for (id, raw_info) in data['agent_infos'].items()},
             isolation_level = chessai.core.isolation.level.Level(data.get('isolation_level', chessai.core.isolation.level.Level.NONE.value)),
             max_moves = data.get('max_moves', DEFAULT_MAX_MOVES),
@@ -459,7 +462,7 @@ class Game(abc.ABC):
         replay_info = typing.cast(GameResult, edq.util.json.load_object_path(args.replay_path, GameResult))
 
         # Overrides from the replay info.
-        args.board = replay_info.game_info.start_fen
+        args.board = replay_info.game_info.start_board
         args.seed = replay_info.game_info.seed
 
         # Special settings for replays.
@@ -589,7 +592,11 @@ def init_from_args(
     # If not, we could try to load from the path.
 
     # Either take the board as given, or load it from a path.
-    if (isinstance(args.board, chessai.core.board.Board)):
+    if (args.board is None):
+        board = chessai.core.board.Board()
+    elif (chessai.core.board.is_valid_fen(args.board)):
+        board = chessai.core.board.Board(args.board)
+    elif (isinstance(args.board, chessai.core.board.Board)):
         board = args.board
     else:
         board = chessai.core.board.load_path(args.board)
@@ -611,7 +618,7 @@ def init_from_args(
 
         game_info = GameInfo(
                 all_agent_infos[-1],
-                start_fen = all_boards[-1],
+                start_board = all_boards[-1],
                 isolation_level = chessai.core.isolation.level.Level(args.isolation_level),
                 max_moves = args.max_moves,
                 agent_start_timeout = args.agent_start_timeout,
@@ -620,7 +627,7 @@ def init_from_args(
                 seed = game_seed
         )
 
-        board = chessai.core.board.Board(game_info.start_fen)
+        board = chessai.core.board.Board(game_info.start_board)
 
         # Suffix the save path if there is more than one game.
         save_path = base_save_path

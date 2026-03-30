@@ -34,6 +34,13 @@ class Board(edq.util.json.DictConverter):
         self._board = chess.Board(start_fen)
         """ The current board which stores the current state and the history. """
 
+        if (not self.is_valid()):
+            raise ValueError("Invalid board format: '{start_fen}'.")
+
+    def is_valid(self) -> bool:
+        """ Checks if the board is in a valid position. """
+        return self._board.is_valid()
+
     def get_turn(self) -> bool:
         """ The side to move (chess.WHITE or chess.BLACK). """
         return self._board.turn
@@ -109,6 +116,16 @@ class Board(edq.util.json.DictConverter):
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
         return cls.from_pgn(data.get('pgn', ''))
+
+def is_valid_fen(fen: str) -> bool:
+    """ Checks if a FEN is valid. """
+
+    try:
+        _ = chessai.core.board.Board(fen)
+    except ValueError:
+        return False
+
+    return True
 
 def load_path(path: str, **kwargs: typing.Any) -> Board:
     """
