@@ -494,7 +494,8 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
     parser.add_argument('--board', dest = 'board',
             action = 'store', type = str, default = default_board,
             help = ('Play on this board (default: %(default)s).'
-                    + ' This may be the full path to a board, or just a filename.'
+                    + ' This may be a FEN of the board.'
+                    + ' It may also be the full path to a board, or just a filename.'
                     + ' If just a filename, than the `chessai/resources/boards` directory will be checked (using a ".board" extension.'))
 
     parser.add_argument('--num-games', dest = 'num_games',
@@ -503,7 +504,7 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
 
     parser.add_argument('--seed', dest = 'seed',
             action = 'store', type = int, default = None,
-            help = 'The random seed for the game (will be randomly generated if not set.')
+            help = 'The random seed for the game (will be randomly generated if not set).')
 
     parser.add_argument('--max-moves', dest = 'max_moves',
             action = 'store', type = int, default = DEFAULT_MAX_MOVES,

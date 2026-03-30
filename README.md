@@ -4,7 +4,7 @@ An AI educational project disguised as [Chess](https://en.wikipedia.org/wiki/Che
 
 ## Documentation
 
-TODO: Release documentation.
+TODO: Release documentation after first release.
 API documentation for all releases is available at [lucas-ellenberger.github.io/chessai](https://lucas-ellenberger.github.io/chessai).
 
 ## Installation / Requirements
@@ -34,7 +34,6 @@ python3 -m chessai.chess --help
 You can change the board that you are playing on with the `--board` option.
 Any [chess FEN](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation) can be used to set the board.
 
-TODO: Provide default boards / puzzles and update documentation.
 Chessai comes with several different boards in the [chessai/resources/boards directory](chessai/resources/boards).
 For example:
 ```sh
@@ -43,9 +42,12 @@ python3 -m chessai.chess --board "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQK
 
 You can also specify a path to a board file if you want to use a custom board:
 ```sh
-python3 -m chessai.chess --board chessai/resources/boards/classic-small.board
+python3 -m chessai.chess --board chessai/resources/boards/standard.board
 ```
 
+### Puzzles
+
+TODO: Add puzzle documentation and explain how to have an agent play a suite of puzzles.
 
 ### Choosing an Agent
 
@@ -68,8 +70,6 @@ python3 -m chessai.chess --black chessai/agents/random.py:RandomAgent
 ```
 
 #### Agent Arguments
-
-TODO: Expand agent argument example.
 
 Many agents will accept arguments that can be used to tweak that agent's behavior.
 These arguments can be passed using the `--agent-arg` options
