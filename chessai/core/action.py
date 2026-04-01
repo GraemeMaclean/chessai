@@ -8,6 +8,8 @@ import typing
 import chess
 import edq.util.json
 
+import chessai.core.board
+
 UCI_NULL_MOVE: str = '0000'
 
 class Action(edq.util.json.DictConverter):
@@ -30,6 +32,22 @@ class Action(edq.util.json.DictConverter):
     def get_move(self) -> chess.Move:
         """ Return the chess move corresponding to the action. """
         return self.move
+
+    def get_start_square(self) -> chessai.core.board.Square:
+        """ Returns the source square. """
+        chess_move = self.move.from_square
+        return chessai.core.board.Square.from_square(chess_move)
+
+    def get_end_square(self) -> chessai.core.board.Square:
+        """ Returns the end square. """
+        chess_move = self.move.to_square
+        return chessai.core.board.Square.from_square(chess_move)
+
+    @classmethod
+    def from_squares(cls, from_square: chessai.core.board.Square, to_square: chessai.core.board.Square) -> 'Action':
+        """ Get an action from the starting and ending squares. """
+        move = chess.Move(from_square.to_chess_square(), to_square.to_chess_square())
+        return cls(move.uci())
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {

@@ -79,6 +79,45 @@ AGENT_SHORT_NAMES: list[str] = [
     AGENT_VALUE.short,
 ]
 
+# Update all maze aliases to be knight aliases.
+DISTANCE_EUCLIDEAN: Alias = Alias('distance-euclidean', 'chessai.search.distance.euclidean_distance')
+DISTANCE_MANHATTAN: Alias = Alias('distance-manhattan', 'chessai.search.distance.manhattan_distance')
+DISTANCE_MAZE: Alias = Alias('distance-maze', 'chessai.search.distance.maze_distance')
+
+DISTANCE_SHORT_NAMES: list[str] = [
+    DISTANCE_EUCLIDEAN.short,
+    DISTANCE_MANHATTAN.short,
+    DISTANCE_MAZE.short,
+]
+
+COST_FUNC_LONGITUDINAL: Alias = Alias('cost-longitudinal', 'chessai.search.common.longitudinal_cost_function')
+COST_FUNC_STAY_EAST: Alias = Alias('cost-stay-east', 'chessai.search.common.stay_east_cost_function')
+COST_FUNC_STAY_WEST: Alias = Alias('cost-stay-west', 'chessai.search.common.stay_west_cost_function')
+COST_FUNC_UNIT: Alias = Alias('cost-unit', 'chessai.search.common.unit_cost_function')
+
+COST_FUNC_SHORT_NAMES: list[str] = [
+    COST_FUNC_LONGITUDINAL.short,
+    COST_FUNC_STAY_EAST.short,
+    COST_FUNC_STAY_WEST.short,
+    COST_FUNC_UNIT.short,
+]
+
+SEARCH_SOLVER_ASTAR: Alias = Alias('search-solver-astar', 'chessai.student.singlesearch.astar_search')
+SEARCH_SOLVER_BFS: Alias = Alias('search-solver-bfs', 'chessai.student.singlesearch.breadth_first_search')
+SEARCH_SOLVER_DFS: Alias = Alias('search-solver-dfs', 'chessai.student.singlesearch.depth_first_search')
+SEARCH_SOLVER_MAZE_TINY: Alias = Alias('search-solver-maze-tiny', 'chessai.search.mazetiny.maze_tiny_search')
+SEARCH_SOLVER_RANDOM: Alias = Alias('search-solver-random', 'chessai.search.random.random_search')
+SEARCH_SOLVER_UCS: Alias = Alias('search-solver-ucs', 'chessai.student.singlesearch.uniform_cost_search')
+
+SEARCH_SOLVER_SHORT_NAMES: list[str] = [
+    SEARCH_SOLVER_ASTAR.short,
+    SEARCH_SOLVER_BFS.short,
+    SEARCH_SOLVER_DFS.short,
+    SEARCH_SOLVER_MAZE_TINY.short,
+    SEARCH_SOLVER_RANDOM.short,
+    SEARCH_SOLVER_UCS.short,
+]
+
 # TODO(Lucas): Implement all of the alias evals.
 STATE_EVAL_BASE: Alias = Alias('state-eval-base', 'chessai.core.gamestate.base_eval')
 # STATE_EVAL_MINIMAX_BETTER: Alias = Alias('state-eval-minimax-better', 'chessai.student.multiagents.better_state_eval')

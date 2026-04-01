@@ -68,7 +68,7 @@ class SearchProblem(abc.ABC, typing.Generic[NodeType]):
         This can help agents quickly check where they have previously been.
         """
 
-        self.position_history: list[chessai.core.board.Position] = []
+        self.position_history: list[chessai.core.board.Square] = []
         """
         Keep track of the order that positions have been visited.
         This let's us know exactly how the agent has moved about.
@@ -122,9 +122,9 @@ class SearchSolution(typing.Generic[NodeType]):
         May be None in cases where the solver does not use search nodes.
         """
 
-    def get_path(self, start_position: chessai.core.board.Position) -> list[chessai.core.board.Position]:
+    def get_path(self, start_position: chessai.core.board.Square) -> list[chessai.core.board.Square]:
         """
-        Given the starting locatrion, get the path this search solution represents.
+        Given the starting location, get the path this search solution represents.
         The resulting path will start at the starting position.
         It is assumed that unknown actions will not result in a move.
         """

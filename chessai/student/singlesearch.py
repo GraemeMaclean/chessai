@@ -19,7 +19,7 @@ import random
 import typing
 
 import chessai.core.search
-# import chessai.search.knights
+import chessai.search.common
 
 def depth_first_search(
         problem: chessai.core.search.SearchProblem,

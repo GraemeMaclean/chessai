@@ -43,6 +43,13 @@ class GameState(edq.util.json.DictConverter):
         """ Returns the player with the next move. """
         return self.board.get_turn()
 
+    def get_white_knight_position(self) -> chessai.core.board.Square | None:
+        """
+        Gets the first found white knight's position.
+        Useful for knight's errant search problems.
+        """
+
+
     def copy(self) -> 'GameState':
         """
         Get a deep copy of this state.
@@ -61,7 +68,6 @@ class GameState(edq.util.json.DictConverter):
         Indicate that the game is starting.
         This will initialize some state.
         """
-        # TODO(Lucas): Necessary?
 
     def agents_game_start(self, agent_responses: dict[bool, chessai.core.agentaction.AgentActionRecord]) -> None:
         """ Indicate that agents have been started. """
@@ -88,7 +94,6 @@ class GameState(edq.util.json.DictConverter):
 
         return successor
 
-
     def process_agent_timeout(self, agent_index: int) -> None:
         """
         Notify the state that the given agent has timed out.
@@ -112,7 +117,6 @@ class GameState(edq.util.json.DictConverter):
         """
 
         self.game_over = True
-
 
     def process_turn(self,
             action: chessai.core.action.Action,
@@ -195,19 +199,19 @@ def base_eval(
     """
     board = state.get_board()
 
-    piece_values: dict[int, int] = {
-        chess.PAWN: 1,
-        chess.KNIGHT: 3,
-        chess.BISHOP: 3,
-        chess.ROOK: 5,
-        chess.QUEEN: 9,
-        chess.KING: 9999,
+    piece_values: dict[chessai.core.board.PieceType, int] = {
+        chessai.core.board.PieceType.PAWN: 1,
+        chessai.core.board.PieceType.KNIGHT: 3,
+        chessai.core.board.PieceType.BISHOP: 3,
+        chessai.core.board.PieceType.ROOK: 5,
+        chessai.core.board.PieceType.QUEEN: 9,
+        chessai.core.board.PieceType.KING: 9999,
     }
 
     # The difference in pieces from white's perspective.
     board_value = 0
     for (piece_type, piece_value) in piece_values.items():
-        piece_count = len(board.get_pieces(piece_type, chess.WHITE)) - len(board.get_pieces(piece_type, chess.BLACK))
+        piece_count = len(board.get_pieces(piece_type, chessai.core.board.Color.WHITE)) - len(board.get_pieces(piece_type, chessai.core.board.Color.BLACK))
 
         board_value += (piece_count * piece_value)
 
