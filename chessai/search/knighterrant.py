@@ -3,7 +3,7 @@ import typing
 
 import chessai.core.search
 
-def maze_tiny_search(
+def knight_errant_search(
         problem: chessai.core.search.SearchProblem,
         heuristic: chessai.core.search.SearchHeuristic,
         rng: random.Random,

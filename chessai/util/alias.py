@@ -66,6 +66,7 @@ AGENT_AGGRESSIVE: Alias = Alias('agent-aggressive', 'chessai.agents.aggressive.A
 # AGENT_MINIMAX: Alias = Alias('agent-minimax', 'chessai.student.multiagents.MyMinimaxLikeAgent')
 AGENT_RANDOM: Alias = Alias('agent-random', 'chessai.agents.random.RandomAgent')
 AGENT_SCRIPTED: Alias = Alias('agent-scripted', 'chessai.agents.scripted.ScriptedAgent')
+AGENT_SEARCH_PROBLEM: Alias = Alias('agent-search-problem', 'chessai.agents.searchproblem.SearchProblemAgent')
 AGENT_TIMEOUT: Alias = Alias('agent-timeout', 'chessai.agents.testing.TimeoutAgent')
 AGENT_VALUE: Alias = Alias('agent-value', 'chessai.agents.value.ValueAgent')
 
@@ -75,19 +76,20 @@ AGENT_SHORT_NAMES: list[str] = [
     # AGENT_MINIMAX.short,
     AGENT_RANDOM.short,
     AGENT_SCRIPTED.short,
+    AGENT_SEARCH_PROBLEM.short,
     AGENT_TIMEOUT.short,
     AGENT_VALUE.short,
 ]
 
-# Update all maze aliases to be knight aliases.
+# Update all knight aliases to be knight aliases.
 DISTANCE_EUCLIDEAN: Alias = Alias('distance-euclidean', 'chessai.search.distance.euclidean_distance')
 DISTANCE_MANHATTAN: Alias = Alias('distance-manhattan', 'chessai.search.distance.manhattan_distance')
-DISTANCE_MAZE: Alias = Alias('distance-maze', 'chessai.search.distance.maze_distance')
+DISTANCE_KNIGHT: Alias = Alias('distance-knight', 'chessai.search.distance.knight_distance')
 
 DISTANCE_SHORT_NAMES: list[str] = [
     DISTANCE_EUCLIDEAN.short,
     DISTANCE_MANHATTAN.short,
-    DISTANCE_MAZE.short,
+    DISTANCE_KNIGHT.short,
 ]
 
 COST_FUNC_LONGITUDINAL: Alias = Alias('cost-longitudinal', 'chessai.search.common.longitudinal_cost_function')
@@ -102,10 +104,28 @@ COST_FUNC_SHORT_NAMES: list[str] = [
     COST_FUNC_UNIT.short,
 ]
 
+HEURISTIC_EUCLIDEAN: Alias = Alias('heuristic-euclidean', 'chessai.search.distance.euclidean_heuristic')
+HEURISTIC_KNIGHT: Alias = Alias('heuristic-knight', 'chessai.student.singlesearch.knights_errant_heuristic')
+HEURISTIC_MANHATTAN: Alias = Alias('heuristic-manhattan', 'chessai.search.distance.manhattan_heuristic')
+HEURISTIC_NULL: Alias = Alias('heuristic-null', 'chessai.search.common.null_heuristic')
+
+HEURISTIC_SHORT_NAMES: list[str] = [
+    HEURISTIC_EUCLIDEAN.short,
+    HEURISTIC_KNIGHT.short,
+    HEURISTIC_MANHATTAN.short,
+    HEURISTIC_NULL.short,
+]
+
+SEARCH_PROBLEM_POSITION: Alias = Alias('search-problem-position', 'chessai.search.position.PositionSearchProblem')
+
+SEARCH_PROBLEM_SHORT_NAMES: list[str] = [
+    SEARCH_PROBLEM_POSITION.short,
+]
+
 SEARCH_SOLVER_ASTAR: Alias = Alias('search-solver-astar', 'chessai.student.singlesearch.astar_search')
 SEARCH_SOLVER_BFS: Alias = Alias('search-solver-bfs', 'chessai.student.singlesearch.breadth_first_search')
 SEARCH_SOLVER_DFS: Alias = Alias('search-solver-dfs', 'chessai.student.singlesearch.depth_first_search')
-SEARCH_SOLVER_MAZE_TINY: Alias = Alias('search-solver-maze-tiny', 'chessai.search.mazetiny.maze_tiny_search')
+SEARCH_SOLVER_KNIGHT_ERRANT: Alias = Alias('search-solver-knight-errant', 'chessai.search.knighterrant.knight_errant_search')
 SEARCH_SOLVER_RANDOM: Alias = Alias('search-solver-random', 'chessai.search.random.random_search')
 SEARCH_SOLVER_UCS: Alias = Alias('search-solver-ucs', 'chessai.student.singlesearch.uniform_cost_search')
 
@@ -113,7 +133,7 @@ SEARCH_SOLVER_SHORT_NAMES: list[str] = [
     SEARCH_SOLVER_ASTAR.short,
     SEARCH_SOLVER_BFS.short,
     SEARCH_SOLVER_DFS.short,
-    SEARCH_SOLVER_MAZE_TINY.short,
+    SEARCH_SOLVER_KNIGHT_ERRANT.short,
     SEARCH_SOLVER_RANDOM.short,
     SEARCH_SOLVER_UCS.short,
 ]
