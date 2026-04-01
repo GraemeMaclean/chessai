@@ -3,10 +3,12 @@ import typing
 import chessai.core.action
 import chessai.core.gamestate
 import chessai.core.search
+import chessai.core.square
+import chessai.core.types
 import chessai.search.common
 import chessai.util.alias
 
-DEFAULT_GOAL_POSITION: chessai.core.board.Square = chessai.core.board.Square.from_file_rank(1, 1)
+DEFAULT_GOAL_POSITION: chessai.core.square.Square = chessai.core.square.Square.from_file_rank(1, 1)
 
 class PositionSearchNode(chessai.core.search.SearchNode):
     """
@@ -15,8 +17,8 @@ class PositionSearchNode(chessai.core.search.SearchNode):
     it is just the current position being searched.
     """
 
-    def __init__(self, position: chessai.core.board.Square) -> None:
-        self.position: chessai.core.board.Square = position
+    def __init__(self, position: chessai.core.square.Square) -> None:
+        self.position: chessai.core.square.Square = position
         """ The current position being searched. """
 
     def __lt__(self, other: object) -> bool:
@@ -41,8 +43,8 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
 
     def __init__(self,
             game_state: chessai.core.gamestate.GameState,
-            goal_position: chessai.core.board.Square | None = None,
-            start_position: chessai.core.board.Square | None = None,
+            goal_position: chessai.core.square.Square | None = None,
+            start_position: chessai.core.square.Square | None = None,
             cost_function: chessai.core.search.CostFunction | str = chessai.util.alias.COST_FUNC_UNIT.long,
             **kwargs: typing.Any) -> None:
         """
@@ -65,7 +67,7 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
             else:
                 goal_position = DEFAULT_GOAL_POSITION
 
-        self.goal_position: chessai.core.board.Square = goal_position
+        self.goal_position: chessai.core.square.Square = goal_position
         """ The position to search for. """
 
         if (start_position is None):
@@ -74,7 +76,7 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
         if (start_position is None):
             raise ValueError("Could not find starting position.")
 
-        self.start_position: chessai.core.board.Square = start_position
+        self.start_position: chessai.core.square.Square = start_position
         """ The position to start from. """
 
         if (isinstance(cost_function, str)):

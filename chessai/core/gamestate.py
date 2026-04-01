@@ -9,6 +9,8 @@ import chess
 import chessai.core.action
 import chessai.core.agentaction
 import chessai.core.board
+import chessai.core.square
+import chessai.core.types
 
 class GameState(edq.util.json.DictConverter):
     """
@@ -43,7 +45,7 @@ class GameState(edq.util.json.DictConverter):
         """ Returns the player with the next move. """
         return self.board.get_turn()
 
-    def get_white_knight_position(self) -> chessai.core.board.Square | None:
+    def get_white_knight_position(self) -> chessai.core.square.Square | None:
         """
         Gets the first found white knight's position.
         Useful for knight's errant search problems.
@@ -199,19 +201,21 @@ def base_eval(
     """
     board = state.get_board()
 
-    piece_values: dict[chessai.core.board.PieceType, int] = {
-        chessai.core.board.PieceType.PAWN: 1,
-        chessai.core.board.PieceType.KNIGHT: 3,
-        chessai.core.board.PieceType.BISHOP: 3,
-        chessai.core.board.PieceType.ROOK: 5,
-        chessai.core.board.PieceType.QUEEN: 9,
-        chessai.core.board.PieceType.KING: 9999,
+    piece_values: dict[chessai.core.types.PieceType, int] = {
+        chessai.core.types.PieceType.PAWN: 1,
+        chessai.core.types.PieceType.KNIGHT: 3,
+        chessai.core.types.PieceType.BISHOP: 3,
+        chessai.core.types.PieceType.ROOK: 5,
+        chessai.core.types.PieceType.QUEEN: 9,
+        chessai.core.types.PieceType.KING: 9999,
     }
 
     # The difference in pieces from white's perspective.
     board_value = 0
     for (piece_type, piece_value) in piece_values.items():
-        piece_count = len(board.get_pieces(piece_type, chessai.core.board.Color.WHITE)) - len(board.get_pieces(piece_type, chessai.core.board.Color.BLACK))
+        white_piece_count = len(board.get_pieces(piece_type, chessai.core.types.Color.WHITE))
+        black_piece_count = len(board.get_pieces(piece_type, chessai.core.types.Color.BLACK))
+        piece_count = white_piece_count - black_piece_count
 
         board_value += (piece_count * piece_value)
 

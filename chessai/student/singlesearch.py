@@ -99,7 +99,7 @@ class KnightsErrantSearchNode(chessai.core.search.SearchNode):
         """
 
         # *** Your Code Here ***
-        pass
+        # Remember that you can also add arguments to your constructor.
 
 class KnightsErrantSearchProblem(chessai.core.search.SearchProblem[KnightsErrantSearchNode]):
     """

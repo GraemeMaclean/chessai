@@ -6,6 +6,7 @@ import typing
 
 import chessai.core.board
 import chessai.core.search
+import chessai.core.square
 
 def unit_cost_function(node: chessai.core.search.SearchNode, **kwargs: typing.Any) -> float:
     """
@@ -25,7 +26,7 @@ def longitudinal_cost_function(node: chessai.core.search.SearchNode, base: float
     The cost will be `base ^ node.position.col`.
     """
 
-    if (hasattr(node, 'position') and isinstance(getattr(node, 'position'), chessai.core.board.Square)):
+    if (hasattr(node, 'position') and isinstance(getattr(node, 'position'), chessai.core.square.Square)):
         return float(base ** getattr(node, 'position').col)
 
     return unit_cost_function(node, **kwargs)
