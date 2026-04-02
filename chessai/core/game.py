@@ -508,7 +508,7 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
 
     parser.add_argument('--max-moves', dest = 'max_moves',
             action = 'store', type = int, default = DEFAULT_MAX_MOVES,
-            help = 'The maximum number of moves/moves (total for all agents) allowed in this game (-1 for unlimited) (default: %(default)s).')
+            help = 'The maximum number of moves (total for all agents) allowed in this game (-1 for unlimited) (default: %(default)s).')
 
     parser.add_argument('--agent-start-timeout', dest = 'agent_start_timeout',
             action = 'store', type = float, default = DEFAULT_AGENT_START_TIMEOUT,
@@ -558,6 +558,7 @@ def init_from_args(
         args: argparse.Namespace,
         game_class: typing.Type[Game],
         base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] | None = None,
+        **kwargs: typing.Any,
         ) -> argparse.Namespace:
     """
     Take in args from a parser that was passed to set_cli_args(),
@@ -596,11 +597,11 @@ def init_from_args(
     if (args.board is None):
         board = chessai.core.board.Board('none')
     elif (chessai.core.board.is_valid_fen(args.board)):
-        board = chessai.core.board.Board('FEN', args.board)
+        board = chessai.core.board.Board('FEN', args.board, kwargs.get('search_target', None))
     elif (isinstance(args.board, chessai.core.board.Board)):
         board = args.board
     else:
-        board = chessai.core.board.load_path(args.board)
+        board = chessai.core.board.load_path(args.board, **kwargs)
 
     agent_infos = _parse_agent_infos([chess.WHITE, chess.BLACK], args.raw_agent_args, base_agent_infos)
 

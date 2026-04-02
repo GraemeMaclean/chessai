@@ -2,6 +2,7 @@ import random
 import typing
 
 import chessai.core.action
+import chessai.core.board
 import chessai.core.gamestate
 
 CRASH_POINTS = -1000000

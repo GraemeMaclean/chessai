@@ -25,13 +25,14 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
             help = ('Select the agent type that the Knight will use (default: %(default)s).'
                     + f' Builtin agents: {chessai.util.alias.AGENT_SHORT_NAMES}.'))
 
-    parser.add_argument('--start-square', dest = 'start_square',
-            action = 'store', type = int, default = 0,
-            help = ('The starting square for the knight (default: %(default)s).'))
-
     parser.add_argument('--target-square', dest = 'target_square',
             action = 'store', type = int, default = 0,
             help = ('The target square for the knight (default: %(default)s).'))
+
+    # parser.add_argument('--start-square', dest = 'start_square',
+    #         action = 'store', type = int, default = None,
+    #         help = ('The starting square for the knight (default: %(default)s).'
+    #                 + ' Overrides the board given by `--board` and places a single white knight at this position.'))
 
     return parser
 
@@ -42,11 +43,56 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
     """
 
     base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = {
-        bool(chessai.core.types.Color.WHITE): chessai.core.agentinfo.AgentInfo(name = args.white_team),
-        bool(chessai.core.types.Color.BLACK): chessai.core.agentinfo.AgentInfo(name = args.black_team),
+        bool(chessai.core.types.Color.WHITE): chessai.core.agentinfo.AgentInfo(name = args.knight),
+        bool(chessai.core.types.Color.BLACK): chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
     }
 
-    return base_agent_infos, [], {}
+    search_target = chessai.core.square.Square(args.target_square)
+    print(search_target)
+
+    board_kwargs: dict[str, typing.Any] = {
+        'search_target': search_target.to_dict(),
+    }
+
+    # If a start square was provided, override the board's knight position.
+    # if args.start_square is not None:
+    #     start_square = chessai.core.square.Square(args.start_square)
+    #     board_kwargs['_start_square'] = start_square.to_dict()
+
+    return base_agent_infos, [], board_kwargs
+
+# TODO(Lucas): Figure out how to use this to parse the above info.
+# def _get_fen_from_knight_position(
+#         square: chessai.core.square.Square,
+#         row_size: int = chessai.core.types.DEFAULT_BOARD_SIZE
+#     ) -> str:
+#     """
+#     Returns a FEN board string placing a single white knight at the given square.
+
+#     The FEN covers only the piece placement portion (8 ranks, '/' separated).
+#     Ranks are ordered from rank 8 (top) down to rank 1 (bottom), as per FEN spec.
+#     """
+
+#     rank = square.rank
+#     file = square.file
+
+#     ranks = []
+#     for r in range(row_size - 1, -1, -1):
+#         if r != rank:
+#             ranks.append(str(row_size))
+#         else:
+#             parts = []
+#             if file > 0:
+#                 parts.append(str(file))
+
+#             parts.append('N')
+
+#             if file < row_size - 1:
+#                 parts.append(str(row_size - file - 1))
+
+#             ranks.append(''.join(parts))
+
+#     return '/'.join(ranks)
 
 def main(argv: list[str] | None = None,
          ) -> list[chessai.core.game.GameResult]:

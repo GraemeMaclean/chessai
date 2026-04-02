@@ -35,6 +35,7 @@ class Board(edq.util.json.DictConverter):
                  source: str,
                  start_fen: str = chess.STARTING_FEN,
                  search_target: chessai.core.square.Square | dict[str, typing.Any] | None = None,
+                 check_validity: bool = False,
                  **kwargs: typing.Any) -> None:
         """
         Construct a board.
@@ -47,21 +48,24 @@ class Board(edq.util.json.DictConverter):
         self._board = chess.Board(start_fen)
         """ The current board which stores the current state and the history. """
 
-        if (isinstance(search_target, dict)):
-            search_target = chessai.core.square.Square.from_dict(search_target)
-
-        self.search_target: chessai.core.square.Square | None = search_target  # type: ignore
-        """ Some boards (especially knight's errant problems) will have a specific square search target. """
-
-        self.num_files : int = chessai.core.types.DEFAULT_BOARD_SIZE
+        self.num_files: int = chessai.core.types.DEFAULT_BOARD_SIZE
         """ The number of files of the chess board. """
 
         self.num_ranks: int = chessai.core.types.DEFAULT_BOARD_SIZE
         """ The number of ranks of the chess board. """
 
-        # TODO(Lucas): May not be able to check if the board is valid with search problems.
-        # if (not self.is_valid()):
-        #     raise ValueError("Invalid board format: '{start_fen}'.")
+        # TEST
+        print("IN CONSTRUCTOR")
+        print(search_target)
+
+        self.search_target: chessai.core.square.Square | None = search_target  # type: ignore
+        """ The target of the Knight's Errant search. """
+
+        if (isinstance(search_target, dict)):
+            self.search_target = chessai.core.square.Square.from_dict(search_target)
+
+        if (check_validity and not self.is_valid()):
+            raise ValueError("Invalid board format: '{start_fen}'.")
 
     @property
     def files(self) -> int:
@@ -122,8 +126,6 @@ class Board(edq.util.json.DictConverter):
         """
         Get squares that the piece at the given square can reach legally,
         and the action it would take to get there.
-
-        Note that this is a high-throughput piece of code, and may contain optimizations.
         """
 
         neighbors: list[tuple[chessai.core.action.Action, chessai.core.square.Square]] = []
@@ -157,30 +159,33 @@ class Board(edq.util.json.DictConverter):
         return game.accept(exporter)
 
     @classmethod
-    def from_pgn(cls, pgn_string: str) -> 'Board':
+    def from_pgn(cls, pgn_string: str,
+             search_target: chessai.core.square.Square | dict[str, typing.Any] | None = None,
+             ) -> 'Board':
         """ Reconstruct a Board from a PGN string, restoring the full move history. """
-        instance = cls.__new__(cls)
 
         game = chess.pgn.read_game(io.StringIO(pgn_string))
         if (game is None):
             raise ValueError(f"Unable to read PGN of board: '{pgn_string}'.")
 
-        # Replay the move history to get the current square.
+        # Replay the move history to get the final FEN.
         board = game.board()
         for move in game.mainline_moves():
             board.push(move)
 
-        instance._board = board
-        return instance
+        return cls('pgn', board.fen(), search_target)
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
             'pgn': self.to_pgn(),
+            'search_target': self.search_target,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
-        return cls.from_pgn(data.get('pgn', ''))
+        # TEST
+        print("IN FROM DICT")
+        return cls.from_pgn(data.get('pgn', ''), data.get('search_target', None))
 
 def is_valid_fen(fen: str) -> bool:
     """ Checks if a FEN is valid. """
@@ -242,5 +247,11 @@ def load_string(source: str, text: str, **kwargs: typing.Any) -> Board:
 
     options.update(kwargs)
 
+    search_target = options.pop('search_target', None)
+
+    # TEST
+    print("TESTING")
+    print(search_target)
+
     board_class = options.get('class', DEFAULT_BOARD_CLASS)
-    return chessai.util.reflection.new_object(board_class, source, board_text, **options)  # type: ignore[no-any-return]
+    return chessai.util.reflection.new_object(board_class, source, board_text, search_target, **options)  # type: ignore[no-any-return]
