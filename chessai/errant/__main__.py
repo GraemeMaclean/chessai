@@ -1,8 +1,8 @@
 """
-A shortcut for the main Knight's Errant executable: `chessai.knight.bin`.
+A shortcut for the main Knight's Errant executable: `chessai.errant.bin`.
 """
 
-import chessai.knight.bin
+import chessai.errant.bin
 
 if (__name__ == '__main__'):
-    chessai.knight.bin.main()
+    chessai.errant.bin.main()

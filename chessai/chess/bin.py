@@ -6,8 +6,6 @@ import argparse
 import logging
 import typing
 
-import chess
-
 import chessai.chess.game
 import chessai.util.alias
 import chessai.util.bin
@@ -39,8 +37,8 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
     """
 
     base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = {
-        chess.WHITE: chessai.core.agentinfo.AgentInfo(name = args.white_team),
-        chess.BLACK: chessai.core.agentinfo.AgentInfo(name = args.black_team),
+        bool(chessai.core.types.Color.WHITE): chessai.core.agentinfo.AgentInfo(name = args.white_team),
+        bool(chessai.core.types.Color.BLACK): chessai.core.agentinfo.AgentInfo(name = args.black_team),
     }
 
     # TODO(Lucas): Expand the board offerings.
@@ -62,7 +60,7 @@ def log_chess_results(results: list[chessai.core.game.GameResult], winning_agent
         if ((result.outcome is None) or (result.outcome.winner is None)):
             record.append('Tie')
             scores.append(0.5)
-        elif (result.outcome.winner == chess.WHITE):
+        elif (result.outcome.winner == chessai.core.types.Color.WHITE):
             record.append('Win')
             scores.append(1)
         else:

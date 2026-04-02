@@ -45,13 +45,6 @@ class GameState(edq.util.json.DictConverter):
         """ Returns the player with the next move. """
         return self.board.get_turn()
 
-    def get_white_knight_position(self) -> chessai.core.square.Square | None:
-        """
-        Gets the first found white knight's position.
-        Useful for knight's errant search problems.
-        """
-
-
     def copy(self) -> 'GameState':
         """
         Get a deep copy of this state.
@@ -96,7 +89,7 @@ class GameState(edq.util.json.DictConverter):
 
         return successor
 
-    def process_agent_timeout(self, agent_index: int) -> None:
+    def process_agent_timeout(self, player: bool) -> None:
         """
         Notify the state that the given agent has timed out.
         The state should make any updates and set the end of game information.
@@ -104,7 +97,7 @@ class GameState(edq.util.json.DictConverter):
 
         self.game_over = True
 
-    def process_agent_crash(self, agent_index: int) -> None:
+    def process_agent_crash(self, player: bool) -> None:
         """
         Notify the state that the given agent has crashed.
         The state should make any updates and set the end of game information.

@@ -71,7 +71,9 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
         """ The position to search for. """
 
         if (start_position is None):
-            start_position = game_state.get_white_knight_position()
+            positions = game_state.get_board().get_pieces(chessai.core.types.PieceType.KNIGHT, chessai.core.types.Color.WHITE)
+            if (len(positions) > 0):
+                start_position = positions[0]
 
         if (start_position is None):
             raise ValueError("Could not find starting position.")

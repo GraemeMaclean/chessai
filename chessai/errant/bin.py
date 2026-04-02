@@ -7,8 +7,8 @@ import typing
 
 import chessai.core.agentinfo
 import chessai.core.board
-import chessai.knight.game
-import chessai.knight.gamestate
+import chessai.errant.game
+import chessai.errant.gamestate
 import chessai.util.bin
 import chessai.util.alias
 
@@ -26,40 +26,30 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
                     + f' Builtin agents: {chessai.util.alias.AGENT_SHORT_NAMES}.'))
 
     parser.add_argument('--start-square', dest = 'start_square',
-            action = 'store', type = int, default = 63,
+            action = 'store', type = int, default = 0,
             help = ('The starting square for the knight (default: %(default)s).'))
 
     parser.add_argument('--target-square', dest = 'target_square',
-            action = 'store', type = int, default = 63,
+            action = 'store', type = int, default = 0,
             help = ('The target square for the knight (default: %(default)s).'))
 
     return parser
 
 # TODO(Lucas): Keep working on parsing the args and defining a game of knight's errant. Then, we can add tests.
-def init_from_args(args: argparse.Namespace) -> tuple[dict[int, chessai.core.agentinfo.AgentInfo], list[int], dict[str, typing.Any]]:
+def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.agentinfo.AgentInfo], list[bool], dict[str, typing.Any]]:
     """
     Setup agents based on Knight's Errant rules.
     """
 
-    base_agent_infos: dict[int, chessai.core.agentinfo.AgentInfo] = {}
+    base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = {
+        bool(chessai.core.types.Color.WHITE): chessai.core.agentinfo.AgentInfo(name = args.white_team),
+        bool(chessai.core.types.Color.BLACK): chessai.core.agentinfo.AgentInfo(name = args.black_team),
+    }
 
-    # Create base arguments for all possible agents.
-    for i in range(chessai.core.board.MAX_AGENTS):
-        if (i == 0):
-            base_agent_infos[i] = chessai.core.agentinfo.AgentInfo(name = args.pacman)
-        else:
-            base_agent_infos[i] = chessai.core.agentinfo.AgentInfo(name = args.ghosts)
-
-    remove_agent_indexes = []
-
-    if (args.num_ghosts >= 0):
-        for i in range(1 + args.num_ghosts, chessai.core.board.MAX_AGENTS):
-            remove_agent_indexes.append(i)
-
-    return base_agent_infos, remove_agent_indexes, {}
+    return base_agent_infos, [], {}
 
 def main(argv: list[str] | None = None,
-        ) -> tuple[list[chessai.core.game.GameResult], list[chessai.core.game.GameResult]]:
+         ) -> list[chessai.core.game.GameResult]:
     """
     Invoke a game of Knight's Errant.
 
@@ -69,11 +59,11 @@ def main(argv: list[str] | None = None,
     return chessai.util.bin.run_main(
         description = "Play a game of Knight's Errant.",
         default_board = DEFAULT_BOARD,
-        game_class = chessai.knight.game.Game,
-        get_additional_ui_options = get_additional_ui_options,
+        game_class = chessai.errant.game.Game,
         custom_set_cli_args = set_cli_args,
         custom_init_from_args = init_from_args,
-        winning_agent_indexes = {chessai.knight.gamestate.PACMAN_AGENT_INDEX},
+        # TODO(Lucas): Does white always win?
+        winning_agent_indexes = {bool(chessai.core.types.Color.WHITE)},
         argv = argv,
     )
 

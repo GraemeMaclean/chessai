@@ -136,6 +136,10 @@ class Board(edq.util.json.DictConverter):
 
         return neighbors
 
+    def get_search_target(self) -> chessai.core.square.Square | None:
+        """ Returns the search target of the board. """
+        return self.search_target
+
     def _push(self, action: chessai.core.action.Action) -> None:
         """ Updates the square with the given move and puts it onto the move stack. """
         return self._board.push(action.get_move())
