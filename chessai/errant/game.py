@@ -41,6 +41,8 @@ class Game(chessai.core.game.Game):
             return state
 
         action = action_record.get_action()
+
+        # TODO(Lucas): We should probably handle black seperately to check if legal or null.
         if ((state.get_board().get_turn() == chessai.core.types.Color.WHITE) and (action not in state.get_legal_actions())):
             raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' or type '{type(action)}'.")
 

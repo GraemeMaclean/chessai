@@ -86,8 +86,8 @@ class SearchProblemAgent(chessai.core.agent.Agent):
 
         logging.info("Path found with %d steps and a total cost of %0.2f in %0.2f seconds. %d search nodes expanded.",
                 len(solution.actions), solution.cost, (end_time.sub(start_time).to_secs()), expanded_node_count)
+        # TODO(Lucas): We will need a better way to output move history.
         logging.trace(f"Position history: '{position_history}'.") # type: ignore[attr-defined]  # pylint: disable=no-member
-
 
         return chessai.core.agentaction.AgentAction()
 
