@@ -47,3 +47,18 @@ class Game(chessai.core.game.Game):
         self._call_state_process_turn_full(state, action, rng)
 
         return state
+
+    def check_end(self, state: chessai.core.gamestate.GameState) -> bool:
+        """
+        Check to see if the game is over.
+        Return True if the game is now over, False otherwise.
+
+        The Knight wins by reaching the target square.
+        """
+
+        if (state.game_over):
+            return True
+
+        board = state.get_board()
+        white_knight_squares = board.get_pieces(chessai.core.types.PieceType.KNIGHT, chessai.core.types.Color.WHITE)
+        return (board.search_target in white_knight_squares)

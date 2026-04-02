@@ -48,7 +48,6 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
     }
 
     search_target = chessai.core.square.Square(args.target_square)
-    print(search_target)
 
     board_kwargs: dict[str, typing.Any] = {
         'search_target': search_target.to_dict(),

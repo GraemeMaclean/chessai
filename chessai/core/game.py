@@ -32,6 +32,7 @@ class GameInfo(edq.util.json.DictConverter):
     def __init__(self,
             agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo],
             start_board: chessai.core.board.Board | str | None = None,
+            search_target: chessai.core.square.Square | int | None = None,
             isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
             max_moves: int = DEFAULT_MAX_MOVES,
             agent_start_timeout: float = DEFAULT_AGENT_START_TIMEOUT,
@@ -60,6 +61,12 @@ class GameInfo(edq.util.json.DictConverter):
 
         self.start_board: str = start_board
         """ The starting fen for this game. """
+
+        if (isinstance(search_target, int)):
+            search_target = chessai.core.square.Square(search_target)
+
+        self.search_target: chessai.core.square.Square | None = search_target
+        """ The search target of this game. """
 
         self.isolation_level: chessai.core.isolation.level.Level = isolation_level
         """ The isolation level to use for this game. """
@@ -98,6 +105,7 @@ class GameInfo(edq.util.json.DictConverter):
         return {
             'seed': self.seed,
             'start_board': self.start_board,
+            'search_target': self.search_target,
             'agent_infos': {id: info.to_dict() for (id, info) in self.agent_infos.items()},
             'isolation_level': self.isolation_level.value,
             'max_moves': self.max_moves,
@@ -112,6 +120,7 @@ class GameInfo(edq.util.json.DictConverter):
         return cls(
             seed = data.get('seed', None),
             start_board = data.get('start_board', None),
+            search_target = data.get('search_target', None),
             agent_infos = {bool(id): chessai.core.agentinfo.AgentInfo.from_dict(raw_info) for (id, raw_info) in data['agent_infos'].items()},
             isolation_level = chessai.core.isolation.level.Level(data.get('isolation_level', chessai.core.isolation.level.Level.NONE.value)),
             max_moves = data.get('max_moves', DEFAULT_MAX_MOVES),
@@ -608,7 +617,7 @@ def init_from_args(
     base_save_path = args.save_path
 
     # TODO(Lucas): Don't need to store boards unless they change.
-    all_boards = []
+    all_boards: list[chessai.core.board.Board] = []
     all_agent_infos = []
     all_games = []
 
@@ -621,6 +630,7 @@ def init_from_args(
         game_info = GameInfo(
                 all_agent_infos[-1],
                 start_board = all_boards[-1],
+                search_target = all_boards[-1].get_search_target(),
                 isolation_level = chessai.core.isolation.level.Level(args.isolation_level),
                 max_moves = args.max_moves,
                 agent_start_timeout = args.agent_start_timeout,
@@ -629,7 +639,9 @@ def init_from_args(
                 seed = game_seed
         )
 
-        board = chessai.core.board.Board(game_info.start_board)
+        # TODO(Lucas): Cleanup board constructor to also take a full board object instead of only a FEN.
+        # TODO(Lucas): We could avoid double passing source and search target (perhaps).
+        board = chessai.core.board.Board(all_boards[-1].source, game_info.start_board, game_info.search_target)
 
         # Suffix the save path if there is more than one game.
         save_path = base_save_path

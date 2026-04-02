@@ -54,10 +54,6 @@ class Board(edq.util.json.DictConverter):
         self.num_ranks: int = chessai.core.types.DEFAULT_BOARD_SIZE
         """ The number of ranks of the chess board. """
 
-        # TEST
-        print("IN CONSTRUCTOR")
-        print(search_target)
-
         self.search_target: chessai.core.square.Square | None = search_target  # type: ignore
         """ The target of the Knight's Errant search. """
 
@@ -183,8 +179,6 @@ class Board(edq.util.json.DictConverter):
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
-        # TEST
-        print("IN FROM DICT")
         return cls.from_pgn(data.get('pgn', ''), data.get('search_target', None))
 
 def is_valid_fen(fen: str) -> bool:
@@ -248,10 +242,6 @@ def load_string(source: str, text: str, **kwargs: typing.Any) -> Board:
     options.update(kwargs)
 
     search_target = options.pop('search_target', None)
-
-    # TEST
-    print("TESTING")
-    print(search_target)
 
     board_class = options.get('class', DEFAULT_BOARD_CLASS)
     return chessai.util.reflection.new_object(board_class, source, board_text, search_target, **options)  # type: ignore[no-any-return]

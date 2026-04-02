@@ -139,9 +139,6 @@ def new_object(reference: Reference | str, *args: typing.Any, **kwargs: typing.A
     passing along the args and kwargs.
     """
 
-    # TEST
-    print("In reflection")
-
     target_class = fetch(reference)
     return target_class(*args, **kwargs)
 
