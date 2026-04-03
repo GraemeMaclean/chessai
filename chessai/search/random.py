@@ -24,7 +24,7 @@ def random_search(
         successors = problem.get_successor_nodes(current_node)
 
         if (len(successors) == 0):
-            raise ValueError("Unable to find solution.")
+            raise chessai.core.search.SolutionNotFoundError("Unable to find solution.")
 
         # Randomly choose a successor.
         successor = rng.choice(successors)

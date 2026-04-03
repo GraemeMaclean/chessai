@@ -140,10 +140,13 @@ class Board(edq.util.json.DictConverter):
 
         neighbors: list[tuple[chessai.core.action.Action, chessai.core.square.Square]] = []
 
-        attackers = self._board.attackers(self.get_turn(), start_square.to_chess_square())
-        for square in attackers:
-            end_square = chessai.core.square.Square.from_square(square)
-            action = chessai.core.action.Action.from_squares(start_square, end_square)
+        for move in self.get_legal_moves():
+            # Skip the legal moves that are not from the starting square.
+            if (chessai.core.square.Square.from_square(move.from_square) != start_square):
+                continue
+
+            end_square = chessai.core.square.Square.from_square(move.to_square)
+            action = chessai.core.action.Action(move.uci())
             neighbors.append((action, end_square))
 
         return neighbors

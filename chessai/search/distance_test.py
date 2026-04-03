@@ -36,7 +36,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
                 distance = chessai.search.distance.manhattan_distance(a, b)
                 self.assertAlmostEqual(expected, distance)
 
-                node = chessai.search.position.PositionSearchNode(a)
+                node = chessai.search.position.PositionSearchNode(a, test_board)
                 problem = chessai.search.position.PositionSearchProblem(
                         test_state,
                         start_position = chessai.core.square.Square.from_file_rank(7, 7),
@@ -74,7 +74,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
                 distance = chessai.search.distance.euclidean_distance(a, b)
                 self.assertAlmostEqual(expected, distance)
 
-                node = chessai.search.position.PositionSearchNode(a)
+                node = chessai.search.position.PositionSearchNode(a, test_board)
                 problem = chessai.search.position.PositionSearchProblem(
                         test_state,
                         start_position = chessai.core.square.Square.from_file_rank(7, 7),
