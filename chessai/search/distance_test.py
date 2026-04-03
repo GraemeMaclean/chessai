@@ -16,34 +16,36 @@ class DistanceTest(edq.testing.unittest.BaseTest):
         # [(a, b, expected), ...]
         test_cases = [
             # Identity
-            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(0, 0), 0.0),
+            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(0, 0), [0.0]),
 
             # Lateral
-            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(1, 0), 1.0),
-            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(0, 1), 1.0),
-            (chessai.core.square.Square.from_file_rank(1, 0), chessai.core.square.Square.from_file_rank(0, 0), 1.0),
-            (chessai.core.square.Square.from_file_rank(0, 1), chessai.core.square.Square.from_file_rank(0, 0), 1.0),
+            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(1, 0), [1.0]),
+            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(0, 1), [1.0]),
+            (chessai.core.square.Square.from_file_rank(1, 0), chessai.core.square.Square.from_file_rank(0, 0), [1.0]),
+            (chessai.core.square.Square.from_file_rank(0, 1), chessai.core.square.Square.from_file_rank(0, 0), [1.0]),
 
             # Diagonal
-            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(1, 1), 2.0),
-            (chessai.core.square.Square.from_file_rank(1, 1), chessai.core.square.Square.from_file_rank(2, 2), 2.0),
-            (chessai.core.square.Square.from_file_rank(1, 1), chessai.core.square.Square.from_file_rank(0, 0), 2.0),
+            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(1, 1), [2.0]),
+            (chessai.core.square.Square.from_file_rank(1, 1), chessai.core.square.Square.from_file_rank(2, 2), [2.0]),
+            (chessai.core.square.Square.from_file_rank(1, 1), chessai.core.square.Square.from_file_rank(0, 0), [2.0]),
         ]
 
         for (i, test_case) in enumerate(test_cases):
-            (a, b, expected) = test_case
+            (a, b, expected_distances) = test_case
             with self.subTest(msg = f"Case {i}: {a} vs {b}"):
                 distance = chessai.search.distance.manhattan_distance(a, b)
-                self.assertAlmostEqual(expected, distance)
+                for expected_distance in expected_distances:
+                    self.assertAlmostEqual(expected_distance, distance)
 
                 node = chessai.search.position.PositionSearchNode(a, test_board)
                 problem = chessai.search.position.PositionSearchProblem(
                         test_state,
-                        start_position = chessai.core.square.Square.from_file_rank(7, 7),
-                        goal_position = b)
+                        start_position = a,
+                        goal_positions = [b])
 
-                heuristic = chessai.search.distance.manhattan_heuristic(node, problem)
-                self.assertAlmostEqual(expected, heuristic)
+                heuristic_distances = chessai.search.distance.manhattan_heuristic(node, problem)
+                for (expected_distance, heuristic_distance) in zip(expected_distances, heuristic_distances):
+                    self.assertAlmostEqual(expected_distance, heuristic_distance)
 
     def test_euclidean_base(self):
         """ Test Euclidean distance and heuristic. """
@@ -54,34 +56,36 @@ class DistanceTest(edq.testing.unittest.BaseTest):
         # [(a, b, expected), ...]
         test_cases = [
             # Identity
-            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(0, 0), 0.0),
+            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(0, 0), [0.0]),
 
             # Lateral
-            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(1, 0), 1.0),
-            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(0, 1), 1.0),
-            (chessai.core.square.Square.from_file_rank(1, 0), chessai.core.square.Square.from_file_rank(0, 0), 1.0),
-            (chessai.core.square.Square.from_file_rank(0, 1), chessai.core.square.Square.from_file_rank(0, 0), 1.0),
+            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(1, 0), [1.0]),
+            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(0, 1), [1.0]),
+            (chessai.core.square.Square.from_file_rank(1, 0), chessai.core.square.Square.from_file_rank(0, 0), [1.0]),
+            (chessai.core.square.Square.from_file_rank(0, 1), chessai.core.square.Square.from_file_rank(0, 0), [1.0]),
 
             # Diagonal
-            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(1, 1), 2.0 ** 0.5),
-            (chessai.core.square.Square.from_file_rank(1, 1), chessai.core.square.Square.from_file_rank(2, 2), 2.0 ** 0.5),
-            (chessai.core.square.Square.from_file_rank(1, 1), chessai.core.square.Square.from_file_rank(0, 0), 2.0 ** 0.5),
+            (chessai.core.square.Square.from_file_rank(0, 0), chessai.core.square.Square.from_file_rank(1, 1), [2.0 ** 0.5]),
+            (chessai.core.square.Square.from_file_rank(1, 1), chessai.core.square.Square.from_file_rank(2, 2), [2.0 ** 0.5]),
+            (chessai.core.square.Square.from_file_rank(1, 1), chessai.core.square.Square.from_file_rank(0, 0), [2.0 ** 0.5]),
         ]
 
         for (i, test_case) in enumerate(test_cases):
-            (a, b, expected) = test_case
+            (a, b, expected_distances) = test_case
             with self.subTest(msg = f"Case {i}: {a} vs {b}"):
                 distance = chessai.search.distance.euclidean_distance(a, b)
-                self.assertAlmostEqual(expected, distance)
+                for expected_distance in expected_distances:
+                    self.assertAlmostEqual(expected_distance, distance)
 
                 node = chessai.search.position.PositionSearchNode(a, test_board)
                 problem = chessai.search.position.PositionSearchProblem(
                         test_state,
-                        start_position = chessai.core.square.Square.from_file_rank(7, 7),
-                        goal_position = b)
+                        start_position = a,
+                        goal_positions = [b])
 
-                heuristic = chessai.search.distance.euclidean_heuristic(node, problem)
-                self.assertAlmostEqual(expected, heuristic)
+                heuristic_distances = chessai.search.distance.euclidean_heuristic(node, problem)
+                for (expected_distance, heuristic_distance) in zip(expected_distances, heuristic_distances):
+                    self.assertAlmostEqual(expected_distance, heuristic_distance)
 
     # def test_maze_base(self):
     #     """ Test maze distance. """

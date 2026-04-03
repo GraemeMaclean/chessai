@@ -34,7 +34,7 @@ class Board(edq.util.json.DictConverter):
     def __init__(self,
                  source: str,
                  start_fen: str = chess.STARTING_FEN,
-                 search_target: chessai.core.square.Square | dict[str, typing.Any] | None = None,
+                 search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
                  check_validity: bool = False,
                  **kwargs: typing.Any) -> None:
         """
@@ -54,15 +54,14 @@ class Board(edq.util.json.DictConverter):
         self.num_ranks: int = chessai.core.types.DEFAULT_BOARD_SIZE
         """ The number of ranks of the chess board. """
 
-        self.search_target: chessai.core.square.Square | None = search_target  # type: ignore
-        """ The target of the Knight's Errant search. """
+        if (search_targets is None):
+            search_targets = []
 
-        if (isinstance(search_target, dict)):
-            self.search_target = chessai.core.square.Square.from_dict(search_target)
-        elif (isinstance(search_target, int)):
-            self.search_target = chessai.core.square.Square(search_target)
-        elif (isinstance(search_target, str)):
-            self.search_target = chessai.core.square.Square(int(search_target))
+        self.search_targets: list[chessai.core.square.Square] = search_targets  # type: ignore
+        """ The targets of the piece tour search. """
+
+        if (isinstance(search_targets, dict)):
+            self.search_targets = chessai.core.square.squares_from_dict(search_targets)
 
         if (check_validity and not self.is_valid()):
             raise ValueError("Invalid board format: '{start_fen}'.")
@@ -151,29 +150,44 @@ class Board(edq.util.json.DictConverter):
 
         return neighbors
 
-    def get_search_target(self) -> chessai.core.square.Square | None:
+    def get_search_targets(self) -> list[chessai.core.square.Square]:
         """ Returns the search target of the board. """
-        return self.search_target
+
+        return self.search_targets
+
+    def remove_search_target(self, square: chessai.core.square.Square) -> None:
+        """
+        Remove a search target from the board.
+        If the square is not a search target, the board is unchanged.
+        """
+
+        if (square not in self.search_targets):
+            return
+
+        self.search_targets.remove(square)
 
     def _push(self, action: chessai.core.action.Action) -> None:
         """ Updates the square with the given move and puts it onto the move stack. """
+
         return self._board.push(action.get_move())
 
     def copy(self) -> 'Board':
         """ Create a deep copy of the board. """
+
         instance = self.__class__.__new__(self.__class__)
         instance._board = self._board.copy()
         return instance
 
     def to_pgn(self) -> str:
         """Serialize the board's game history to a PGN string."""
+
         game = chess.pgn.Game.from_board(self._board)
         exporter = chess.pgn.StringExporter()
         return game.accept(exporter)
 
     @classmethod
     def from_pgn(cls, pgn_string: str,
-             search_target: chessai.core.square.Square | dict[str, typing.Any] | None = None,
+             search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
              ) -> 'Board':
         """ Reconstruct a Board from a PGN string, restoring the full move history. """
 
@@ -186,17 +200,17 @@ class Board(edq.util.json.DictConverter):
         for move in game.mainline_moves():
             board.push(move)
 
-        return cls('pgn', board.fen(), search_target)
+        return cls('pgn', board.fen(), search_targets)
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
             'pgn': self.to_pgn(),
-            'search_target': self.search_target,
+            'search_targets': self.search_targets,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
-        return cls.from_pgn(data.get('pgn', ''), data.get('search_target', None))
+        return cls.from_pgn(data.get('pgn', ''), data.get('search_targets', None))
 
 def is_valid_fen(fen: str) -> bool:
     """ Checks if a FEN is valid. """
@@ -258,7 +272,7 @@ def load_string(source: str, text: str, **kwargs: typing.Any) -> Board:
 
     options.update(kwargs)
 
-    search_target = options.pop('search_target', None)
+    search_targets: list[chessai.core.square.Square] = options.pop('search_targets', None)
 
     board_class = options.get('class', DEFAULT_BOARD_CLASS)
-    return chessai.util.reflection.new_object(board_class, source, board_text, search_target, **options)  # type: ignore[no-any-return]
+    return chessai.util.reflection.new_object(board_class, source, board_text, search_targets, **options)  # type: ignore[no-any-return]

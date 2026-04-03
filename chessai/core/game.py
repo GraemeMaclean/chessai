@@ -32,7 +32,7 @@ class GameInfo(edq.util.json.DictConverter):
     def __init__(self,
             agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo],
             start_board: chessai.core.board.Board | str | None = None,
-            search_target: chessai.core.square.Square | int | None = None,
+            search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
             isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
             max_moves: int = DEFAULT_MAX_MOVES,
             agent_start_timeout: float = DEFAULT_AGENT_START_TIMEOUT,
@@ -62,11 +62,14 @@ class GameInfo(edq.util.json.DictConverter):
         self.start_board: str = start_board
         """ The starting fen for this game. """
 
-        if (isinstance(search_target, int)):
-            search_target = chessai.core.square.Square(search_target)
+        if (search_targets is None):
+            search_targets = []
 
-        self.search_target: chessai.core.square.Square | None = search_target
-        """ The search target of this game. """
+        self.search_targets: list[chessai.core.square.Square] = search_targets # type: ignore
+        """ The search targets of this game. """
+
+        if (isinstance(search_targets, dict)):
+            self.search_targets = chessai.core.square.squares_from_dict(search_targets)
 
         self.isolation_level: chessai.core.isolation.level.Level = isolation_level
         """ The isolation level to use for this game. """
@@ -105,7 +108,7 @@ class GameInfo(edq.util.json.DictConverter):
         return {
             'seed': self.seed,
             'start_board': self.start_board,
-            'search_target': self.search_target,
+            'search_targets': self.search_targets,
             'agent_infos': {id: info.to_dict() for (id, info) in self.agent_infos.items()},
             'isolation_level': self.isolation_level.value,
             'max_moves': self.max_moves,
@@ -120,7 +123,7 @@ class GameInfo(edq.util.json.DictConverter):
         return cls(
             seed = data.get('seed', None),
             start_board = data.get('start_board', None),
-            search_target = data.get('search_target', None),
+            search_targets = data.get('search_targets', None),
             agent_infos = {bool(id): chessai.core.agentinfo.AgentInfo.from_dict(raw_info) for (id, raw_info) in data['agent_infos'].items()},
             isolation_level = chessai.core.isolation.level.Level(data.get('isolation_level', chessai.core.isolation.level.Level.NONE.value)),
             max_moves = data.get('max_moves', DEFAULT_MAX_MOVES),
@@ -606,7 +609,7 @@ def init_from_args(
     if (args.board is None):
         board = chessai.core.board.Board('none')
     elif (chessai.core.board.is_valid_fen(args.board)):
-        board = chessai.core.board.Board('FEN', args.board, kwargs.get('search_target', None))
+        board = chessai.core.board.Board('FEN', args.board, kwargs.get('search_targets', None))
     elif (isinstance(args.board, chessai.core.board.Board)):
         board = args.board
     else:
@@ -630,7 +633,7 @@ def init_from_args(
         game_info = GameInfo(
                 all_agent_infos[-1],
                 start_board = all_boards[-1],
-                search_target = all_boards[-1].get_search_target(),
+                search_targets = all_boards[-1].get_search_targets(),
                 isolation_level = chessai.core.isolation.level.Level(args.isolation_level),
                 max_moves = args.max_moves,
                 agent_start_timeout = args.agent_start_timeout,
@@ -641,7 +644,7 @@ def init_from_args(
 
         # TODO(Lucas): Cleanup board constructor to also take a full board object instead of only a FEN.
         # TODO(Lucas): We could avoid double passing source and search target (perhaps).
-        board = chessai.core.board.Board(all_boards[-1].source, game_info.start_board, game_info.search_target)
+        board = chessai.core.board.Board(all_boards[-1].source, game_info.start_board, game_info.search_targets)
 
         # Suffix the save path if there is more than one game.
         save_path = base_save_path

@@ -64,8 +64,7 @@ class Game(chessai.core.game.Game):
             return True
 
         board = state.get_board()
-        white_knight_squares = board.get_pieces(chessai.core.types.PieceType.KNIGHT, chessai.core.types.Color.WHITE)
-        return (board.search_target in white_knight_squares)
+        return (len(board.get_search_targets()) == 0)
 
     def _handle_black_turn(self, state: chessai.core.gamestate.GameState,
                     action: chessai.core.action.Action,

@@ -8,8 +8,6 @@ import chessai.core.types
 import chessai.search.common
 import chessai.util.alias
 
-DEFAULT_GOAL_POSITION: chessai.core.square.Square = chessai.core.square.Square.from_file_rank(1, 1)
-
 class PositionSearchNode(chessai.core.search.SearchNode):
     """
     A search node for the position search problem.
@@ -46,7 +44,7 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
 
     def __init__(self,
             game_state: chessai.core.gamestate.GameState,
-            goal_position: chessai.core.square.Square | None = None,
+            goal_positions: list[chessai.core.square.Square] | None = None,
             start_position: chessai.core.square.Square | None = None,
             cost_function: chessai.core.search.CostFunction | str = chessai.util.alias.COST_FUNC_UNIT.long,
             **kwargs: typing.Any) -> None:
@@ -64,14 +62,14 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
         self.board: chessai.core.board.Board = game_state.board
         """ Keep track of the board so we can navigate. """
 
-        if (goal_position is None):
-            if (self.board.search_target is not None):
-                goal_position = self.board.search_target
-            else:
-                goal_position = DEFAULT_GOAL_POSITION
+        if (goal_positions is None):
+            if (len(self.board.search_targets) == 0):
+                raise ValueError("Cannot create a position search problem without at least one goal position.")
 
-        self.goal_position: chessai.core.square.Square = goal_position
-        """ The position to search for. """
+            goal_positions = self.board.search_targets
+
+        self.goal_positions: list[chessai.core.square.Square] = goal_positions
+        """ The positions to search for. """
 
         if (start_position is None):
             # TODO(Lucas): Will need to generalize this once we open up the piece offerings.
@@ -98,7 +96,8 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
         return PositionSearchNode(self.start_position, self.start_board)
 
     def is_goal_node(self, node: PositionSearchNode) -> bool:
-        return (self.goal_position == node.position)
+        return (node.position in self.goal_positions)
+        # return (self.goal_position == node.position)
 
     def complete(self, goal_node: PositionSearchNode) -> None:
         # Mark the final node in the history.

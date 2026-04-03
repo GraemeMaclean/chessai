@@ -98,31 +98,35 @@ def distance_heuristic(
         node: chessai.core.search.SearchNode,
         problem: chessai.core.search.SearchProblem,
         distance_function: DistanceFunction = manhattan_distance,
-        **kwargs: typing.Any) -> float:
+        **kwargs: typing.Any) -> list[float]:
     """
     A heuristic that looks for positional information in this search information,
     and returns the result of the given distance function if that information is found.
     Otherwise, the result of the null heuristic will be returned.
 
     In the search node, a "position" attribute of type chessai.core.square.Square will be checked,
-    and in the search problem, a "goal_position" attribute of type chessai.core.square.Square will be checked.
+    and in the search problem, a "goal_positions" attribute of type list[chessai.core.square.Square] will be checked.
     """
 
     if ((not hasattr(node, 'position')) or (not isinstance(getattr(node, 'position'), chessai.core.square.Square))):
         return chessai.search.common.null_heuristic(node, problem, **kwargs)
 
-    if ((not hasattr(problem, 'goal_position')) or (not isinstance(getattr(problem, 'goal_position'), chessai.core.square.Square))):
+    if ((not hasattr(problem, 'goal_positions')) or (not isinstance(getattr(problem, 'goal_positions'), list))):
         return chessai.search.common.null_heuristic(node, problem, **kwargs)
 
     a = getattr(node, 'position')
-    b = getattr(problem, 'goal_position')
+    list_b = getattr(problem, 'goal_positions')
 
-    return distance_function(a, b)
+    for b in list_b:
+        if (not isinstance(b, chessai.core.square.Square)):
+            return chessai.search.common.null_heuristic(node, problem, **kwargs)
+
+    return [distance_function(a, b) for b in list_b]
 
 def manhattan_heuristic(
         node: chessai.core.search.SearchNode,
         problem: chessai.core.search.SearchProblem,
-        **kwargs: typing.Any) -> float:
+        **kwargs: typing.Any) -> list[float]:
     """
     A distance_heuristic using Manhattan distance.
     """
@@ -132,7 +136,7 @@ def manhattan_heuristic(
 def euclidean_heuristic(
         node: chessai.core.search.SearchNode,
         problem: chessai.core.search.SearchProblem,
-        **kwargs: typing.Any) -> float:
+        **kwargs: typing.Any) -> list[float]:
     """
     A distance_heuristic using Euclidean distance.
     """

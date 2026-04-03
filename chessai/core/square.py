@@ -172,3 +172,27 @@ class Square(edq.util.json.DictConverter):
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> 'Square':
         return cls(data['square'])
+
+def squares_from_dict(data: dict[str, typing.Any]) -> list[Square]:
+    """
+    Get a list of squares from a dict.
+    The 'squares' key will be checked.
+    """
+
+    clean_squares: list[Square] = []
+
+    raw_squares = data.get('squares', [])
+    for raw_square in raw_squares:
+        clean_square = None
+
+        if (isinstance(raw_square, dict)):
+            clean_square = Square.from_dict(raw_square)
+        elif (isinstance(raw_square, int)):
+            clean_square = Square(raw_square)
+        elif (isinstance(raw_square, str)):
+            clean_square = Square(int(raw_square))
+
+        if (clean_square is not None):
+            clean_squares.append(clean_square)
+
+    return clean_squares
