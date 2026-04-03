@@ -20,13 +20,13 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
     This is a sibling to init_from_args(), as the arguments set here can be interpreted there.
     """
 
-    parser.add_argument('--knight', dest = 'knight',
+    parser.add_argument('--white', dest = 'white',
             action = 'store', type = str, default = chessai.util.alias.AGENT_RANDOM.short,
-            help = ('Select the agent type that the Knight will use (default: %(default)s).'
+            help = ('Select the agent type that the white agent will use (default: %(default)s).'
                     + f' Builtin agents: {chessai.util.alias.AGENT_SHORT_NAMES}.'))
 
     parser.add_argument('--target-square', dest = 'target_square',
-            action = 'store', type = int, default = 0,
+            action = 'store', type = int, default = None,
             help = ('The target square for the knight (default: %(default)s).'))
 
     # parser.add_argument('--start-square', dest = 'start_square',
@@ -43,15 +43,15 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
     """
 
     base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = {
-        bool(chessai.core.types.Color.WHITE): chessai.core.agentinfo.AgentInfo(name = args.knight),
+        bool(chessai.core.types.Color.WHITE): chessai.core.agentinfo.AgentInfo(name = args.white),
         bool(chessai.core.types.Color.BLACK): chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
     }
 
-    search_target = chessai.core.square.Square(args.target_square)
+    board_kwargs: dict[str, typing.Any] = {}
 
-    board_kwargs: dict[str, typing.Any] = {
-        'search_target': search_target.to_dict(),
-    }
+    if (args.target_square is not None):
+        search_target = chessai.core.square.Square(args.target_square)
+        board_kwargs['search_target'] = search_target.to_dict()
 
     # If a start square was provided, override the board's knight position.
     # if args.start_square is not None:

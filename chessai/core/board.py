@@ -59,6 +59,10 @@ class Board(edq.util.json.DictConverter):
 
         if (isinstance(search_target, dict)):
             self.search_target = chessai.core.square.Square.from_dict(search_target)
+        elif (isinstance(search_target, int)):
+            self.search_target = chessai.core.square.Square(search_target)
+        elif (isinstance(search_target, str)):
+            self.search_target = chessai.core.square.Square(int(search_target))
 
         if (check_validity and not self.is_valid()):
             raise ValueError("Invalid board format: '{start_fen}'.")
@@ -66,31 +70,38 @@ class Board(edq.util.json.DictConverter):
     @property
     def files(self) -> int:
         """ The files (columns) of this square, in [0, 7]. a=0, h=7. """
+
         return self.num_files
 
     @property
     def ranks(self) -> int:
         """ The number of ranks (rows) of this board, in [0, 7]. Rank 1=0, Rank 8=7. """
+
         return self.num_ranks
 
     def is_valid(self) -> bool:
         """ Checks if the board is in a valid square. """
+
         return self._board.is_valid()
 
     def get_turn(self) -> bool:
         """ The side to move (chess.WHITE or chess.BLACK). """
+
         return self._board.turn
 
     def get_fullmove_number(self) -> int:
         """ Counts move pairs. Starts at 1 and is incremented after every move of the black side. """
+
         return self._board.fullmove_number
 
     def get_legal_moves(self) -> chess.LegalMoveGenerator:
         """ Returns a dynamic list of the legal moves. """
+
         return self._board.legal_moves
 
     def get_fen(self) -> str:
         """ Gets a FEN representation of the current board square. """
+
         return self._board.fen()
 
     def get_pieces(self,
@@ -108,14 +119,17 @@ class Board(edq.util.json.DictConverter):
 
     def get_outcome(self) -> chess.Outcome | None:
         """ Gets the outcome of the game if it is over. """
+
         return self._board.outcome()
 
     def is_game_over(self) -> bool:
         """ Returns if the game is over. """
+
         return self._board.is_game_over()
 
     def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Returns if the move captures a piece. """
+
         return self._board.is_capture(action.get_move())
 
     def get_neighbors(self, start_square: chessai.core.square.Square) -> list[tuple[chessai.core.action.Action, chessai.core.square.Square]]:

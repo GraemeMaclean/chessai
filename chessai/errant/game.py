@@ -42,8 +42,10 @@ class Game(chessai.core.game.Game):
 
         action = action_record.get_action()
 
-        # TODO(Lucas): We should probably handle black seperately to check if legal or null.
-        if ((state.get_board().get_turn() == chessai.core.types.Color.WHITE) and (action not in state.get_legal_actions())):
+        if (state.get_player() == chessai.core.types.Color.BLACK):
+            return self._handle_black_turn(state, action, rng)
+
+        if (action not in state.get_legal_actions()):
             raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' or type '{type(action)}'.")
 
         self._call_state_process_turn_full(state, action, rng)
@@ -64,3 +66,15 @@ class Game(chessai.core.game.Game):
         board = state.get_board()
         white_knight_squares = board.get_pieces(chessai.core.types.PieceType.KNIGHT, chessai.core.types.Color.WHITE)
         return (board.search_target in white_knight_squares)
+
+    def _handle_black_turn(self, state: chessai.core.gamestate.GameState,
+                    action: chessai.core.action.Action,
+                    rng: random.Random) -> chessai.core.gamestate.GameState:
+        """
+        Black is not expected to be an agent in errant games.
+        So, it may make null moves to pass the turn back to white.
+        """
+
+        self._call_state_process_turn_full(state, action, rng)
+
+        return state
