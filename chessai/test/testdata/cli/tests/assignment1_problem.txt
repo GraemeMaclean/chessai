@@ -6,8 +6,9 @@
     ]
 }
 ---
+<LOG_PREFIX> -- Path found with 42 steps and a total cost of 42.00 in <DURATION_SECONDS>. 42 search nodes expanded.
 <LOG_PREFIX> -- Average Score: 0.50
 <LOG_PREFIX> -- Scores:        0.5
 <LOG_PREFIX> -- Record:        Tie
-<LOG_PREFIX> -- Average Moves: 33.0
-<LOG_PREFIX> -- Move Counts:   33
+<LOG_PREFIX> -- Average Moves: 83.0
+<LOG_PREFIX> -- Move Counts:   83

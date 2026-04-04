@@ -109,17 +109,17 @@ def distance_heuristic(
     """
 
     if ((not hasattr(node, 'position')) or (not isinstance(getattr(node, 'position'), chessai.core.square.Square))):
-        return chessai.search.common.null_heuristic(node, problem, **kwargs)
+        return [chessai.search.common.null_heuristic(node, problem, **kwargs)]
 
     if ((not hasattr(problem, 'goal_positions')) or (not isinstance(getattr(problem, 'goal_positions'), list))):
-        return chessai.search.common.null_heuristic(node, problem, **kwargs)
+        return [chessai.search.common.null_heuristic(node, problem, **kwargs)]
 
     a = getattr(node, 'position')
     list_b = getattr(problem, 'goal_positions')
 
     for b in list_b:
         if (not isinstance(b, chessai.core.square.Square)):
-            return chessai.search.common.null_heuristic(node, problem, **kwargs)
+            return [chessai.search.common.null_heuristic(node, problem, **kwargs)]
 
     return [distance_function(a, b) for b in list_b]
 

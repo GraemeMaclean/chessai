@@ -15,8 +15,9 @@ import chessai.util.reflection
 THIS_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 BOARDS_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'boards')
 
-SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
 AGENT_PATTERN: re.Pattern = re.compile(r'^\d$')
+INT_PATTERN: re.Pattern = re.compile(r'\d+')
+SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
 
 FILE_EXTENSION = '.board'
 
@@ -59,6 +60,12 @@ class Board(edq.util.json.DictConverter):
 
         self.search_targets: list[chessai.core.square.Square] = search_targets  # type: ignore
         """ The targets of the piece tour search. """
+
+        # Convert the string case into the dict case.
+        if (isinstance(search_targets, str)):
+            search_targets = {
+                chessai.core.square.SQUARES_KEY: search_targets
+            }
 
         if (isinstance(search_targets, dict)):
             self.search_targets = chessai.core.square.squares_from_dict(search_targets)
@@ -272,7 +279,13 @@ def load_string(source: str, text: str, **kwargs: typing.Any) -> Board:
 
     options.update(kwargs)
 
-    search_targets: list[chessai.core.square.Square] = options.pop('search_targets', None)
+    target_squares = options.get(chessai.core.square.SQUARES_KEY, None)
+
+    # If search targets were given by the CLI, override the search targets found in the file.
+    if (target_squares is not None):
+        options['search_targets'] = target_squares
+
+    search_targets = options.pop('search_targets', None)
 
     board_class = options.get('class', DEFAULT_BOARD_CLASS)
     return chessai.util.reflection.new_object(board_class, source, board_text, search_targets, **options)  # type: ignore[no-any-return]

@@ -5,6 +5,8 @@ import edq.util.json
 
 import chessai.core.types
 
+SQUARES_KEY: str = 'squares'
+
 class Square(edq.util.json.DictConverter):
     """
     An immutable chess square on an 8x8 board.
@@ -181,7 +183,10 @@ def squares_from_dict(data: dict[str, typing.Any]) -> list[Square]:
 
     clean_squares: list[Square] = []
 
-    raw_squares = data.get('squares', [])
+    raw_squares = data.get(SQUARES_KEY, [])
+    if (isinstance(raw_squares, str)):
+        raw_squares = raw_squares.split(',')
+
     for raw_square in raw_squares:
         clean_square = None
 

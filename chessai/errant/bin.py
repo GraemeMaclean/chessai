@@ -25,9 +25,10 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
             help = ('Select the agent type that the white agent will use (default: %(default)s).'
                     + f' Builtin agents: {chessai.util.alias.AGENT_SHORT_NAMES}.'))
 
-    parser.add_argument('--target-square', dest = 'target_square',
-            action = 'store', type = int, default = None,
-            help = ('The target square for the knight (default: %(default)s).'))
+    parser.add_argument('--target-squares', dest = 'target_squares',
+            action = 'store', type = str, default = None,
+            help = ('The target squares for the search problem (default: %(default)s).'
+                    + ' Separate multiple targets with commas (e.g., \'0,42,63\').'))
 
     # parser.add_argument('--start-square', dest = 'start_square',
     #         action = 'store', type = int, default = None,
@@ -49,9 +50,8 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
 
     board_kwargs: dict[str, typing.Any] = {}
 
-    if (args.target_square is not None):
-        search_target = chessai.core.square.Square(args.target_square)
-        board_kwargs['search_target'] = search_target.to_dict()
+    if (args.target_squares is not None):
+        board_kwargs[chessai.core.square.SQUARES_KEY] = args.target_squares
 
     # If a start square was provided, override the board's knight position.
     # if args.start_square is not None:

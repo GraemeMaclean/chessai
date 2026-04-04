@@ -609,13 +609,14 @@ def init_from_args(
     if (args.board is None):
         board = chessai.core.board.Board('none')
     elif (chessai.core.board.is_valid_fen(args.board)):
-        board = chessai.core.board.Board('FEN', args.board, kwargs.get('search_targets', None))
+        board = chessai.core.board.Board('FEN', args.board, kwargs.get(chessai.core.square.SQUARES_KEY, None))
     elif (isinstance(args.board, chessai.core.board.Board)):
         board = args.board
     else:
         board = chessai.core.board.load_path(args.board, **kwargs)
 
-    agent_infos = _parse_agent_infos([chess.WHITE, chess.BLACK], args.raw_agent_args, base_agent_infos)
+    agents = [bool(chessai.core.types.Color.WHITE), bool(chessai.core.types.Color.BLACK)]
+    agent_infos = _parse_agent_infos(agents, args.raw_agent_args, base_agent_infos)
 
     base_save_path = args.save_path
 
@@ -696,9 +697,9 @@ def _parse_agent_infos(
         raw_team = parts[0].strip().lower()
         team_color: bool | None = None
         if (raw_team in ('white', 'w')):
-            team_color = chess.WHITE
+            team_color = bool(chessai.core.types.Color.WHITE)
         elif (raw_team in ('black', 'b')):
-            team_color = chess.BLACK
+            team_color = bool(chessai.core.types.Color.BLACK)
         else:
             raise ValueError(f"CLI agent argument has an unknown agent team: {parts[0]}.")
 
