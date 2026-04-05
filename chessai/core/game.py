@@ -135,17 +135,17 @@ class GameInfo(edq.util.json.DictConverter):
 class GameResult(edq.util.json.DictConverter):
     """ The result of running a game. """
 
-    # TODO(Lucas): May be able to simplify *_indexes with white, black, None.
-    # May be able to prune most of this info in favor of a single PGN.
+    # TODO(Lucas): May be able to replace many of the bools with chessai.core.types.Color.
     def __init__(self,
             game_id: int,
             game_info: GameInfo,
-            outcome: chess.Outcome | None,
+            winner: chessai.core.types.Color | None = None,
+            termination_reason: chessai.core.types.TerminationReason | None = None,
+            score: int | None = None,
             end_fen: str | None = None,
             game_timeout: bool = False,
             timeout_agent_teams: list[bool] | None = None,
             crash_agent_teams: list[bool] | None = None,
-            winning_agent_teams: list[bool] | None = None,
             start_time: edq.util.time.Timestamp | None = None,
             end_time: edq.util.time.Timestamp | None = None,
             history: list[chessai.core.agentaction.AgentActionRecord] | None = None,
@@ -157,8 +157,17 @@ class GameResult(edq.util.json.DictConverter):
         self.game_info: GameInfo = game_info
         """ The core information about this game. """
 
-        self.outcome: chess.Outcome | None = outcome
-        """ The outcome of a game or none if it is incomplete. """
+        self.winner: chessai.core.types.Color | None = winner
+        """
+        The winner of the game's color, or None for a tie.
+        Games may interpret this value in different ways.
+        """
+
+        self.termination_reason: chessai.core.types.TerminationReason | None = termination_reason
+        """ The reason the game ended. """
+
+        self.score: int | None = score
+        """ The score of the game from white's perspective. """
 
         # TODO(Lucas): We don't just want the end_fen, we need the PGN.
         # The PGN needs to be built throughout the game, so we will need to update the state update function.
@@ -204,20 +213,13 @@ class GameResult(edq.util.json.DictConverter):
         self.crash_agent_teams: list[bool] = crash_agent_teams
         """ The list of agents that crashed in this game. """
 
-        if (winning_agent_teams is None):
-            winning_agent_teams = []
-
-        self.winning_agent_teams: list[bool] = winning_agent_teams
-        """
-        The agents that are considered the "winner" of this game.
-        Games may interpret this value in different ways.
-        """
-
     def to_dict(self) -> dict[str, typing.Any]:
         return {
             'game_id': self.game_id,
             'game_info': self.game_info.to_dict(),
-            'outcome': self.outcome,
+            'winner': self.winner,
+            'termination_reason': self.termination_reason,
+            'score': self.score,
             'end_fen': self.end_fen,
             'start_time': self.start_time,
             'end_time': self.end_time,
@@ -238,7 +240,9 @@ class GameResult(edq.util.json.DictConverter):
         return cls(
             data['game_id'],
             GameInfo.from_dict(data['game_info']),
-            outcome = data.get('outcome', None),
+            winner = data.get('winner', None),
+            termination_reason = data.get('termination_reason', None),
+            score = data.get('score', None),
             end_fen = data.get('end_fen', None),
             start_time = data.get('start_time', None),
             end_time = data.get('end_time', None),

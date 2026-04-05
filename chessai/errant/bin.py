@@ -1,8 +1,9 @@
 """
-The main executable for running a game of Knight's Errant.
+The main executable for running a game of tour.
 """
 
 import argparse
+import logging
 import typing
 
 import chessai.core.agentinfo
@@ -16,7 +17,7 @@ DEFAULT_BOARD: str = 'knights-errant-base'
 
 def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argparse.ArgumentParser:
     """
-    Set Knight's-Errant-specific CLI arguments.
+    Set tour-specific CLI arguments.
     This is a sibling to init_from_args(), as the arguments set here can be interpreted there.
     """
 
@@ -30,14 +31,8 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
             help = ('The target squares for the search problem (default: %(default)s).'
                     + ' Separate multiple targets with commas (e.g., \'0,42,63\').'))
 
-    # parser.add_argument('--start-square', dest = 'start_square',
-    #         action = 'store', type = int, default = None,
-    #         help = ('The starting square for the knight (default: %(default)s).'
-    #                 + ' Overrides the board given by `--board` and places a single white knight at this position.'))
-
     return parser
 
-# TODO(Lucas): Keep working on parsing the args and defining a game of knight's errant. Then, we can add tests.
 def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.agentinfo.AgentInfo], list[bool], dict[str, typing.Any]]:
     """
     Setup agents based on Knight's Errant rules.
@@ -53,45 +48,60 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
     if (args.target_squares is not None):
         board_kwargs[chessai.core.square.SQUARES_KEY] = args.target_squares
 
-    # If a start square was provided, override the board's knight position.
-    # if args.start_square is not None:
-    #     start_square = chessai.core.square.Square(args.start_square)
-    #     board_kwargs['_start_square'] = start_square.to_dict()
-
     return base_agent_infos, [], board_kwargs
 
-# TODO(Lucas): Figure out how to use this to parse the above info.
-# def _get_fen_from_knight_position(
-#         square: chessai.core.square.Square,
-#         row_size: int = chessai.core.types.DEFAULT_BOARD_SIZE
-#     ) -> str:
-#     """
-#     Returns a FEN board string placing a single white knight at the given square.
+def log_tour_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[bool], prefix: str = '') -> None:
+    """
+    Log the result of running several tour games.
+    """
 
-#     The FEN covers only the piece placement portion (8 ranks, '/' separated).
-#     Ranks are ordered from rank 8 (top) down to rank 1 (bottom), as per FEN spec.
-#     """
+    move_counts: list[int] = [len(result.history) for result in results]
 
-#     rank = square.rank
-#     file = square.file
+    record: list[str] = []
+    scores: list[float] = []
+    for result in results:
+        if ((result.outcome is None) or (result.outcome.winner is None)):
+            record.append('Tie')
+            scores.append(0.5)
+        elif (result.outcome.winner == chessai.core.types.Color.WHITE):
+            record.append('Win')
+            scores.append(1)
+        else:
+            record.append('Loss')
+            scores.append(0)
 
-#     ranks = []
-#     for r in range(row_size - 1, -1, -1):
-#         if r != rank:
-#             ranks.append(str(row_size))
-#         else:
-#             parts = []
-#             if file > 0:
-#                 parts.append(str(file))
+    average_score: float = (sum(scores)) / len(scores)
+    logging.info('Average Score: %0.2f', average_score)
 
-#             parts.append('N')
+    # Avoid logging long lists (which can be a bit slow in Python's logging module).
+    log_lists_to_info: bool = (len(results) < chessai.util.bin.SCORE_LIST_MAX_INFO_LENGTH)
+    log_lists_to_debug: bool = (logging.getLogger().getEffectiveLevel() <= logging.DEBUG)
 
-#             if file < row_size - 1:
-#                 parts.append(str(row_size - file - 1))
+    joined_scores: str = ''
+    joined_record: str = ''
+    joined_move_counts: str = ''
 
-#             ranks.append(''.join(parts))
+    if (log_lists_to_info or log_lists_to_debug):
+        joined_scores = ', '.join([str(score) for score in scores])
+        joined_record = ', '.join(record)
+        joined_move_counts = ', '.join([str(move_count) for move_count in move_counts])
 
-#     return '/'.join(ranks)
+    if (log_lists_to_info):
+        logging.info('%sScores:        %s', prefix, joined_scores)
+    elif (log_lists_to_debug):
+        logging.debug('%sScores:        %s', prefix, joined_scores)
+
+    if (log_lists_to_info):
+        logging.info('%sRecord:        %s', prefix, joined_record)
+    elif (log_lists_to_debug):
+        logging.debug('%sRecord:        %s', prefix, joined_record)
+
+    logging.info('%sAverage Moves: %s', prefix, sum(move_counts) / float(len(results)))
+
+    if (log_lists_to_info):
+        logging.info('%sMove Counts:   %s', prefix, joined_move_counts)
+    elif (log_lists_to_debug):
+        logging.debug('%sMove Counts:   %s', prefix, joined_move_counts)
 
 def main(argv: list[str] | None = None,
          ) -> list[chessai.core.game.GameResult]:
@@ -107,8 +117,7 @@ def main(argv: list[str] | None = None,
         game_class = chessai.errant.game.Game,
         custom_set_cli_args = set_cli_args,
         custom_init_from_args = init_from_args,
-        # TODO(Lucas): Does white always win?
-        winning_agent_indexes = {bool(chessai.core.types.Color.WHITE)},
+        log_results = log_tour_results,
         argv = argv,
     )
 

@@ -49,7 +49,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
 
 def log_chess_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[bool], prefix: str = '') -> None:
     """
-    Log the result of running several games.
+    Log the result of running several Chess games.
     """
 
     move_counts: list[int] = [len(result.history) for result in results]
