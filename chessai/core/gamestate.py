@@ -45,6 +45,11 @@ class GameState(edq.util.json.DictConverter):
         """ Returns the player with the next move. """
         return self.board.get_turn()
 
+    def get_move_count(self) -> int:
+        """ Returns the number of moves in the game. """
+
+        return self.board.get_move_count()
+
     def copy(self) -> 'GameState':
         """
         Get a deep copy of this state.
@@ -70,7 +75,7 @@ class GameState(edq.util.json.DictConverter):
     def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
         """
         Indicate that the game has ended.
-        The state should take any final actions and return the indexes of the winning agents (if any) and the score of the game.
+        The state should take any final actions and return the player colors of the winning agents (if any) and the score of the game.
         """
 
         return ([], 0)
@@ -181,8 +186,9 @@ class AgentStateEvaluationFunction(typing.Protocol):
 
     def __call__(self,
             state: GameState,
+            action: chessai.core.action.Action | None = None,
             agent: typing.Any | None = None,
-            **kwargs: typing.Any) -> int:
+            **kwargs: typing.Any) -> float:
         """
         Compute a score for a state that the provided agent can use to decide actions.
         The current state is the only required argument, the others are optional.
@@ -192,10 +198,11 @@ class AgentStateEvaluationFunction(typing.Protocol):
 
 def base_eval(
         state: GameState,
+        action: chessai.core.action.Action | None = None,
         agent: typing.Any | None = None,
         **kwargs: typing.Any) -> float:
     """
-    The most basic evaluation function, which just uses the difference of the number of pieces.
+    The most basic evaluation function, which just uses the difference in piece value on the board.
     """
     board = state.get_board()
 

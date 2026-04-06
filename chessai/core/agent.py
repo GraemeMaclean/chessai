@@ -58,9 +58,6 @@ class Agent(abc.ABC):
         It is initialized to -1 (before the game starts), but gets populated during game_start_full().
         """
 
-    # TODO(Lucas): Should we define a chessai.core.gamestate.GameState for PGNs?
-    # It could also incluse helper functions to display the gamestate as an SVG or convert to a board.
-    # I believe the pgn can include the current move stack, so we may want a good way to parse into board, move stack, most recent move, etc.
     def get_action_full(self,
             state: chessai.core.gamestate.GameState,
             ) -> chessai.core.agentaction.AgentAction:
@@ -86,7 +83,8 @@ class Agent(abc.ABC):
         This is simplified version of get_action_full(),
         see that method for full details.
         """
-        return chessai.core.action.NULL_ACTION
+
+        return chessai.core.action.Action()
 
     def game_start_full(self,
             player: bool,
@@ -99,6 +97,7 @@ class Agent(abc.ABC):
         Any precomputation for this game should be done in this method.
         Calls to this method may be subject to a timeout.
         """
+
         self.player = player
         self.rng = random.Random(suggested_seed)
 
@@ -136,13 +135,15 @@ class Agent(abc.ABC):
 
     def evaluate_state(self,
             state: chessai.core.gamestate.GameState,
+            action: chessai.core.action.Action | None = None,
             **kwargs: typing.Any) -> float:
         """
         Evaluate the state to get a decide how good the current position is.
         The base implementation for this function just calls `self.evaluation_function`,
         but child classes may override this method to easily implement their own evaluations.
         """
-        return self.evaluation_function(state, agent = self, **kwargs)
+
+        return self.evaluation_function(state, action = action, agent = self, **kwargs)
 
     def get_minimax_move(self,
             state: chessai.core.gamestate.GameState) -> chessai.core.action.Action:
@@ -155,7 +156,8 @@ class Agent(abc.ABC):
         Returns:
         A single chessai.core.action.Action type object.
         """
-        return chessai.core.action.NULL_ACTION
+
+        return chessai.core.action.Action()
 
 
     def get_expectimax_move(self,
@@ -169,7 +171,8 @@ class Agent(abc.ABC):
         Returns:
         A single chessai.core.action.Action type object.
         """
-        return chessai.core.action.NULL_ACTION
+
+        return chessai.core.action.Action()
 
 def load(agent_info: chessai.core.agentinfo.AgentInfo) -> Agent:
     """

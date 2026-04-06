@@ -176,6 +176,11 @@ class Board(edq.util.json.DictConverter):
 
         return neighbors
 
+    def get_move_count(self) -> int:
+        """ Returns the number of moves in the game. """
+
+        return len(self._board.move_stack)
+
     def get_search_targets(self) -> list[chessai.core.square.Square]:
         """ Returns the search target of the board. """
 
