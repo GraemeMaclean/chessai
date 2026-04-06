@@ -57,13 +57,13 @@ class AgentActionRecord(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-            player: bool,
+            player: chessai.core.types.Color,
             agent_action: AgentAction | None,
             duration: edq.util.time.Duration,
             crashed: bool = False,
             timeout: bool = False,
             ) -> None:
-        self.player: bool = player
+        self.player: chessai.core.types.Color = player
         """ The player for the agent making this action. """
 
         self.agent_action: AgentAction | None = agent_action

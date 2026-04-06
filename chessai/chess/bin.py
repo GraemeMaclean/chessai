@@ -3,7 +3,6 @@ The main executable for running a game of Chess.
 """
 
 import argparse
-import logging
 import typing
 
 import chessai.chess.game
@@ -28,7 +27,8 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
 
     return parser
 
-def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.agentinfo.AgentInfo], list[bool], dict[str, typing.Any]]:
+def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
+        list[chessai.core.types.Color], dict[str, typing.Any]]:
     """
     Setup agents based on Chess rules.
 
@@ -36,9 +36,9 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
     Missing agents will be filled in with random agents.
     """
 
-    base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = {
-        bool(chessai.core.types.Color.WHITE): chessai.core.agentinfo.AgentInfo(name = args.white_team),
-        bool(chessai.core.types.Color.BLACK): chessai.core.agentinfo.AgentInfo(name = args.black_team),
+    base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] = {
+        chessai.core.types.Color.WHITE: chessai.core.agentinfo.AgentInfo(name = args.white_team),
+        chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = args.black_team),
     }
 
     # TODO(Lucas): Expand the board offerings.
@@ -46,59 +46,6 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
     # args.board = chessai.chess.game.Game.check_for_random_board(args.board)
 
     return base_agent_infos, [], {}
-
-def log_chess_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[bool], prefix: str = '') -> None:
-    """
-    Log the result of running several Chess games.
-    """
-
-    move_counts: list[int] = [len(result.history) for result in results]
-
-    record: list[str] = []
-    scores: list[float] = []
-    for result in results:
-        if ((result.outcome is None) or (result.outcome.winner is None)):
-            record.append('Tie')
-            scores.append(0.5)
-        elif (result.outcome.winner == chessai.core.types.Color.WHITE):
-            record.append('Win')
-            scores.append(1)
-        else:
-            record.append('Loss')
-            scores.append(0)
-
-    average_score: float = (sum(scores)) / len(scores)
-    logging.info('Average Score: %0.2f', average_score)
-
-    # Avoid logging long lists (which can be a bit slow in Python's logging module).
-    log_lists_to_info: bool = (len(results) < chessai.util.bin.SCORE_LIST_MAX_INFO_LENGTH)
-    log_lists_to_debug: bool = (logging.getLogger().getEffectiveLevel() <= logging.DEBUG)
-
-    joined_scores: str = ''
-    joined_record: str = ''
-    joined_move_counts: str = ''
-
-    if (log_lists_to_info or log_lists_to_debug):
-        joined_scores = ', '.join([str(score) for score in scores])
-        joined_record = ', '.join(record)
-        joined_move_counts = ', '.join([str(move_count) for move_count in move_counts])
-
-    if (log_lists_to_info):
-        logging.info('%sScores:        %s', prefix, joined_scores)
-    elif (log_lists_to_debug):
-        logging.debug('%sScores:        %s', prefix, joined_scores)
-
-    if (log_lists_to_info):
-        logging.info('%sRecord:        %s', prefix, joined_record)
-    elif (log_lists_to_debug):
-        logging.debug('%sRecord:        %s', prefix, joined_record)
-
-    logging.info('%sAverage Moves: %s', prefix, sum(move_counts) / float(len(results)))
-
-    if (log_lists_to_info):
-        logging.info('%sMove Counts:   %s', prefix, joined_move_counts)
-    elif (log_lists_to_debug):
-        logging.debug('%sMove Counts:   %s', prefix, joined_move_counts)
 
 def main(argv: list[str] | None = None,
         ) -> list[chessai.core.game.GameResult]:
@@ -114,7 +61,6 @@ def main(argv: list[str] | None = None,
         default_board = None,
         custom_set_cli_args = set_cli_args,
         custom_init_from_args = init_from_args,
-        log_results = log_chess_results,
         argv = argv,
     )
 

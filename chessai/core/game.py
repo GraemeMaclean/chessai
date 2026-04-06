@@ -30,7 +30,7 @@ class GameInfo(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-            agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo],
+            agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
             start_board: chessai.core.board.Board | str | None = None,
             search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
             isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
@@ -47,7 +47,7 @@ class GameInfo(edq.util.json.DictConverter):
         self.seed: int = seed
         """ The random seed for this game's RNG. """
 
-        self.agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = agent_infos
+        self.agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] = agent_infos
         """ The required information for creating the agents for this game. """
 
         if (len(self.agent_infos) == 0):
@@ -124,7 +124,9 @@ class GameInfo(edq.util.json.DictConverter):
             seed = data.get('seed', None),
             start_board = data.get('start_board', None),
             search_targets = data.get('search_targets', None),
-            agent_infos = {bool(id): chessai.core.agentinfo.AgentInfo.from_dict(raw_info) for (id, raw_info) in data['agent_infos'].items()},
+            agent_infos = {
+                chessai.core.types.Color(id): chessai.core.agentinfo.AgentInfo.from_dict(raw_info) for (id, raw_info) in data['agent_infos'].items()
+            },
             isolation_level = chessai.core.isolation.level.Level(data.get('isolation_level', chessai.core.isolation.level.Level.NONE.value)),
             max_moves = data.get('max_moves', DEFAULT_MAX_MOVES),
             agent_start_timeout = data.get('agent_start_timeout', DEFAULT_AGENT_START_TIMEOUT),
@@ -139,17 +141,17 @@ class GameResult(edq.util.json.DictConverter):
     def __init__(self,
             game_id: int,
             game_info: GameInfo,
-            winner: chessai.core.types.Color | None = None,
             termination_reason: chessai.core.types.TerminationReason | None = None,
-            score: int | None = None,
+            score: float = 0,
             end_fen: str | None = None,
             game_timeout: bool = False,
-            timeout_agent_teams: list[bool] | None = None,
-            crash_agent_teams: list[bool] | None = None,
+            timeout_agent_teams: list[chessai.core.types.Color] | None = None,
+            crash_agent_teams: list[chessai.core.types.Color] | None = None,
+            winning_agent_teams: list[chessai.core.types.Color] | None = None,
             start_time: edq.util.time.Timestamp | None = None,
             end_time: edq.util.time.Timestamp | None = None,
             history: list[chessai.core.agentaction.AgentActionRecord] | None = None,
-            agent_complete_records: dict[bool, chessai.core.agentaction.AgentActionRecord] | None = None,
+            agent_complete_records: dict[chessai.core.types.Color, chessai.core.agentaction.AgentActionRecord] | None = None,
             **kwargs: typing.Any) -> None:
         self.game_id: int = game_id
         """ The ID of the game result. """
@@ -157,16 +159,10 @@ class GameResult(edq.util.json.DictConverter):
         self.game_info: GameInfo = game_info
         """ The core information about this game. """
 
-        self.winner: chessai.core.types.Color | None = winner
-        """
-        The winner of the game's color, or None for a tie.
-        Games may interpret this value in different ways.
-        """
-
         self.termination_reason: chessai.core.types.TerminationReason | None = termination_reason
         """ The reason the game ended. """
 
-        self.score: int | None = score
+        self.score: float = score
         """ The score of the game from white's perspective. """
 
         # TODO(Lucas): We don't just want the end_fen, we need the PGN.
@@ -192,7 +188,7 @@ class GameResult(edq.util.json.DictConverter):
         if (agent_complete_records is None):
             agent_complete_records = {}
 
-        self.agent_complete_records: dict[bool, chessai.core.agentaction.AgentActionRecord] = agent_complete_records
+        self.agent_complete_records: dict[chessai.core.types.Color, chessai.core.agentaction.AgentActionRecord] = agent_complete_records
         """
         The record recieved from an agent when the game finishes.
         For agents that learn, this may include information that the agent learned this game.
@@ -204,20 +200,30 @@ class GameResult(edq.util.json.DictConverter):
         if (timeout_agent_teams is None):
             timeout_agent_teams = []
 
-        self.timeout_agent_teams: list[bool] = timeout_agent_teams
+        self.timeout_agent_teams: list[chessai.core.types.Color] = timeout_agent_teams
         """ The list of agents that timed out in this game. """
 
         if (crash_agent_teams is None):
             crash_agent_teams = []
 
-        self.crash_agent_teams: list[bool] = crash_agent_teams
+        self.crash_agent_teams: list[chessai.core.types.Color] = crash_agent_teams
         """ The list of agents that crashed in this game. """
+
+        if (winning_agent_teams is None):
+            winning_agent_teams = []
+
+        self.winning_agent_teams: list[chessai.core.types.Color] = winning_agent_teams
+        """
+        The list of agents that won this game.
+        An empty list indicates a tie.
+
+        Games may interpret this value in different ways.
+        """
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
             'game_id': self.game_id,
             'game_info': self.game_info.to_dict(),
-            'winner': self.winner,
             'termination_reason': self.termination_reason,
             'score': self.score,
             'end_fen': self.end_fen,
@@ -240,9 +246,8 @@ class GameResult(edq.util.json.DictConverter):
         return cls(
             data['game_id'],
             GameInfo.from_dict(data['game_info']),
-            winner = data.get('winner', None),
             termination_reason = data.get('termination_reason', None),
-            score = data.get('score', None),
+            score = data.get('score', 0),
             end_fen = data.get('end_fen', None),
             start_time = data.get('start_time', None),
             end_time = data.get('end_time', None),
@@ -251,7 +256,7 @@ class GameResult(edq.util.json.DictConverter):
             game_timeout = data.get('game_timeout', False),
             timeout_agent_teams = data.get('timeout_agent_teams', None),
             crash_agent_teams = data.get('crash_agent_teams', None),
-            winning_agent_teams = data.get('winning_agent_teams', -1),
+            winning_agent_teams = data.get('winning_agent_teams', None),
         )
 
     def get_duration_secs(self) -> float:
@@ -300,7 +305,7 @@ class Game(abc.ABC):
     def get_initial_state(self,
             rng: random.Random,
             board: chessai.core.board.Board,
-            agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo],
+            agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
             ) -> chessai.core.gamestate.GameState:
         """ Create the initial state for this game. """
 
@@ -372,7 +377,7 @@ class Game(abc.ABC):
 
         # Keep track of what happens during this game.
         game_id = rng.randint(0, 2**64)
-        result = GameResult(game_id, self.game_info, self.board.get_outcome())
+        result = GameResult(game_id, self.game_info)
 
         # Initialize the agent isolator.
         isolator = self.game_info.isolation_level.get_isolator()
@@ -429,10 +434,11 @@ class Game(abc.ABC):
         result.end_time = edq.util.time.Timestamp.now()
 
         # Notify the state about the end of the game.
-        winners = state.game_complete()
+        (winners, score) = state.game_complete()
         result.winning_agent_teams += winners
+        result.score = score
 
-        result.outcome = state.get_board().get_outcome()
+        result.termination_reason = state.get_termination_reason()
         result.end_fen = state.get_board().get_fen()
 
         # Notify agents about the end of this game.
@@ -468,7 +474,7 @@ class Game(abc.ABC):
 
     @classmethod
     def override_args_with_replay(cls,
-            args: argparse.Namespace, base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo]) -> None:
+            args: argparse.Namespace, base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo]) -> None:
         """
         Override the args with the settings from the replay in the args.
         Children may extend this for additional functionality.
@@ -486,7 +492,7 @@ class Game(abc.ABC):
         args.max_moves = len(replay_info.history)
 
         # Script the moves for each agent based on the replay's history.
-        scripted_actions: dict[bool, list[chessai.core.action.Action]] = {}
+        scripted_actions: dict[chessai.core.types.Color, list[chessai.core.action.Action]] = {}
         for item in replay_info.history:
             if (item.player not in scripted_actions):
                 scripted_actions[item.player] = []
@@ -573,7 +579,7 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
 def init_from_args(
         args: argparse.Namespace,
         game_class: typing.Type[Game],
-        base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] | None = None,
+        base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] | None = None,
         **kwargs: typing.Any,
         ) -> argparse.Namespace:
     """
@@ -619,7 +625,7 @@ def init_from_args(
     else:
         board = chessai.core.board.load_path(args.board, **kwargs)
 
-    agents = [bool(chessai.core.types.Color.WHITE), bool(chessai.core.types.Color.BLACK)]
+    agents = [chessai.core.types.Color.WHITE, chessai.core.types.Color.BLACK]
     agent_infos = _parse_agent_infos(agents, args.raw_agent_args, base_agent_infos)
 
     base_save_path = args.save_path
@@ -676,10 +682,10 @@ def init_from_args(
 
 # TODO(Lucas): Should be able to simplify the following for two agents.
 def _parse_agent_infos(
-        agent_teams: list[bool],
+        agent_teams: list[chessai.core.types.Color],
         raw_args: list[str],
-        base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo],
-        ) -> dict[bool, chessai.core.agentinfo.AgentInfo]:
+        base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
+        ) -> dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo]:
     # Initialize with random agents.
     agent_info = {agent_team: chessai.core.agentinfo.AgentInfo(name = DEFAULT_AGENT) for agent_team in sorted(agent_teams)}
 
@@ -699,11 +705,11 @@ def _parse_agent_infos(
             raise ValueError(f"Improperly formatted CLI agent argument: '{raw_arg}'.")
 
         raw_team = parts[0].strip().lower()
-        team_color: bool | None = None
+        team_color: chessai.core.types.Color | None = None
         if (raw_team in ('white', 'w')):
-            team_color = bool(chessai.core.types.Color.WHITE)
+            team_color = chessai.core.types.Color.WHITE
         elif (raw_team in ('black', 'b')):
-            team_color = bool(chessai.core.types.Color.BLACK)
+            team_color = chessai.core.types.Color.BLACK
         else:
             raise ValueError(f"CLI agent argument has an unknown agent team: {parts[0]}.")
 

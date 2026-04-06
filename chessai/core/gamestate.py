@@ -41,7 +41,7 @@ class GameState(edq.util.json.DictConverter):
         """ Returns the chess board for the game state. """
         return self.board
 
-    def get_player(self) -> bool:
+    def get_player(self) -> chessai.core.types.Color:
         """ Returns the player with the next move. """
         return self.board.get_turn()
 
@@ -64,16 +64,21 @@ class GameState(edq.util.json.DictConverter):
         This will initialize some state.
         """
 
-    def agents_game_start(self, agent_responses: dict[bool, chessai.core.agentaction.AgentActionRecord]) -> None:
+    def agents_game_start(self, agent_responses: dict[chessai.core.types.Color, chessai.core.agentaction.AgentActionRecord]) -> None:
         """ Indicate that agents have been started. """
 
-    def game_complete(self) -> list[bool]:
+    def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
         """
         Indicate that the game has ended.
-        The state should take any final actions and return the indexes of the winning agents (if any).
+        The state should take any final actions and return the indexes of the winning agents (if any) and the score of the game.
         """
 
-        return []
+        return ([], 0)
+
+    def get_termination_reason(self) -> chessai.core.types.TerminationReason:
+        """ Get the reason for the game ending. """
+
+        return self.board.get_termination_reason()
 
     def generate_successor(self,
             action: chessai.core.action.Action,
@@ -89,7 +94,7 @@ class GameState(edq.util.json.DictConverter):
 
         return successor
 
-    def process_agent_timeout(self, player: bool) -> None:
+    def process_agent_timeout(self, player: chessai.core.types.Color) -> None:
         """
         Notify the state that the given agent has timed out.
         The state should make any updates and set the end of game information.
@@ -97,7 +102,7 @@ class GameState(edq.util.json.DictConverter):
 
         self.game_over = True
 
-    def process_agent_crash(self, player: bool) -> None:
+    def process_agent_crash(self, player: chessai.core.types.Color) -> None:
         """
         Notify the state that the given agent has crashed.
         The state should make any updates and set the end of game information.

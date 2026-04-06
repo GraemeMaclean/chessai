@@ -16,7 +16,7 @@ class AgentIsolator(abc.ABC):
     """
 
     @abc.abstractmethod
-    def init_agents(self, agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo]) -> None:
+    def init_agents(self, agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo]) -> None:
         """
         Initialize the agents this isolator will be responsible for.
         """
@@ -26,7 +26,7 @@ class AgentIsolator(abc.ABC):
             rng: random.Random,
             initial_state: chessai.core.gamestate.GameState,
             timeout: float,
-            ) -> dict[bool, chessai.core.agentaction.AgentActionRecord]:
+            ) -> dict[chessai.core.types.Color, chessai.core.agentaction.AgentActionRecord]:
         """
         Pass along the initial game state to each agent and all them the allotted time to start.
         """
@@ -35,7 +35,7 @@ class AgentIsolator(abc.ABC):
     def game_complete(self,
             final_state: chessai.core.gamestate.GameState,
             timeout: float,
-            ) -> dict[bool, chessai.core.agentaction.AgentActionRecord]:
+            ) -> dict[chessai.core.types.Color, chessai.core.agentaction.AgentActionRecord]:
         """
         Notify all agents that the game is over.
         """

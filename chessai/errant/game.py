@@ -14,7 +14,7 @@ class Game(chessai.core.game.Game):
     def get_initial_state(self,
             rng: random.Random,
             board: chessai.core.board.Board,
-            agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo]) -> chessai.core.gamestate.GameState:
+            agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo]) -> chessai.core.gamestate.GameState:
         return chessai.errant.gamestate.GameState(board = board, agent_infos = agent_infos)
 
     def process_turn(self,

@@ -60,21 +60,21 @@ class GameState(chessai.core.gamestate.GameState):
         # The agent always loses a point each turn.
         self.score -= TIME_PENALTY
 
-    def process_agent_timeout(self, player: bool) -> None:
+    def process_agent_timeout(self, player: chessai.core.types.Color) -> None:
         # Treat timeouts like crashes.
         self.process_agent_crash(player)
 
-    def process_agent_crash(self, player: bool) -> None:
+    def process_agent_crash(self, player: chessai.core.types.Color) -> None:
         super().process_agent_crash(player)
 
         if (player == chessai.core.types.Color.WHITE):
             self.score += CRASH_POINTS
 
-    def game_complete(self) -> list[bool]:
+    def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
         search_targets = self.board.get_search_targets()
 
         # The agent wins if they reach all of the search targets.
         if (len(search_targets) == 0):
-            return [bool(chessai.core.types.Color.WHITE)]
+            return ([chessai.core.types.Color.WHITE], self.score)
 
-        return [bool(chessai.core.types.Color.BLACK)]
+        return ([chessai.core.types.Color.BLACK], self.score)

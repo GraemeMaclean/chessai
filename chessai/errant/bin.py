@@ -33,14 +33,15 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
 
     return parser
 
-def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.agentinfo.AgentInfo], list[bool], dict[str, typing.Any]]:
+def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
+        list[chessai.core.types.Color], dict[str, typing.Any]]:
     """
     Setup agents based on Knight's Errant rules.
     """
 
-    base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = {
-        bool(chessai.core.types.Color.WHITE): chessai.core.agentinfo.AgentInfo(name = args.white),
-        bool(chessai.core.types.Color.BLACK): chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
+    base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] = {
+        chessai.core.types.Color.WHITE: chessai.core.agentinfo.AgentInfo(name = args.white),
+        chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
     }
 
     board_kwargs: dict[str, typing.Any] = {}
@@ -50,25 +51,22 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.ag
 
     return base_agent_infos, [], board_kwargs
 
-def log_tour_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[bool], prefix: str = '') -> None:
+def log_tour_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
     Log the result of running several tour games.
     """
 
     move_counts: list[int] = [len(result.history) for result in results]
+    scores: list[float] = [result.score for result in results]
 
     record: list[str] = []
-    scores: list[float] = []
     for result in results:
-        if ((result.outcome is None) or (result.outcome.winner is None)):
-            record.append('Tie')
-            scores.append(0.5)
-        elif (result.outcome.winner == chessai.core.types.Color.WHITE):
+        if (result.score > 0):
             record.append('Win')
-            scores.append(1)
-        else:
+        elif (result.score < 0):
             record.append('Loss')
-            scores.append(0)
+        else:
+            record.append('Tie')
 
     average_score: float = (sum(scores)) / len(scores)
     logging.info('Average Score: %0.2f', average_score)

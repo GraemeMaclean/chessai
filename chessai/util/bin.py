@@ -1,8 +1,7 @@
 import argparse
 import logging
+import math
 import typing
-
-import chess
 
 import chessai.core.agentaction
 import chessai.core.agentinfo
@@ -49,7 +48,7 @@ class InitFromArgs(typing.Protocol):
 
     def __call__(self,
             args: argparse.Namespace,
-            ) -> tuple[dict[bool, chessai.core.agentinfo.AgentInfo], list[bool], dict[str, typing.Any]]:
+            ) -> tuple[dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo], list[chessai.core.types.Color], dict[str, typing.Any]]:
         """
         Initialize components from arguments and return
         the base agent infos, a list of agents to remove from the board, as well as any board options.
@@ -64,47 +63,45 @@ class LogResults(typing.Protocol):
 
     def __call__(self,
             results: list[chessai.core.game.GameResult],
-            winning_agent_indexes: set[bool],
+            winning_agent_indexes: set[chessai.core.types.Color],
             prefix: str = '',
             ) -> None:
         """
         Log the result of running several games.
         """
 
-def base_init_from_args(args: argparse.Namespace) -> tuple[dict[bool, chessai.core.agentinfo.AgentInfo], list[bool], dict[str, typing.Any]]:
+def base_init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
+        list[chessai.core.types.Color], dict[str, typing.Any]]:
     """
     Take in args from a parser that was passed to set_cli_args(),
     and initialize the proper components.
     """
 
     # Create base arguments for all possible agents.
-    base_agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo] = {
-        chess.WHITE: chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_RANDOM.long),
-        chess.BLACK: chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_RANDOM.long),
+    base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] = {
+        chessai.core.types.Color.WHITE: chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_RANDOM.long),
+        chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_RANDOM.long),
     }
 
     return base_agent_infos, [], {}
 
 # TODO(Lucas): Do we need the winning agent teams?
-def base_log_results(results: list[chessai.core.game.GameResult], winning_agent_teams: set[bool], prefix: str = '') -> None:
+def base_log_results(results: list[chessai.core.game.GameResult], winning_agent_teams: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
     Log the result of running several games.
     """
 
     move_counts: list[int] = [len(result.history) for result in results]
+    scores: list[float] = [result.score for result in results]
 
     record: list[str] = []
-    scores: list[float] = []
     for result in results:
-        if ((result.outcome is None) or (result.outcome.winner is None)):
+        if (math.isclose(result.score, 0.5)):
             record.append('Tie')
-            scores.append(0.5)
-        elif (result.outcome.winner == chess.WHITE):
+        elif (math.isclose(result.score, 1.0)):
             record.append('Win')
-            scores.append(1)
         else:
             record.append('Loss')
-            scores.append(0)
 
     average_score: float = (sum(scores)) / len(scores)
     logging.info('Average Score: %0.2f', average_score)
@@ -145,7 +142,7 @@ def run_main(
         default_board: str | None = None,
         custom_set_cli_args: SetCLIArgs | None = None,
         custom_init_from_args: InitFromArgs = base_init_from_args,
-        winning_agent_indexes: set[bool] | None = None,
+        winning_agent_indexes: set[chessai.core.types.Color] | None = None,
         log_results: LogResults | None = typing.cast(LogResults, base_log_results),
         argv: list[str] | None = None,
         ) -> list[chessai.core.game.GameResult]:
@@ -210,7 +207,7 @@ def parse_args(
 
 def run_games(
         args: argparse.Namespace,
-        winning_agent_indexes: set[bool] | None = None,
+        winning_agent_indexes: set[chessai.core.types.Color] | None = None,
         log_results: LogResults | None = typing.cast(LogResults, base_log_results),
         ) -> list[chessai.core.game.GameResult]:
     """

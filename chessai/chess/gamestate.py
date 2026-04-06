@@ -19,3 +19,16 @@ class GameState(chessai.core.gamestate.GameState):
 
         board = self.get_board()
         board._push(action)
+
+    def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
+        winners = self.get_board().get_winners()
+
+        # Score is based on white's perspective using standard chess scoring.
+        if (chessai.core.types.Color.WHITE in winners):
+            score = 1.0
+        elif (chessai.core.types.Color.BLACK in winners):
+            score = 0.0
+        else:
+            score = 0.5
+
+        return (winners, score)

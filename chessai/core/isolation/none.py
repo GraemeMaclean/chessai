@@ -20,13 +20,13 @@ class NoneIsolator(chessai.core.isolation.isolator.AgentIsolator):
     """
 
     def __init__(self) -> None:
-        self._agents: dict[bool, chessai.core.agent.Agent] = {}
+        self._agents: dict[chessai.core.types.Color, chessai.core.agent.Agent] = {}
         """
         The agents that this isolator manages.
         These agents are held and ran in this thread's memory space.
         """
 
-    def init_agents(self, agent_infos: dict[bool, chessai.core.agentinfo.AgentInfo]) -> None:
+    def init_agents(self, agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo]) -> None:
         self._agents = {}
         for (team, agent_info) in agent_infos.items():
             self._agents[team] = chessai.core.agent.load(agent_info)
@@ -35,7 +35,7 @@ class NoneIsolator(chessai.core.isolation.isolator.AgentIsolator):
             rng: random.Random,
             initial_state: chessai.core.gamestate.GameState,
             timeout: float,
-            ) -> dict[bool, chessai.core.agentaction.AgentActionRecord]:
+            ) -> dict[chessai.core.types.Color, chessai.core.agentaction.AgentActionRecord]:
         results = {}
         for (team, agent) in self._agents.items():
             data = {
@@ -51,7 +51,7 @@ class NoneIsolator(chessai.core.isolation.isolator.AgentIsolator):
     def game_complete(self,
             final_state: chessai.core.gamestate.GameState,
             timeout: float,
-            ) -> dict[bool, chessai.core.agentaction.AgentActionRecord]:
+            ) -> dict[chessai.core.types.Color, chessai.core.agentaction.AgentActionRecord]:
         results = {}
         for (team, agent) in self._agents.items():
             data = {
@@ -77,7 +77,7 @@ class NoneIsolator(chessai.core.isolation.isolator.AgentIsolator):
         self._agents.clear()
 
 def _call_agent_method(
-        player: bool,
+        player: chessai.core.types.Color,
         agent_method: typing.Callable[..., chessai.core.agentaction.AgentAction],
         agent_method_kwargs: dict[str, typing.Any],
         ) -> chessai.core.agentaction.AgentActionRecord:

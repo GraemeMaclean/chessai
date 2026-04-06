@@ -90,10 +90,10 @@ class Board(edq.util.json.DictConverter):
 
         return self._board.is_valid()
 
-    def get_turn(self) -> bool:
-        """ The side to move (chess.WHITE or chess.BLACK). """
+    def get_turn(self) -> chessai.core.types.Color:
+        """ The side to move (chessai.core.types.WHITE or chessai.core.types.BLACK). """
 
-        return self._board.turn
+        return chessai.core.types.Color(self._board.turn)
 
     def get_fullmove_number(self) -> int:
         """ Counts move pairs. Starts at 1 and is incremented after every move of the black side. """
@@ -123,10 +123,29 @@ class Board(edq.util.json.DictConverter):
 
         return squares
 
-    def get_outcome(self) -> chess.Outcome | None:
-        """ Gets the outcome of the game if it is over. """
+    def get_winners(self) -> list[chessai.core.types.Color]:
+        """
+        Gets the list of winners from the game.
+        If the game is not over, it will be considered a tie.
+        """
 
-        return self._board.outcome()
+        outcome = self._board.outcome()
+        if (outcome is None):
+            return []
+
+        if (outcome.winner is None):
+            return []
+
+        return [chessai.core.types.Color(outcome.winner)]
+
+    def get_termination_reason(self) -> chessai.core.types.TerminationReason:
+        """ Get the reason for the game ending. """
+
+        outcome = self._board.outcome()
+        if (outcome is None):
+            return chessai.core.types.TerminationReason.IN_PROGRESS
+
+        return chessai.core.types.TerminationReason.from_chess_termination(outcome.termination)
 
     def is_game_over(self) -> bool:
         """ Returns if the game is over. """

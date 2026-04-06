@@ -29,6 +29,7 @@ class Color(int, enum.Enum):
     def __bool__(self) -> bool:
         return bool(self.value)
 
+# TODO(Lucas): Implement the functions detailed in the attribute docstrings.
 class TerminationReason(enum.Enum):
     """ An enum representing the reason for a game to be over. """
 
@@ -39,7 +40,7 @@ class TerminationReason(enum.Enum):
     """ See chessai.core.board.Board.is_stalemate(). """
 
     INSUFFICIENT_MATERIAL = enum.auto()
-    """ See chessai.core.board.Board.is_stalemate(). """
+    """ See chessai.core.board.Board.is_insufficient_material(). """
 
     SEVENTYFIVE_MOVES = enum.auto()
     """ See chessai.core.board.Board.is_fivefold_repition(). """
@@ -58,6 +59,30 @@ class TerminationReason(enum.Enum):
 
     VARIANT_DRAW = enum.auto()
     """ See chessai.core.board.Board.is_variant_draw()`. """
+
+    IN_PROGRESS = enum.auto()
+    """ Indicates the game is still in progress (i.e., it has not yet terminated). """
+
+    UNKNOWN = enum.auto()
+    """ The termination reason is unknown. """
+
+    @classmethod
+    def from_chess_termination(cls, termination: chess.Termination) -> 'TerminationReason':
+        """ Convert a chess.Termination to a TerminationReason. """
+
+        termination_map: dict[chess.Termination, TerminationReason] = {
+            chess.Termination.CHECKMATE: TerminationReason.CHECKMATE,
+            chess.Termination.STALEMATE: TerminationReason.STALEMATE,
+            chess.Termination.INSUFFICIENT_MATERIAL: TerminationReason.INSUFFICIENT_MATERIAL,
+            chess.Termination.SEVENTYFIVE_MOVES: TerminationReason.SEVENTYFIVE_MOVES,
+            chess.Termination.FIFTY_MOVES: TerminationReason.FIFTY_MOVES,
+            chess.Termination.THREEFOLD_REPETITION: TerminationReason.THREEFOLD_REPETITION,
+            chess.Termination.VARIANT_WIN: TerminationReason.VARIANT_WIN,
+            chess.Termination.VARIANT_LOSS: TerminationReason.VARIANT_LOSS,
+            chess.Termination.VARIANT_DRAW: TerminationReason.VARIANT_DRAW,
+        }
+
+        return termination_map.get(termination, TerminationReason.UNKNOWN)
 
 class PieceType(str, enum.Enum):
     """ An enum representing the different chess pieces. """
