@@ -10,7 +10,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     def test_manhattan_base(self):
         """ Test Manhattan distance and heuristic. """
 
-        test_board = chessai.core.board.load_path('knights-errant-base')
+        test_board = chessai.core.board.load_path('tour-base')
         test_state = chessai.core.gamestate.GameState(seed = 4, board = test_board)
 
         # [(a, b, expected), ...]
@@ -50,7 +50,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     def test_euclidean_base(self):
         """ Test Euclidean distance and heuristic. """
 
-        test_board = chessai.core.board.load_path('knights-errant-base')
+        test_board = chessai.core.board.load_path('tour-base')
         test_state = chessai.core.gamestate.GameState(seed = 4, board = test_board)
 
         # [(a, b, expected), ...]
@@ -90,7 +90,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     # def test_maze_base(self):
     #     """ Test maze distance. """
 
-    #     test_board = chessai.core.board.load_path('knights-errant-base')
+    #     test_board = chessai.core.board.load_path('tour-base')
     #     test_state = chessai.core.gamestate.GameState(seed = 4, board = test_board)
 
     #     # Note that the distances will be random because we are using random search.
@@ -120,7 +120,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     # def test_distanceprecomputer_base(self):
     #     """ Test precomputing distances. """
 
-    #     test_board = chessai.core.board.load_path('knights-errant-base')
+    #     test_board = chessai.core.board.load_path('tour-base')
     #     precomputer = chessai.search.distance.DistancePreComputer()
     #     precomputer.compute(test_board)
 

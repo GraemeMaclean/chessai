@@ -3,13 +3,13 @@ import typing
 
 import chessai.core.search
 
-def knight_errant_search(
+def piece_tour_search(
         problem: chessai.core.search.SearchProblem,
         heuristic: chessai.core.search.SearchHeuristic,
         rng: random.Random,
         **kwargs: typing.Any) -> chessai.core.search.SearchSolution:
     """
-    Output a very specific set of actions meant for the `knights-errant-base` board.
+    Output a very specific set of actions meant for the `tour-base` board.
     This (fake) search will generally not work on other boards.
     """
 

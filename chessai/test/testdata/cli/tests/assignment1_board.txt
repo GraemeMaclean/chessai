@@ -1,8 +1,8 @@
 {
-    "cli": "chessai.errant.bin",
+    "cli": "chessai.tour.bin",
     "arguments": [
         "--seed", "2",
-        "--board", "knights-errant-multi"
+        "--board", "tour-multi"
     ]
 }
 ---

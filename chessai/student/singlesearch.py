@@ -1,9 +1,9 @@
 """
 In this file, you will implement code relating to simple single-agent searches.
 
-For Assignment 1, you will be working on the Knight's Errant problem:
-given a starting square and a target square on a chessboard, find the
-minimum number of moves for a knight to travel between them.
+For Assignment 1, you will be working on the Piece Tour problem:
+given a starting square and target squares on a chessboard,
+find the minimum number of moves for an arbitrary piece to travel to all of them.
 
 You will implement four search algorithms:
   - Depth First Search (DFS)
@@ -11,8 +11,7 @@ You will implement four search algorithms:
   - Uniform Cost Search (UCS)
   - A* Search
 
-You will also implement heuristics for A* and analyze their admissibility
-and consistency in your written report.
+You will also implement heuristics for A* and analyze their admissibility and consistency.
 """
 
 import random
@@ -78,15 +77,15 @@ def astar_search(
     raise NotImplementedError('astar_search')
 
 
-class KnightsErrantSearchNode(chessai.core.search.SearchNode):
+class PieceTourSearchNode(chessai.core.search.SearchNode):
     """
-    A search node representing a state in the Knight's Errant problem.
+    A search node representing a state in the Piece Tour problem.
 
     The state must encode everything the search needs to determine:
       1. Where the knight currently is.
       2. Whether the goal has been reached.
 
-    For the basic Knight's Errant problem (single target square),
+    For the basic Piece Tour problem (single target square),
     the position alone is sufficient. But think carefully:
     if you were to extend this to visiting multiple squares,
     what additional information would your state need to track?
@@ -94,24 +93,24 @@ class KnightsErrantSearchNode(chessai.core.search.SearchNode):
 
     def __init__(self) -> None:
         """
-        Construct a search node for the Knight's Errant problem.
+        Construct a search node for the Piece Tour problem.
         You may add arguments to this constructor as needed.
         """
 
         # *** Your Code Here ***
         # Remember that you can also add arguments to your constructor.
 
-class KnightsErrantSearchProblem(chessai.core.search.SearchProblem[KnightsErrantSearchNode]):
+class PieceTourSearchProblem(chessai.core.search.SearchProblem[PieceTourSearchNode]):
     """
-    A search problem for moving a knight from a start square to a target square
+    A search problem for moving an arbitrary piece from a start square to target squares
     in the minimum number of moves.
 
-    The board is a standard 8x8 chessboard. Squares are represented as
-    (file, rank) tuples where file and rank are both in [0, 7].
+    The board is a standard 8x8 chessboard.
+    Squares are represented as (file, rank) tuples where file and rank are both in [0, 7].
     For example, (0, 0) is a1, (7, 7) is h8.
 
-    A knight moves in an 'L' shape: two squares in one direction and
-    one square perpendicular. A knight on (r, c) can reach up to 8 squares.
+    Note: A knight moves in an 'L' shape: two squares in one direction and one square perpendicular.
+    A knight on (r, c) can reach up to 8 squares.
     """
 
     def __init__(self,
@@ -125,42 +124,39 @@ class KnightsErrantSearchProblem(chessai.core.search.SearchProblem[KnightsErrant
 
         # *** Your Code Here (if needed) ***
 
-    def get_starting_node(self) -> KnightsErrantSearchNode:
+    def get_starting_node(self) -> PieceTourSearchNode:
         # *** Your Code Here ***
-        raise NotImplementedError('KnightsErrantSearchProblem.get_starting_node')
+        raise NotImplementedError('PieceTourSearchProblem.get_starting_node')
 
-    def is_goal_node(self, node: KnightsErrantSearchNode) -> bool:
+    def is_goal_node(self, node: PieceTourSearchNode) -> bool:
         # *** Your Code Here ***
-        raise NotImplementedError('KnightsErrantSearchProblem.is_goal_node')
+        raise NotImplementedError('PieceTourSearchProblem.is_goal_node')
 
-    def get_successor_nodes(self, node: KnightsErrantSearchNode) -> list[chessai.core.search.SuccessorInfo]:
+    def get_successor_nodes(self, node: PieceTourSearchNode) -> list[chessai.core.search.SuccessorInfo]:
         """
         Return a list of (successor_node, action, cost) tuples representing
         all valid moves from the current node.
-
-        Remember that a knight cannot move off the board.
         """
 
         # *** Your Code Here ***
-        raise NotImplementedError('KnightsErrantSearchProblem.get_successor_nodes')
+        raise NotImplementedError('PieceTourSearchProblem.get_successor_nodes')
 
-def knights_errant_heuristic(
-        node: KnightsErrantSearchNode,
-        problem: KnightsErrantSearchProblem,
+def knights_tour_heuristic(
+        node: PieceTourSearchNode,
+        problem: PieceTourSearchProblem,
         **kwargs: typing.Any) -> float:
     """
-    A heuristic for the Knight's Errant problem.
+    A heuristic for a Piece Tour using a knight.
 
     Your heuristic must be ADMISSIBLE: it must never overestimate the
     true cost to reach the goal. Formally, for all nodes n:
         h(n) <= h*(n)
     where h*(n) is the true optimal cost from n to the goal.
 
-    For full credit, your heuristic should also be CONSISTENT (monotone):
+    For full credit, your heuristic should also be CONSISTENT:
         h(n) <= cost(n, n') + h(n')
     for every successor n' of n.
 
-    You must prove admissibility (and ideally consistency) in your written report.
     A non-trivial heuristic that is both admissible and consistent and meaningfully
     reduces the number of nodes expanded compared to UCS will receive full credit.
 
@@ -169,4 +165,4 @@ def knights_errant_heuristic(
     """
 
     # *** Your Code Here ***
-    return chessai.search.common.null_heuristic(node, problem)  # Default: trivial heuristic.
+    return chessai.search.common.null_heuristic(node, problem)

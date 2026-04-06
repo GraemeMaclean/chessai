@@ -21,7 +21,7 @@ CRASH_POINTS = -1000000
 """ Points for crashing the game. """
 
 class GameState(chessai.core.gamestate.GameState):
-    """ A game state specific to a Knight's Errant game. """
+    """ A game state specific to a Tour game. """
 
     def __init__(self,
                  board: chessai.core.board.Board | None = None,
@@ -31,11 +31,11 @@ class GameState(chessai.core.gamestate.GameState):
         super().__init__(board, seed, game_over, **kwargs)
 
         self.score: int = 0
-        """ The score for the Knight's Errant. """
+        """ The score for the Tour. """
 
-        # A Knight's Errant problem must have a search target.
+        # A Tour problem must have at least one search target.
         if (len(self.board.get_search_targets()) == 0):
-            raise ValueError("Cannot create a errant game state without a search target.")
+            raise ValueError("Cannot create a Tour game state without at least one search target.")
 
     def process_turn(self,
             action: chessai.core.action.Action,

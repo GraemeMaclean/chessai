@@ -8,16 +8,16 @@ import typing
 
 import chessai.core.agentinfo
 import chessai.core.board
-import chessai.errant.game
-import chessai.errant.gamestate
+import chessai.tour.game
+import chessai.tour.gamestate
 import chessai.util.bin
 import chessai.util.alias
 
-DEFAULT_BOARD: str = 'knights-errant-base'
+DEFAULT_BOARD: str = 'tour-base'
 
 def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argparse.ArgumentParser:
     """
-    Set tour-specific CLI arguments.
+    Set Tour-specific CLI arguments.
     This is a sibling to init_from_args(), as the arguments set here can be interpreted there.
     """
 
@@ -36,7 +36,7 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
 def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
         list[chessai.core.types.Color], dict[str, typing.Any]]:
     """
-    Setup agents based on Knight's Errant rules.
+    Setup agents based on Tour rules.
     """
 
     base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] = {
@@ -53,7 +53,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
 
 def log_tour_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
-    Log the result of running several tour games.
+    Log the result of running several Tour games.
     """
 
     move_counts: list[int] = [len(result.history) for result in results]
@@ -104,15 +104,15 @@ def log_tour_results(results: list[chessai.core.game.GameResult], winning_agent_
 def main(argv: list[str] | None = None,
          ) -> list[chessai.core.game.GameResult]:
     """
-    Invoke a game of Knight's Errant.
+    Invoke a game of Tour.
 
     Will return the results of any training games followed by the results of any non-training games.
     """
 
     return chessai.util.bin.run_main(
-        description = "Play a game of Knight's Errant.",
+        description = "Play a game of Tour.",
         default_board = DEFAULT_BOARD,
-        game_class = chessai.errant.game.Game,
+        game_class = chessai.tour.game.Game,
         custom_set_cli_args = set_cli_args,
         custom_init_from_args = init_from_args,
         log_results = log_tour_results,

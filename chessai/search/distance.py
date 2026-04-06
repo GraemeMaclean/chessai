@@ -73,11 +73,6 @@ def knight_distance(
     if (state is None):
         raise ValueError("Cannot compute maze distance without a game state.")
 
-    # Make sure we are not starting in a wall.
-    # TODO(Lucas): We just need to check if the position is valid.
-    # if (state.board.is_wall(a) or state.board.is_wall(b)):
-    #     raise ValueError("Position for maze distance is inside a wall.")
-
     # Fetch our solver.
     if (isinstance(solver, str)):
         solver = chessai.util.reflection.fetch(solver)

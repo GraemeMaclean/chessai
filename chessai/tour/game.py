@@ -4,7 +4,7 @@ import chessai.core.agentinfo
 import chessai.core.board
 import chessai.core.game
 import chessai.core.gamestate
-import chessai.errant.gamestate
+import chessai.tour.gamestate
 
 class Game(chessai.core.game.Game):
     """
@@ -15,7 +15,7 @@ class Game(chessai.core.game.Game):
             rng: random.Random,
             board: chessai.core.board.Board,
             agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo]) -> chessai.core.gamestate.GameState:
-        return chessai.errant.gamestate.GameState(board = board, agent_infos = agent_infos)
+        return chessai.tour.gamestate.GameState(board = board, agent_infos = agent_infos)
 
     def process_turn(self,
             state: chessai.core.gamestate.GameState,
@@ -70,7 +70,7 @@ class Game(chessai.core.game.Game):
                     action: chessai.core.action.Action,
                     rng: random.Random) -> chessai.core.gamestate.GameState:
         """
-        Black is not expected to be an agent in errant games.
+        Black is not expected to be an agent in tour games.
         So, it may make null moves to pass the turn back to white.
         """
 

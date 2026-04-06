@@ -1,0 +1,18 @@
+{
+    "cli": "chessai.tour.bin",
+    "arguments": [
+        "--seed", "4",
+        "--white", "agent-search-problem",
+        "--agent-arg", "white::solver=search-solver-bfs"
+    ]
+}
+---
+<LOG_PREFIX> -- Agent 1 crashed.
+Traceback (most recent call last):
+<TRACEBACK>
+NotImplementedError: breadth_first_search
+<LOG_PREFIX> -- Average Score: -1000000.00
+<LOG_PREFIX> -- Scores:        -1000000
+<LOG_PREFIX> -- Record:        Loss
+<LOG_PREFIX> -- Average Moves: 0.0
+<LOG_PREFIX> -- Move Counts:   0

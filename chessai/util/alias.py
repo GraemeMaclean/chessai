@@ -83,7 +83,6 @@ AGENT_SHORT_NAMES: list[str] = [
     AGENT_VALUE.short,
 ]
 
-# Update all knight aliases to be knight aliases.
 DISTANCE_EUCLIDEAN: Alias = Alias('distance-euclidean', 'chessai.search.distance.euclidean_distance')
 DISTANCE_MANHATTAN: Alias = Alias('distance-manhattan', 'chessai.search.distance.manhattan_distance')
 DISTANCE_KNIGHT: Alias = Alias('distance-knight', 'chessai.search.distance.knight_distance')
@@ -107,7 +106,7 @@ COST_FUNC_SHORT_NAMES: list[str] = [
 ]
 
 HEURISTIC_EUCLIDEAN: Alias = Alias('heuristic-euclidean', 'chessai.search.distance.euclidean_heuristic')
-HEURISTIC_KNIGHT: Alias = Alias('heuristic-knight', 'chessai.student.singlesearch.knights_errant_heuristic')
+HEURISTIC_KNIGHT: Alias = Alias('heuristic-knight', 'chessai.student.singlesearch.knights_tour_heuristic')
 HEURISTIC_MANHATTAN: Alias = Alias('heuristic-manhattan', 'chessai.search.distance.manhattan_heuristic')
 HEURISTIC_NULL: Alias = Alias('heuristic-null', 'chessai.search.common.null_heuristic')
 
@@ -127,7 +126,7 @@ SEARCH_PROBLEM_SHORT_NAMES: list[str] = [
 SEARCH_SOLVER_ASTAR: Alias = Alias('search-solver-astar', 'chessai.student.singlesearch.astar_search')
 SEARCH_SOLVER_BFS: Alias = Alias('search-solver-bfs', 'chessai.student.singlesearch.breadth_first_search')
 SEARCH_SOLVER_DFS: Alias = Alias('search-solver-dfs', 'chessai.student.singlesearch.depth_first_search')
-SEARCH_SOLVER_KNIGHT_ERRANT: Alias = Alias('search-solver-knight-errant', 'chessai.search.knighterrant.knight_errant_search')
+SEARCH_SOLVER_PIECE_TOUR: Alias = Alias('search-solver-piece-tour', 'chessai.search.piecetour.piece_tour_search')
 SEARCH_SOLVER_RANDOM: Alias = Alias('search-solver-random', 'chessai.search.random.random_search')
 SEARCH_SOLVER_UCS: Alias = Alias('search-solver-ucs', 'chessai.student.singlesearch.uniform_cost_search')
 
@@ -135,7 +134,7 @@ SEARCH_SOLVER_SHORT_NAMES: list[str] = [
     SEARCH_SOLVER_ASTAR.short,
     SEARCH_SOLVER_BFS.short,
     SEARCH_SOLVER_DFS.short,
-    SEARCH_SOLVER_KNIGHT_ERRANT.short,
+    SEARCH_SOLVER_PIECE_TOUR.short,
     SEARCH_SOLVER_RANDOM.short,
     SEARCH_SOLVER_UCS.short,
 ]
