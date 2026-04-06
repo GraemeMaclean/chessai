@@ -75,6 +75,9 @@ class GameState(chessai.core.gamestate.GameState):
 
         # The agent wins if they reach all of the search targets.
         if (len(search_targets) == 0):
+
+            self.score += BOARD_CLEAR_POINTS
+
             return ([chessai.core.types.Color.WHITE], self.score)
 
         return ([chessai.core.types.Color.BLACK], self.score)

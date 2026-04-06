@@ -125,7 +125,8 @@ class GameInfo(edq.util.json.DictConverter):
             start_board = data.get('start_board', None),
             search_targets = data.get('search_targets', None),
             agent_infos = {
-                chessai.core.types.Color(id): chessai.core.agentinfo.AgentInfo.from_dict(raw_info) for (id, raw_info) in data['agent_infos'].items()
+                chessai.core.types.Color(int(id)): chessai.core.agentinfo.AgentInfo.from_dict(raw_info)
+                    for (id, raw_info) in data['agent_infos'].items()
             },
             isolation_level = chessai.core.isolation.level.Level(data.get('isolation_level', chessai.core.isolation.level.Level.NONE.value)),
             max_moves = data.get('max_moves', DEFAULT_MAX_MOVES),
