@@ -142,11 +142,10 @@ SEARCH_SOLVER_SHORT_NAMES: list[str] = [
     SEARCH_SOLVER_UCS.short,
 ]
 
-# TODO(Lucas): Implement all of the alias evals.
 STATE_EVAL_BASE: Alias = Alias('state-eval-base', 'chessai.core.gamestate.base_eval')
-# STATE_EVAL_MINIMAX_BETTER: Alias = Alias('state-eval-minimax-better', 'chessai.student.multiagents.better_state_eval')
+STATE_EVAL_MINIMAX_BETTER: Alias = Alias('state-eval-minimax-better', 'chessai.student.multiagents.better_state_eval')
 
 STATE_EVAL_SHORT_NAMES: list[str] = [
     STATE_EVAL_BASE.short,
-    # STATE_EVAL_MINIMAX_BETTER.short,
+    STATE_EVAL_MINIMAX_BETTER.short,
 ]
