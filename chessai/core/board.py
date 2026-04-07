@@ -33,14 +33,14 @@ class Board(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-                 source: str,
-                 start_fen: str = chess.STARTING_FEN,
-                 search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
-                 check_validity: bool = False,
-                 **kwargs: typing.Any) -> None:
+            source: str,
+            start_fen: str = chess.STARTING_FEN,
+            search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
+            check_validity: bool = False,
+            **kwargs: typing.Any) -> None:
         """
         Construct a board.
-        The board must be a valid board given by the starting FEN.
+        The board must be a valid board given by the starting FEN if check_validity is true.
         """
 
         self.source: str = source
@@ -70,7 +70,7 @@ class Board(edq.util.json.DictConverter):
         if (isinstance(search_targets, dict)):
             self.search_targets = chessai.core.square.squares_from_dict(search_targets)
 
-        if (check_validity and not self.is_valid()):
+        if (check_validity and (not self.is_valid())):
             raise ValueError("Invalid board format: '{start_fen}'.")
 
     @property

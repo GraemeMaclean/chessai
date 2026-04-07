@@ -335,7 +335,7 @@ class Game(abc.ABC):
 
         action = action_record.get_action()
         if (action not in state.get_legal_actions()):
-            raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' or type '{type(action)}'.")
+            raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' of type '{type(action)}'.")
 
         self._call_state_process_turn_full(state, action, rng)
 

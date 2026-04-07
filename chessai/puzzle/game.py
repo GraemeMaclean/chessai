@@ -42,11 +42,14 @@ class Game(chessai.core.game.Game):
 
         action = action_record.get_action()
 
-        if (state.get_player() == chessai.core.types.Color.BLACK):
-            return self._handle_black_turn(state, action, rng)
+        if (state.get_player() == state.get_dummy_player()):
+            return _process_dummy_turn(state, action, rng)
 
         if (action not in state.get_legal_actions()):
-            raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' or type '{type(action)}'.")
+            raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' of type '{type(action)}'.")
+
+        if (action not in state.correct_puzzle_move()):
+            raise ValueError(f"Incorrect action for agent {action_record.player}: '{action.uci()}' of type '{type(action)}'.")
 
         self._call_state_process_turn_full(state, action, rng)
 
@@ -64,16 +67,20 @@ class Game(chessai.core.game.Game):
             return True
 
         board = state.get_board()
-        return (len(board.get_search_targets()) == 0)
+        return (len(board.get_move_lines()) == 0)
 
-    def _handle_black_turn(self, state: chessai.core.gamestate.GameState,
-                    action: chessai.core.action.Action,
-                    rng: random.Random) -> chessai.core.gamestate.GameState:
-        """
-        Black is not expected to be an agent in puzzle games.
-        So, it will take scripted moves based on the potential solution lines.
-        """
+    def _process_dummy_turn(self,
+            state: chessai.core.gamestate.GameState,
+            action: chessai.core.action.Action,
+            rng: random.Random,
+            ) -> chessai.core.gamestate.GameState:
+        """ Process a dummy player turn by following a random move line. """
 
-        self._call_state_process_turn_full(state, action, rng)
+        if (action != chessai.core.action.Action()):
+            raise ValueError(f"Dummy player: '{state.get_dummy_player()}' did not make a null move '{action.uci()}'.")
+
+        move_line_action = state.override_dummy_move()
+
+        self._call_state_process_turn_full(state, move_line_action, rng)
 
         return state

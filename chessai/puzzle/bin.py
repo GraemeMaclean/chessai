@@ -21,9 +21,9 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
     This is a sibling to init_from_args(), as the arguments set here can be interpreted there.
     """
 
-    parser.add_argument('--white', dest = 'white',
+    parser.add_argument('--agent', dest = 'agent',
             action = 'store', type = str, default = chessai.util.alias.AGENT_RANDOM.short,
-            help = ('Select the agent type that the white agent will use (default: %(default)s).'
+            help = ('Select the agent type that the puzzle agent will use (default: %(default)s).'
                     + f' Builtin agents: {chessai.util.alias.AGENT_SHORT_NAMES}.'))
 
     return parser
@@ -34,17 +34,13 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
     Setup agents based on Puzzle rules.
     """
 
+    # TODO(Lucas): How can we set it up so the puzzle can be from black's POV too?
     base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] = {
-        chessai.core.types.Color.WHITE: chessai.core.agentinfo.AgentInfo(name = args.white),
+        chessai.core.types.Color.WHITE: chessai.core.agentinfo.AgentInfo(name = args.agent),
         chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
     }
 
-    board_kwargs: dict[str, typing.Any] = {}
-
-    if (args.target_squares is not None):
-        board_kwargs[chessai.core.square.SQUARES_KEY] = args.target_squares
-
-    return base_agent_infos, [], board_kwargs
+    return base_agent_infos, [], {}
 
 def log_puzzle_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
