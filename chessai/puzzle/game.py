@@ -4,7 +4,7 @@ import chessai.core.agentinfo
 import chessai.core.board
 import chessai.core.game
 import chessai.core.gamestate
-import chessai.tour.gamestate
+import chessai.puzzle.gamestate
 
 class Game(chessai.core.game.Game):
     """
@@ -15,7 +15,7 @@ class Game(chessai.core.game.Game):
             rng: random.Random,
             board: chessai.core.board.Board,
             agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo]) -> chessai.core.gamestate.GameState:
-        return chessai.tour.gamestate.GameState(board = board, agent_infos = agent_infos)
+        return chessai.puzzle.gamestate.GameState(board = board, agent_infos = agent_infos)
 
     def process_turn(self,
             state: chessai.core.gamestate.GameState,
@@ -57,7 +57,7 @@ class Game(chessai.core.game.Game):
         Check to see if the game is over.
         Return True if the game is now over, False otherwise.
 
-        White wins by reaching all target squares.
+        The Knight wins by reaching the target square.
         """
 
         if (state.game_over):
@@ -70,8 +70,8 @@ class Game(chessai.core.game.Game):
                     action: chessai.core.action.Action,
                     rng: random.Random) -> chessai.core.gamestate.GameState:
         """
-        Black is not expected to be an agent in tour games.
-        So, it may make null moves to pass the turn back to white.
+        Black is not expected to be an agent in puzzle games.
+        So, it will take scripted moves based on the potential solution lines.
         """
 
         self._call_state_process_turn_full(state, action, rng)
