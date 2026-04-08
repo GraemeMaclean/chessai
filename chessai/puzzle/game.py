@@ -28,6 +28,9 @@ class Game(chessai.core.game.Game):
         The returned game state may be a copy or modified version of the passed in game state.
         """
 
+        if (not (isinstance(state, chessai.puzzle.gamestate.GameState))):
+            raise ValueError(f"Puzzle games require a puzzle gamestate, got: '{type(state)}'.")
+
         # The agent has timed out.
         if (action_record.timeout):
             result.timeout_agent_teams.append(action_record.player)
@@ -43,12 +46,12 @@ class Game(chessai.core.game.Game):
         action = action_record.get_action()
 
         if (state.get_player() == state.get_dummy_player()):
-            return _process_dummy_turn(state, action, rng)
+            return self._process_dummy_turn(state, action, rng)
 
         if (action not in state.get_legal_actions()):
             raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' of type '{type(action)}'.")
 
-        if (action not in state.correct_puzzle_move()):
+        if (action not in state.next_puzzle_moves()):
             raise ValueError(f"Incorrect action for agent {action_record.player}: '{action.uci()}' of type '{type(action)}'.")
 
         self._call_state_process_turn_full(state, action, rng)
@@ -67,6 +70,10 @@ class Game(chessai.core.game.Game):
             return True
 
         board = state.get_board()
+
+        if (not isinstance(board, chessai.puzzle.board.Board)):
+            raise ValueError(f"Puzzle games require a puzzle board, got board of type: '{type(self.board)}'.")
+
         return (len(board.get_move_lines()) == 0)
 
     def _process_dummy_turn(self,
@@ -76,11 +83,14 @@ class Game(chessai.core.game.Game):
             ) -> chessai.core.gamestate.GameState:
         """ Process a dummy player turn by following a random move line. """
 
+        if (not (isinstance(state, chessai.puzzle.gamestate.GameState))):
+            raise ValueError(f"Puzzle games require a puzzle gamestate, got: '{type(state)}'.")
+
         if (action != chessai.core.action.Action()):
             raise ValueError(f"Dummy player: '{state.get_dummy_player()}' did not make a null move '{action.uci()}'.")
 
-        move_line_action = state.override_dummy_move()
+        overriden_action = state.override_dummy_move()
 
-        self._call_state_process_turn_full(state, move_line_action, rng)
+        self._call_state_process_turn_full(state, overriden_action, rng)
 
         return state

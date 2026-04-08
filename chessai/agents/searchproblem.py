@@ -68,7 +68,7 @@ class SearchProblemAgent(chessai.core.agent.Agent):
         return self._actions.pop(0)
 
     def game_start_full(self,
-            player: bool,
+            player: chessai.core.types.Color,
             suggested_seed: int,
             initial_state: chessai.core.gamestate.GameState,
             ) -> chessai.core.agentaction.AgentAction:

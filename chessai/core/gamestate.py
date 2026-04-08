@@ -224,7 +224,7 @@ def base_eval(
 
         board_value += (piece_count * piece_value)
 
-    if (board.get_turn() == chess.WHITE):
+    if (board.get_turn() == chessai.core.types.Color.WHITE):
         return board_value
 
     # The piece difference is the opposite for black.

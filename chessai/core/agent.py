@@ -45,9 +45,9 @@ class Agent(abc.ABC):
         but will be recreated with the suggested seed from the game engine during game_start_full().
         """
 
-        self.player: bool | None = None
+        self.player: chessai.core.types.Color | None = None
         """
-        The color of the player this agent has been assigned for this game (true -> chess.WHITE, false -> chess.BLACK).
+        The color of the player this agent has been assigned for this game.
         It is initialized to None (before the game starts), but gets populated during game_start_full().
         """
 
@@ -87,7 +87,7 @@ class Agent(abc.ABC):
         return chessai.core.action.Action()
 
     def game_start_full(self,
-            player: bool,
+            player: chessai.core.types.Color,
             suggested_seed: int,
             initial_state: chessai.core.gamestate.GameState,
             ) -> chessai.core.agentaction.AgentAction:
