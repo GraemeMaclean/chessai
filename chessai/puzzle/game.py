@@ -1,4 +1,5 @@
 import random
+import typing
 
 import chessai.core.agentinfo
 import chessai.core.board
@@ -28,8 +29,7 @@ class Game(chessai.core.game.Game):
         The returned game state may be a copy or modified version of the passed in game state.
         """
 
-        if (not (isinstance(state, chessai.puzzle.gamestate.GameState))):
-            raise ValueError(f"Puzzle games require a puzzle gamestate, got: '{type(state)}'.")
+        state = typing.cast(chessai.puzzle.gamestate.GameState, state)
 
         # The agent has timed out.
         if (action_record.timeout):
@@ -63,7 +63,7 @@ class Game(chessai.core.game.Game):
         Check to see if the game is over.
         Return True if the game is now over, False otherwise.
 
-        The Knight wins by reaching the target square.
+        The agent wins by completing the move lines.
         """
 
         if (state.game_over):
@@ -71,8 +71,7 @@ class Game(chessai.core.game.Game):
 
         board = state.get_board()
 
-        if (not isinstance(board, chessai.puzzle.board.Board)):
-            raise ValueError(f"Puzzle games require a puzzle board, got board of type: '{type(self.board)}'.")
+        board = typing.cast(chessai.puzzle.board.Board, board)
 
         return (len(board.get_move_lines()) == 0)
 

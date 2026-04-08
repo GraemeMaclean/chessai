@@ -13,7 +13,6 @@ import edq.util.json
 import edq.util.pyimport
 import edq.util.reflection
 
-# TODO(Lucas): Implement the following package.
 import chessai.util.alias
 
 REF_DELIM: str = ':'

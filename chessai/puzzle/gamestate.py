@@ -20,10 +20,7 @@ class GameState(chessai.core.gamestate.GameState):
         # The dummy player for the current game is the opposite of the puzzle's starting player.
         self.dummy_player: chessai.core.types.Color = self.get_player().opposite()
 
-        if (not (isinstance(self.board, chessai.puzzle.board.Board))):
-            raise ValueError(f"Puzzle gamestates require a puzzle board, got board of type: '{type(self.board)}'.")
-
-        # TODO(Lucas): How do we want to track puzzle moves.
+        self.board = typing.cast(chessai.puzzle.board.Board, self.board)
 
     # TODO(Lucas): Should we store puzzle moves and check each turn, or analyze at the end?
     def process_turn(self,
@@ -39,15 +36,11 @@ class GameState(chessai.core.gamestate.GameState):
         board = self.get_board()
         board._push(action)
 
-        satisfies_move_line = self._update_move_lines(action)
-
-        # TEST
-        print(f"Action: '{action.uci()}' satisfied a move line: '{satisfies_move_line}'.")
+        self._update_move_lines(action)
 
     # TODO(Lucas): What denotes a complete game?
     def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
-        if (not isinstance(self.board, chessai.puzzle.board.Board)):
-            raise ValueError(f"Puzzle gamestates require a puzzle board, got board of type: '{type(self.board)}'.")
+        self.board = typing.cast(chessai.puzzle.board.Board, self.board)
 
         if (len(self.board.get_move_lines()) == 0):
             return ([self.dummy_player.opposite()], 0)
@@ -62,8 +55,7 @@ class GameState(chessai.core.gamestate.GameState):
     def get_move_lines(self) -> list[list[chessai.core.action.Action]]:
         """ Get the move lines that the puzzle accepts as a solution. """
 
-        if (not isinstance(self.board, chessai.puzzle.board.Board)):
-            raise ValueError(f"Puzzle gamestates require a puzzle board, got board of type: '{type(self.board)}'.")
+        self.board = typing.cast(chessai.puzzle.board.Board, self.board)
 
         return self.board.get_move_lines()
 
@@ -98,7 +90,6 @@ class GameState(chessai.core.gamestate.GameState):
         Returns true if the action satisfies at least one move line.
         """
 
-        if (not isinstance(self.board, chessai.puzzle.board.Board)):
-            raise ValueError(f"Puzzle gamestates require a puzzle board, got board of type: '{type(self.board)}'.")
+        self.board = typing.cast(chessai.puzzle.board.Board, self.board)
 
         return self.board.update_move_lines(action)

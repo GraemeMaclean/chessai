@@ -1,3 +1,4 @@
+import copy
 import io
 import os
 import re
@@ -22,6 +23,7 @@ SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
 FILE_EXTENSION = '.board'
 
 DEFAULT_BOARD_CLASS: str = 'chessai.core.board.Board'
+DEFAULT_FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 # TODO(Lucas): Continue adding the necessary methods for students to interact with the board.
 class Board(edq.util.json.DictConverter):
@@ -34,7 +36,7 @@ class Board(edq.util.json.DictConverter):
 
     def __init__(self,
             source: str,
-            start_fen: str = chess.STARTING_FEN,
+            start_fen: str = DEFAULT_FEN,
             search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
             check_validity: bool = False,
             **kwargs: typing.Any) -> None:
@@ -206,7 +208,11 @@ class Board(edq.util.json.DictConverter):
         """ Create a deep copy of the board. """
 
         instance = self.__class__.__new__(self.__class__)
+        instance.source = self.source
         instance._board = self._board.copy()
+        instance.num_files = self.num_files
+        instance.num_ranks = self.num_ranks
+        instance.search_targets = copy.deepcopy(self.search_targets)
         return instance
 
     def to_pgn(self) -> str:

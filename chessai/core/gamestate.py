@@ -4,8 +4,6 @@ import typing
 
 import edq.util.json
 
-import chess
-
 import chessai.core.action
 import chessai.core.agentaction
 import chessai.core.board

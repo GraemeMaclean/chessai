@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None,
     """
 
     return chessai.util.bin.run_main(
-        description = "Play a game of puzzle.",
+        description = "Play a game of Puzzle.",
         default_board = DEFAULT_BOARD,
         game_class = chessai.puzzle.game.Game,
         custom_set_cli_args = set_cli_args,

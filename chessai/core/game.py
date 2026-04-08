@@ -9,8 +9,6 @@ import typing
 
 import edq.util.json
 
-import chess
-
 import chessai.core.action
 import chessai.core.agentinfo
 import chessai.core.board
@@ -54,7 +52,7 @@ class GameInfo(edq.util.json.DictConverter):
             raise ValueError("No agents provided.")
 
         if (start_board is None):
-            start_board = chess.STARTING_FEN
+            start_board = chessai.core.board.DEFAULT_FEN
 
         if (isinstance(start_board, chessai.core.board.Board)):
             start_board = start_board.get_fen()
@@ -656,7 +654,7 @@ def init_from_args(
 
         # TODO(Lucas): Cleanup board constructor to also take a full board object instead of only a FEN.
         # TODO(Lucas): We could avoid double passing source and search target (perhaps).
-        board = chessai.core.board.Board(all_boards[-1].source, game_info.start_board, game_info.search_targets)
+        board = board.copy()
 
         # Suffix the save path if there is more than one game.
         save_path = base_save_path
