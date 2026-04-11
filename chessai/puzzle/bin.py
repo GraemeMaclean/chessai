@@ -4,6 +4,7 @@ The main executable for running a game of puzzle.
 
 import argparse
 import logging
+import math
 import typing
 
 import chessai.core.agentinfo
@@ -26,6 +27,13 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
             help = ('Select the agent type that the puzzle agent will use (default: %(default)s).'
                     + f' Builtin agents: {chessai.util.alias.AGENT_SHORT_NAMES}.'))
 
+    parser.add_argument('--move-lines', dest = 'move_lines',
+        action = 'store', type = str, default = None,
+        help = ('Override the puzzle solution move lines (default: read from board file).'
+                + ' Expects a list of valid move lines, where each move line is a list of moves.'
+                + ' Single line: "[[e2e4,d7d5]]".'
+                + ' Multiple lines: "[[e2e4,d7d5],[e2e4,e7e5]]".'))
+
     return parser
 
 def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
@@ -40,7 +48,14 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
         chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
     }
 
-    return base_agent_infos, [], {}
+    extra_kwargs: dict[str, typing.Any] = {}
+
+    # If move lines were given on the CLI, pass them through so board loading can pick them up.
+    # They are parsed here so CLI errors are caught early with a clear message.
+    if (args.move_lines is not None):
+        extra_kwargs[chessai.puzzle.board.MOVE_LINES_KEY] = chessai.puzzle.board.move_lines_from_string(args.move_lines)
+
+    return base_agent_infos, [], extra_kwargs
 
 def log_puzzle_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
@@ -52,9 +67,9 @@ def log_puzzle_results(results: list[chessai.core.game.GameResult], winning_agen
 
     record: list[str] = []
     for result in results:
-        if (result.score > 0):
+        if (math.isclose(result.score, 1.0)):
             record.append('Win')
-        elif (result.score < 0):
+        elif (math.isclose(result.score, 0)):
             record.append('Loss')
         else:
             record.append('Tie')

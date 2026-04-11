@@ -40,12 +40,23 @@ class GameState(chessai.core.gamestate.GameState):
 
     # TODO(Lucas): What denotes a complete game?
     def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
-        self.board = typing.cast(chessai.puzzle.board.Board, self.board)
+        winners = self.get_board().get_winners()
 
-        if (len(self.board.get_move_lines()) == 0):
-            return ([self.dummy_player.opposite()], 0)
+        # Score is based on white's perspective using standard chess scoring.
+        if (chessai.core.types.Color.WHITE in winners):
+            score = 1.0
+        elif (chessai.core.types.Color.BLACK in winners):
+            score = 0.0
+        else:
+            score = 0.5
 
-        return ([self.dummy_player], 0)
+        return (winners, score)
+        # self.board = typing.cast(chessai.puzzle.board.Board, self.board)
+
+        # if (len(self.board.get_move_lines()) == 0):
+        #     return ([self.dummy_player.opposite()], 1.0)
+
+        # return ([self.dummy_player], 0)
 
     def get_dummy_player(self) -> chessai.core.types.Color:
         """ Returns the dummy player for this puzzle. """

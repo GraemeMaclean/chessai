@@ -1,3 +1,4 @@
+import logging
 import random
 import typing
 
@@ -52,7 +53,10 @@ class Game(chessai.core.game.Game):
             raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' of type '{type(action)}'.")
 
         if (action not in state.next_puzzle_moves()):
-            raise ValueError(f"Incorrect action for agent {action_record.player}: '{action.uci()}' of type '{type(action)}'.")
+            # TEST
+            logging.debug("Found puzzle moves: '%s'.", state.next_puzzle_moves())
+            logging.info("Incorrect action for agent '%s': '%s' of type '%s'.", action_record.player, action.uci(), type(action))
+            state.game_over = True
 
         self._call_state_process_turn_full(state, action, rng)
 
