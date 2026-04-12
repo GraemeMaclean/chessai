@@ -1,0 +1,13 @@
+{
+    "cli": "chessai.puzzle.bin",
+    "arguments": [
+        "--seed", "2",
+    ]
+}
+---
+<LOG_PREFIX> -- Incorrect action for agent 'white': 'a1f1' of type '<class 'chessai.core.action.Action'>'.
+<LOG_PREFIX> -- Average Score: 0.00
+<LOG_PREFIX> -- Scores:        0.0
+<LOG_PREFIX> -- Record:        Loss
+<LOG_PREFIX> -- Average Moves: 1.0
+<LOG_PREFIX> -- Move Counts:   1
