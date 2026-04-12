@@ -105,7 +105,7 @@ class Game(chessai.core.game.Game):
                 f"null move '{action.uci()}'."
             )
 
-        overriden_action = state.override_dummy_move()
+        overriden_action = state.override_dummy_move(rng)
 
         self._call_state_process_turn_full(state, overriden_action, rng)
 

@@ -82,7 +82,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         return puzzle_moves
 
-    def override_dummy_move(self) -> chessai.core.action.Action:
+    def override_dummy_move(self, rng: random.Random) -> chessai.core.action.Action:
         """ Override the dummy player's move by selecting a continuation from one of the move lines. """
 
         if (self.get_player() != self.dummy_player):
@@ -92,7 +92,7 @@ class GameState(chessai.core.gamestate.GameState):
         if (len(possible_moves) == 0):
             raise ValueError('Unable to find a valid continuation of the puzzle for the dummy agent.')
 
-        chosen_move = random.sample(possible_moves, 1)
+        chosen_move = rng.sample(possible_moves, 1)
         return chosen_move[0]
 
     def _update_move_lines(self, action: chessai.core.action.Action) -> bool:

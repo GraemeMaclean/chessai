@@ -253,7 +253,7 @@ def is_valid_fen(fen: str) -> bool:
     """ Checks if a FEN is valid. """
 
     try:
-        _ = chessai.core.board.Board('TEST', fen)
+        _ = Board('TEST', fen)
     except ValueError:
         return False
 
@@ -319,3 +319,20 @@ def load_string(source: str, text: str, **kwargs: typing.Any) -> Board:
 
     board_class = options.get('class', DEFAULT_BOARD_CLASS)
     return chessai.util.reflection.new_object(board_class, source, board_text, search_targets, **options)  # type: ignore[no-any-return]
+
+def parse_board(raw_board: typing.Any, **kwargs) -> Board:
+    """
+    Try to parse a board from a number of formats.
+    Takes the board as given, or loads it from a path.
+    """
+
+    if (raw_board is None):
+        board = Board('none')
+    elif (is_valid_fen(raw_board)):
+        board = Board('FEN', raw_board, kwargs.get(chessai.core.square.SQUARES_KEY, None))
+    elif (isinstance(raw_board, Board)):
+        board = raw_board
+    else:
+        board = load_path(raw_board, **kwargs)
+
+    return board

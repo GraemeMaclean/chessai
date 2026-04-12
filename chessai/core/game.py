@@ -614,15 +614,7 @@ def init_from_args(
     # we could write a utility to check if the arg is a valid FEN.
     # If not, we could try to load from the path.
 
-    # Either take the board as given, or load it from a path.
-    if (args.board is None):
-        board = chessai.core.board.Board('none')
-    elif (chessai.core.board.is_valid_fen(args.board)):
-        board = chessai.core.board.Board('FEN', args.board, kwargs.get(chessai.core.square.SQUARES_KEY, None))
-    elif (isinstance(args.board, chessai.core.board.Board)):
-        board = args.board
-    else:
-        board = chessai.core.board.load_path(args.board, **kwargs)
+    board = chessai.core.board.parse_board(args.board, **kwargs)
 
     agents = [chessai.core.types.Color.WHITE, chessai.core.types.Color.BLACK]
     agent_infos = _parse_agent_infos(agents, args.raw_agent_args, base_agent_infos)

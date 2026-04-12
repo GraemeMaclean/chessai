@@ -9,6 +9,8 @@ import typing
 
 import chessai.core.agentinfo
 import chessai.core.board
+import chessai.core.types
+import chessai.puzzle.board
 import chessai.puzzle.game
 import chessai.puzzle.gamestate
 import chessai.util.bin
@@ -40,12 +42,20 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
         list[chessai.core.types.Color], dict[str, typing.Any]]:
     """
     Setup agents based on Puzzle rules.
+
+    The solver agent is whichever color has the first move according to the board's FEN (i.e., the side-to-move).
+    The dummy agent is assigned the opposite color so it can supply scripted responses.
+
+    If the board hasn't been loaded yet (args.board is still a string or None),
+    we parse the side-to-move directly from the FEN/board argument so we can
+    assign colors before the full board object is constructed.
     """
 
-    # TODO(Lucas): How can we set it up so the puzzle can be from black's POV too?
+    solver_color = _detect_solver_color(args)
+
     base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] = {
-        chessai.core.types.Color.WHITE: chessai.core.agentinfo.AgentInfo(name = args.agent),
-        chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
+        solver_color:            chessai.core.agentinfo.AgentInfo(name = args.agent),
+        solver_color.opposite(): chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
     }
 
     extra_kwargs: dict[str, typing.Any] = {}
@@ -56,6 +66,17 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
         extra_kwargs[chessai.puzzle.board.MOVE_LINES_KEY] = chessai.puzzle.board.move_lines_from_string(args.move_lines)
 
     return base_agent_infos, [], extra_kwargs
+
+# TODO(Lucas): Not a huge fan of this code, can we do better?
+def _detect_solver_color(args: argparse.Namespace) -> chessai.core.types.Color:
+    """
+    Determine which color is the puzzle solver (i.e., the side that moves first).
+    """
+
+    board_arg = getattr(args, 'board', None)
+
+    board = chessai.core.board.parse_board(board_arg)
+    return board.get_turn()
 
 def log_puzzle_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
@@ -105,7 +126,7 @@ def log_puzzle_results(results: list[chessai.core.game.GameResult], winning_agen
     if (log_lists_to_info):
         logging.info('%sMove Counts:   %s', prefix, joined_move_counts)
     elif (log_lists_to_debug):
-        logging.debug('%sMove Counts:   %s', prefix, joined_move_counts)
+        logging.debug('%sMoves Counts:   %s', prefix, joined_move_counts)
 
 def main(argv: list[str] | None = None,
          ) -> list[chessai.core.game.GameResult]:
