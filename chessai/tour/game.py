@@ -63,8 +63,7 @@ class Game(chessai.core.game.Game):
         if (state.game_over):
             return True
 
-        board = state.get_board()
-        return (len(board.get_search_targets()) == 0)
+        return (len(state.get_search_targets()) == 0)
 
     def _handle_black_turn(self, state: chessai.core.gamestate.GameState,
                     action: chessai.core.action.Action,

@@ -356,8 +356,7 @@ class Game(abc.ABC):
         By default, this will just check chessai.core.gamestate.GameState.game_over,
         but child games can override for more complex functionality.
         """
-        board = state.get_board()
-        return (state.game_over or board.is_game_over())
+        return (state.game_over or state.is_game_over())
 
     def game_complete(self, state: chessai.core.gamestate.GameState, result: GameResult) -> None:
         """
@@ -405,7 +404,7 @@ class Game(abc.ABC):
         state.agents_game_start(records)
 
         while (not self.check_end(state)):
-            logging.trace("Turn %d, agent %s.", state.get_board().get_fullmove_number(), state.get_player()) # type: ignore[attr-defined]  # pylint: disable=no-member
+            logging.trace("Turn %d, agent %s.", state.get_fullmove_number(), state.get_player()) # type: ignore[attr-defined]  # pylint: disable=no-member
 
             # Get the next action from the agent.
             action_record = isolator.get_action(state, self.game_info.agent_action_timeout)
@@ -438,7 +437,7 @@ class Game(abc.ABC):
         result.score = score
 
         result.termination_reason = state.get_termination_reason()
-        result.end_fen = state.get_board().get_fen()
+        result.end_fen = state.get_fen()
 
         # Notify agents about the end of this game.
         result.agent_complete_records = isolator.game_complete(state, self.game_info.agent_end_timeout)

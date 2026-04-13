@@ -17,11 +17,10 @@ class GameState(chessai.core.gamestate.GameState):
         To get a copy of a potential successor state, use generate_successor().
         """
 
-        board = self.get_board()
-        board._push(action)
+        self.push(action)
 
     def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
-        winners = self.get_board().get_winners()
+        winners = self.get_winners()
 
         # Score is based on white's perspective using standard chess scoring.
         if (chessai.core.types.Color.WHITE in winners):

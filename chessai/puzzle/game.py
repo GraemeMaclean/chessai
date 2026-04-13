@@ -82,8 +82,7 @@ class Game(chessai.core.game.Game):
         if state.game_over:
             return True
 
-        board = state.get_board()
-        board = typing.cast(chessai.puzzle.board.Board, board)
+        board = typing.cast(chessai.puzzle.board.Board, state.board)
 
         return (len(board.get_move_lines()) == 0)
 

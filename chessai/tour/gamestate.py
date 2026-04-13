@@ -47,8 +47,7 @@ class GameState(chessai.core.gamestate.GameState):
         To get a copy of a potential successor state, use generate_successor().
         """
 
-        board = self.get_board()
-        board._push(action)
+        self.push(action)
 
         destination_square = action.get_end_square()
         search_targets = self.board.get_search_targets()

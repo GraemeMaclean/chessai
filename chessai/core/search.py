@@ -122,6 +122,7 @@ class SearchSolution(typing.Generic[NodeType]):
         May be None in cases where the solver does not use search nodes.
         """
 
+    # TODO(Lucas): May want to consider passing around gamestates instead of boards.
     def get_path(self, start_board: chessai.core.board.Board, start_position: chessai.core.square.Square) -> list[chessai.core.square.Square]:
         """
         Given the starting location, get the path this search solution represents.

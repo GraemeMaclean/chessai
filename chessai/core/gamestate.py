@@ -35,10 +35,6 @@ class GameState(edq.util.json.DictConverter):
         self.game_over: bool = game_over
         """ Indicates that this state represents a complete game. """
 
-    def get_board(self) -> chessai.core.board.Board:
-        """ Returns the chess board for the game state. """
-        return self.board
-
     def get_player(self) -> chessai.core.types.Color:
         """ Returns the player with the next move. """
         return self.board.get_turn()
@@ -47,6 +43,55 @@ class GameState(edq.util.json.DictConverter):
         """ Returns the number of moves in the game. """
 
         return self.board.get_move_count()
+
+    def get_fullmove_number(self) -> int:
+        """
+        Returns the total number of moves pairs made this game.
+        This number starts at one and is incremented after every black move.
+        """
+
+        return self.board.get_fullmove_number()
+
+    def get_pieces(self, piece_type: chessai.core.types.PieceType, color: chessai.core.types.Color) -> list[chessai.core.square.Square]:
+        """ Get the squares that the given piece type and color are on. """
+
+        return self.board.get_pieces(piece_type, color)
+
+    def get_winners(self) -> list[chessai.core.types.Color]:
+        """
+        Gets the list of winners from the game.
+        If the game is not over, it will be considered a tie.
+        """
+
+        return self.board.get_winners()
+
+    def is_capture(self, action: chessai.core.action.Action) -> bool:
+        """ Returns whether the given move captures a piece. """
+
+        return self.board.is_capture(action)
+
+    def is_game_over(self) -> bool:
+        """ Returns whether the game is over based on the standard chess rules. """
+
+        return self.board.is_game_over()
+
+    def get_search_targets(self) -> list[chessai.core.square.Square]:
+        """ Gets the squares on the board that are search targets. """
+
+        return self.board.get_search_targets()
+
+    def get_fen(self) -> str:
+        """
+        Gets the FEN representation of the gamestate.
+        See https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation .
+        """
+
+        return self.board.get_fen()
+
+    def push(self, action: chessai.core.action.Action) -> None:
+        """ Updates the gamestate with the given action. """
+
+        return self.board._push(action)
 
     def copy(self) -> 'GameState':
         """
@@ -202,7 +247,6 @@ def base_eval(
     """
     The most basic evaluation function, which just uses the difference in piece value on the board.
     """
-    board = state.get_board()
 
     piece_values: dict[chessai.core.types.PieceType, int] = {
         chessai.core.types.PieceType.PAWN: 1,
@@ -216,13 +260,13 @@ def base_eval(
     # The difference in pieces from white's perspective.
     board_value = 0
     for (piece_type, piece_value) in piece_values.items():
-        white_piece_count = len(board.get_pieces(piece_type, chessai.core.types.Color.WHITE))
-        black_piece_count = len(board.get_pieces(piece_type, chessai.core.types.Color.BLACK))
+        white_piece_count = len(state.get_pieces(piece_type, chessai.core.types.Color.WHITE))
+        black_piece_count = len(state.get_pieces(piece_type, chessai.core.types.Color.BLACK))
         piece_count = white_piece_count - black_piece_count
 
         board_value += (piece_count * piece_value)
 
-    if (board.get_turn() == chessai.core.types.Color.WHITE):
+    if (state.get_player() == chessai.core.types.Color.WHITE):
         return board_value
 
     # The piece difference is the opposite for black.

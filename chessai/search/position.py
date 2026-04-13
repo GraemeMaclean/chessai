@@ -37,6 +37,8 @@ class PositionSearchNode(chessai.core.search.SearchNode):
     def __hash__(self) -> int:
         return hash(self.position)
 
+# TODO(Lucas): Do we need to add a piece type for the search problem?
+# The start position finds the first available piece, but do the search problems need explicit piece info?
 class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode]):
     """
     A search problem for finding a specific position on the board.
@@ -72,10 +74,11 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
         """ The positions to search for. """
 
         if (start_position is None):
-            # TODO(Lucas): Will need to generalize this once we open up the piece offerings.
-            positions = game_state.get_board().get_pieces(chessai.core.types.PieceType.KNIGHT, chessai.core.types.Color.WHITE)
-            if (len(positions) > 0):
-                start_position = positions[0]
+            for piece_type in chessai.core.types.PieceType:
+                positions = game_state.get_pieces(piece_type, chessai.core.types.Color.WHITE)
+                if (len(positions) > 0):
+                    start_position = positions[0]
+                    break
 
         if (start_position is None):
             raise ValueError("Could not find starting position.")
