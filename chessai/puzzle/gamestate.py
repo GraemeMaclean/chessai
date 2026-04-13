@@ -92,8 +92,12 @@ class GameState(chessai.core.gamestate.GameState):
         if (len(possible_moves) == 0):
             raise ValueError('Unable to find a valid continuation of the puzzle for the dummy agent.')
 
-        chosen_move = rng.sample(possible_moves, 1)
-        return chosen_move[0]
+        chosen_move_list = rng.sample(possible_moves, 1)
+        chosen_move = chosen_move_list[0]
+        if (chosen_move not in self.get_legal_actions()):
+            raise ValueError(f"Puzzle has a dummy move that is invalid: '{self.get_player()}', '{chosen_move.uci()}', '{self.board.get_fen()}'.")
+
+        return chosen_move
 
     def _update_move_lines(self, action: chessai.core.action.Action) -> bool:
         """

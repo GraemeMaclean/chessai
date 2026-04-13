@@ -1,7 +1,7 @@
 {
     "cli": "chessai.puzzle.bin",
     "arguments": [
-        "--seed", "106",
+        "--seed", "5919",
         "--board", "puzzle-mate-3"
     ]
 }

@@ -1,6 +1,6 @@
 {
     "class": "chessai.puzzle.board.Board",
-    "move_lines": "[[c2e3,g2h3,f8h8,a7h7,h8h7]]"
+    "move_lines": "[[c2e3,g2h3,f8h8,a7h7,h8h7]]",
 }
 ---
-5r2/8/2p5/1k1p4/N7/6P1/PPn3KP/8 b - - 0 1
+5r2/R7/2p5/1k1p4/N7/6P1/PPn3KP/8 b - - 0 1
