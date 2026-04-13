@@ -42,7 +42,7 @@ class Game(chessai.core.game.Game):
 
         action = action_record.get_action()
 
-        if (state.get_player() == chessai.core.types.Color.BLACK):
+        if (state.turn == chessai.core.types.Color.BLACK):
             return self._handle_black_turn(state, action, rng)
 
         if (action not in state.get_legal_actions()):

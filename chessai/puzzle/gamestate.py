@@ -19,7 +19,7 @@ class GameState(chessai.core.gamestate.GameState):
         super().__init__(board, seed, game_over, **kwargs)
 
         # The dummy player for the current game is the opposite of the puzzle's starting player.
-        self.dummy_player: chessai.core.types.Color = self.get_player().opposite()
+        self.dummy_player: chessai.core.types.Color = self.turn.opposite()
 
         self.puzzle_solved: bool = puzzle_solved
         """
@@ -84,8 +84,8 @@ class GameState(chessai.core.gamestate.GameState):
     def override_dummy_move(self, rng: random.Random) -> chessai.core.action.Action:
         """ Override the dummy player's move by selecting a continuation from one of the move lines. """
 
-        if (self.get_player() != self.dummy_player):
-            raise ValueError(f"Non dummy player's cannot override a dummy move: '{self.get_player()}'.")
+        if (self.turn != self.dummy_player):
+            raise ValueError(f"Non dummy player's cannot override a dummy move: '{self.turn}'.")
 
         possible_moves = self.next_puzzle_moves()
         if (len(possible_moves) == 0):
@@ -94,7 +94,7 @@ class GameState(chessai.core.gamestate.GameState):
         chosen_move_list = rng.sample(possible_moves, 1)
         chosen_move = chosen_move_list[0]
         if (chosen_move not in self.get_legal_actions()):
-            raise ValueError(f"Puzzle has a dummy move that is invalid: '{self.get_player()}', '{chosen_move.uci()}', '{self.board.get_fen()}'.")
+            raise ValueError(f"Puzzle has a dummy move that is invalid: '{self.turn}', '{chosen_move.uci()}', '{self.board.get_fen()}'.")
 
         return chosen_move
 

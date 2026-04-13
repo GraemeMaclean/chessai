@@ -149,10 +149,10 @@ class Board(edq.util.json.DictConverter):
 
         return chessai.core.types.TerminationReason.from_chess_termination(outcome.termination)
 
-    def is_game_over(self) -> bool:
+    def is_game_over(self, claim_draw: bool = False) -> bool:
         """ Returns if the game is over. """
 
-        return self._board.is_game_over()
+        return self._board.is_game_over(claim_draw)
 
     def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Returns if the move captures a piece. """

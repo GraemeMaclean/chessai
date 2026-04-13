@@ -54,7 +54,7 @@ class Game(chessai.core.game.Game):
 
         action = action_record.get_action()
 
-        if (state.get_player() == state.get_dummy_player()):
+        if (state.turn == state.get_dummy_player()):
             return self._process_dummy_turn(state, action, rng)
 
         if (action not in state.get_legal_actions()):

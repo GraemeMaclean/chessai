@@ -106,7 +106,7 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
         self._stats_nodes_visited[-1] += 1
 
         # If we see ourselves, then we have descended a full ply.
-        if (state.get_player() == self.player):
+        if (state.turn == self.player):
             ply_count -= 1
 
         # At ply count zero, we just evaluate the current state and return up the tree.
@@ -125,7 +125,7 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
         if ((len(legal_actions) > 1) and (chessai.core.action.Action() in legal_actions)):
             legal_actions.remove(chessai.core.action.Action())
 
-        if (state.get_player() == self.player):
+        if (state.turn == self.player):
             # We are considering ourselves, get the max.
             return self.minimax_step_max(state, ply_count, legal_actions, alpha, beta)
 

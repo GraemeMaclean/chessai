@@ -39,12 +39,12 @@ class NoneIsolator(chessai.core.isolation.isolator.AgentIsolator):
         results = {}
         for (team, agent) in self._agents.items():
             data = {
-                'player': initial_state.get_player(),
+                'player': initial_state.turn,
                 'suggested_seed': rng.randint(0, 2**64),
                 'initial_state': initial_state,
             }
 
-            results[team] = _call_agent_method(initial_state.get_player(), agent.game_start_full, data)
+            results[team] = _call_agent_method(initial_state.turn, agent.game_start_full, data)
 
         return results
 
@@ -58,7 +58,7 @@ class NoneIsolator(chessai.core.isolation.isolator.AgentIsolator):
                 'final_state': final_state,
             }
 
-            results[team] = _call_agent_method(final_state.get_player(), agent.game_complete_full, data)
+            results[team] = _call_agent_method(final_state.turn, agent.game_complete_full, data)
 
         return results
 
@@ -66,12 +66,12 @@ class NoneIsolator(chessai.core.isolation.isolator.AgentIsolator):
             state: chessai.core.gamestate.GameState,
             timeout: float,
             ) -> chessai.core.agentaction.AgentActionRecord:
-        agent = self._agents[state.get_player()]
+        agent = self._agents[state.turn]
         data = {
             'state': state,
         }
 
-        return _call_agent_method(state.get_player(), agent.get_action_full, data)
+        return _call_agent_method(state.turn, agent.get_action_full, data)
 
     def close(self) -> None:
         self._agents.clear()
