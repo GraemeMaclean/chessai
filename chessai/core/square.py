@@ -1,11 +1,12 @@
 import typing
 
-import chess
 import edq.util.json
 
-import chessai.core.types
+import chessai.core.board
 
 SQUARES_KEY: str = 'squares'
+
+FILE_ALPHABET: str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 class Square(edq.util.json.DictConverter):
     """
@@ -20,93 +21,72 @@ class Square(edq.util.json.DictConverter):
     Rank increases bottom-to-top (1=0, 8=7).
     """
 
-    SQUARE_BOARD_SIZE: int = chessai.core.types.DEFAULT_BOARD_SIZE
-    """ The number of files (columns) and ranks (rows) on a standard chess board. """
+    def __init__(self,
+                 square: int,
+                 files: int = chessai.core.board.DEFAULT_BOARD_FILES,
+                 ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS) -> None:
+        """ Construct a Square from a square index in [0, files * ranks]. """
 
-    NUM_SQUARES: int = SQUARE_BOARD_SIZE * SQUARE_BOARD_SIZE
-    """ The total number of squares on a standard chess board. """
+        self.square: int = square
+        """ The square index [0, BOARD_SIZE]. """
 
-    def __init__(self, square: int) -> None:
-        """
-        Construct a Square from a square index in [0, 63].
-        Prefer the named constructors (from_file_rank, from_square, from_name)
-        for clarity.
-        """
+        self.files = files
+        """ The number of files on the board this square belongs to. """
 
-        if (square < 0 or square >= Square.NUM_SQUARES):
-            raise ValueError(
-                f"Square index {square} is out of range [0, {Square.NUM_SQUARES - 1}]."
-            )
-
-        self._square: int = square
-        """
-        The square index [0, 63].
-        Cached as the hash value since square indices are already unique.
-        """
+        self.ranks = ranks
+        """ The number of ranks on the board this square belongs to. """
 
     @classmethod
-    def from_file_rank(cls, file: int, rank: int) -> 'Square':
-        """
-        Construct a Square from a (file, rank) pair.
-        File and rank must both be in [0, 7].
+    def from_file_rank(cls, file: int, rank: int,
+            files: int = chessai.core.board.DEFAULT_BOARD_FILES,
+            ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS) -> 'Square':
+        """ Construct a Square from a (file, rank) pair. """
 
-        Example:
-            Square.from_file_rank(0, 0)  # a1
-            Square.from_file_rank(4, 3)  # e4
-        """
+        if ((file < 0) or (file >= files)):
+            raise ValueError(f"File {file} is out of range [0, {files - 1}].")
 
-        if (file < 0 or file >= Square.SQUARE_BOARD_SIZE):
-            raise ValueError(f"File {file} is out of range [0, {Square.SQUARE_BOARD_SIZE - 1}].")
+        if (rank < 0 or rank >= ranks):
+            raise ValueError(f"Rank {rank} is out of range [0, {ranks - 1}].")
 
-        if (rank < 0 or rank >= Square.SQUARE_BOARD_SIZE):
-            raise ValueError(f"Rank {rank} is out of range [0, {Square.SQUARE_BOARD_SIZE - 1}].")
+        # TODO(Lucas): Check this logic
+        square_number = (file * files) + (rank)
 
-        return cls(chess.square(file, rank))
+        return cls(square_number, files, ranks)
 
     @classmethod
-    def from_square(cls, square: chess.Square) -> 'Square':
-        """
-        Construct a Square from a python-chess square constant.
-
-        Example:
-            Square.from_square(chess.E4)
-            Square.from_square(chess.A1)
-        """
-
-        return cls(int(square))
-
-    @classmethod
-    def from_name(cls, name: str) -> 'Square':
-        """
-        Construct a Square from standard algebraic square name.
-
-        Example:
-            Square.from_name('e4')
-            Square.from_name('a1')
-        """
+    def from_name(cls,
+            name: str,
+            files: chessai.core.board.DEFAULT_BOARD_FILES,
+            ranks: chessai.core.board.DEFAULT_BOARD_RANKS) -> 'Square':
+        """ Construct a Square from standard algebraic square name. """
 
         square = chess.parse_square(name.lower())
         return cls(int(square))
 
-    @property
-    def square(self) -> int:
-        """ The square index [0, 63]. Compatible with python-chess square constants. """
-        return self._square
-
-    @property
     def file(self) -> int:
-        """ The file (column) of this square, in [0, 7]. a=0, h=7. """
-        return chess.square_file(self._square)
+        """ The file (column) of this square, in [0, files]. a=0, b=1, c=2... """
 
-    @property
+        return (self.square // self.files)
+
     def rank(self) -> int:
-        """ The rank (row) of this square, in [0, 7]. Rank 1=0, Rank 8=7. """
-        return chess.square_rank(self._square)
+        """ The rank (row) of this square, in [0, ranks]. Rank 1=0, Rank 2=1... """
 
-    @property
+        return (self.square % self.ranks)
+
     def name(self) -> str:
         """ The standard algebraic name of this square, e.g. 'e4'. """
-        return chess.square_name(self._square)
+
+        file = self.file()
+        file_name = ''
+        while (file > len(FILE_ALPHABET)):
+            file_name += FILE_ALPHABET[-1]
+            file -= len(FILE_ALPHABET)
+
+        file_name += FILE_ALPHABET[file]
+
+        rank = str(self.rank())
+
+        return file_name + rank
 
     def offset(self, file_delta: int, rank_delta: int) -> 'Square | None':
         """
@@ -117,20 +97,22 @@ class Square(edq.util.json.DictConverter):
         new_file = self.file + file_delta
         new_rank = self.rank + rank_delta
 
-        if (new_file < 0 or new_file >= Square.SQUARE_BOARD_SIZE):
+        if ((new_file < 0) or (new_file >= self.files)):
             return None
 
-        if (new_rank < 0 or new_rank >= Square.SQUARE_BOARD_SIZE):
+        if ((new_rank < 0) or (new_rank >= self.ranks)):
             return None
 
         return Square.from_file_rank(new_file, new_rank)
 
     def file_distance(self, other: 'Square') -> int:
         """ The absolute difference in file between this square and another. """
+
         return abs(self.file - other.file)
 
     def rank_distance(self, other: 'Square') -> int:
         """ The absolute difference in rank between this square and another. """
+
         return abs(self.rank - other.rank)
 
     def chebyshev_distance(self, other: 'Square') -> int:
@@ -153,29 +135,24 @@ class Square(edq.util.json.DictConverter):
 
         return self.file_distance(other) + self.rank_distance(other)
 
-    # def apply_action(self, action: chessai.core.action.Action) -> 'Square':
-    #     """ Returns the Square that the action moves to. """
-
-    #     start_square = action.get_start_square()
-    #     if (self != start_square):
-    #         raise ValueError(f"Actions applied must start from the same square: {action}")
-
-    #     return action.get_end_square()
-
-    def to_chess_square(self) -> chess.Square:
-        """ Gets the Python chess library square. """
-        return chess.square(self.file, self.rank)
-
     def to_dict(self) -> dict[str, typing.Any]:
         return {
-            'square': self._square,
+            'square': self.square,
+            'files': self.files,
+            'ranks': self.ranks,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> 'Square':
-        return cls(data['square'])
+        return cls(
+                data['square'],
+                data.get('files', chessai.core.board.DEFAULT_BOARD_FILES),
+                data.get('ranks', chessai.core.board.DEFAULT_BOARD_FILES),
+            )
 
-def squares_from_dict(data: dict[str, typing.Any]) -> list[Square]:
+def squares_from_dict(data: dict[str, typing.Any],
+            files: int = chessai.core.board.DEFAULT_BOARD_FILES,
+            ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS) -> list[Square]:
     """
     Get a list of squares from a dict.
     The 'squares' key will be checked.
@@ -193,9 +170,9 @@ def squares_from_dict(data: dict[str, typing.Any]) -> list[Square]:
         if (isinstance(raw_square, dict)):
             clean_square = Square.from_dict(raw_square)
         elif (isinstance(raw_square, int)):
-            clean_square = Square(raw_square)
+            clean_square = Square(raw_square, files, ranks)
         elif (isinstance(raw_square, str)):
-            clean_square = Square(int(raw_square))
+            clean_square = Square(int(raw_square), files, ranks)
 
         if (clean_square is not None):
             clean_squares.append(clean_square)

@@ -58,7 +58,7 @@ class GameState(edq.util.json.DictConverter):
         """ The stateless board which enforces the rules. """
 
         if (fen is None):
-            fen = board.get_initial_fen()
+            fen = board.initial_fen
 
         parsed_fen = chessai.core.fen.parse(fen)
 

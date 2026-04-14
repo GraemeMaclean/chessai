@@ -2,8 +2,6 @@ import enum
 
 import chess
 
-DEFAULT_BOARD_SIZE: int = 8
-
 class Color(int, enum.Enum):
     """ An enum representing the side to move or the color of a piece. """
     BLACK = 0

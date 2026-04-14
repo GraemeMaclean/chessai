@@ -119,8 +119,10 @@ def serialize(
     return f"{piece_field} {turn_field} {castling_field} {ep_field} {halfmove_clock} {fullmove_number}"
 
 def _parse_pieces(
-        piece_field: str,
-) -> dict[chessai.core.square.Square, chessai.core.piece.Piece]:
+            piece_field: str,
+            num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
+            num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS,
+        ) -> dict[chessai.core.square.Square, chessai.core.piece.Piece]:
     """
     Parse the piece-placement field of a FEN string.
 
@@ -128,9 +130,9 @@ def _parse_pieces(
     """
 
     ranks = piece_field.split('/')
-    if (len(ranks) != chessai.core.types.DEFAULT_BOARD_SIZE):
+    if (len(ranks) != num_ranks):
         raise ValueError(
-            f"FEN piece field must have {chessai.core.types.DEFAULT_BOARD_SIZE} ranks"
+            f"FEN piece field must have {num_ranks} ranks"
             + f" separated by '/', found {len(ranks)}: '{piece_field}'."
         )
 
@@ -138,14 +140,14 @@ def _parse_pieces(
 
     for (rank_index, rank_str) in enumerate(ranks):
         # FEN rank 8 is index 0 in the string, which is rank 7 in [0, 7].
-        rank = chessai.core.types.DEFAULT_BOARD_SIZE - 1 - rank_index
+        rank = (num_ranks - 1) - rank_index
         file = 0
 
         for char in rank_str:
             if (char.isdigit()):
                 file += int(char)
             elif (char in _FEN_SYMBOL_TO_PIECE):
-                if (file >= chessai.core.types.DEFAULT_BOARD_SIZE):
+                if (file >= num_files):
                     raise ValueError(f"Too many pieces on rank {rank + 1} in FEN: '{piece_field}'.")
 
                 square = chessai.core.square.Square.from_file_rank(file, rank)
@@ -155,28 +157,30 @@ def _parse_pieces(
             else:
                 raise ValueError(f"Unknown character '{char}' in FEN piece field: '{piece_field}'.")
 
-        if (file != chessai.core.types.DEFAULT_BOARD_SIZE):
+        if (file != num_files):
             raise ValueError(
                 f"Rank {rank + 1} has {file} files, expected"
-                + f" {chessai.core.types.DEFAULT_BOARD_SIZE}: '{piece_field}'."
+                + f" {num_files}: '{piece_field}'."
             )
 
     return pieces
 
-def _serialize_pieces(pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece]) -> str:
+def _serialize_pieces(pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece],
+        num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
+        num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS) -> str:
     """
     Serialize a piece map into the piece-placement field of a FEN string.
     """
 
     ranks: list[str] = []
 
-    for rank_index in range(chessai.core.types.DEFAULT_BOARD_SIZE):
+    for rank_index in range(num_ranks):
         # FEN rank 8 comes first, so we descend from rank 7 to rank 0.
-        rank = chessai.core.types.DEFAULT_BOARD_SIZE - 1 - rank_index
+        rank = (num_ranks - 1) - rank_index
         empty_count = 0
         rank_str = ''
 
-        for file in range(chessai.core.types.DEFAULT_BOARD_SIZE):
+        for file in range(num_files):
             square = chessai.core.square.Square.from_file_rank(file, rank)
             piece = pieces.get(square)
 
@@ -186,9 +190,11 @@ def _serialize_pieces(pieces: dict[chessai.core.square.Square, chessai.core.piec
                 if (empty_count > 0):
                     rank_str += str(empty_count)
                     empty_count = 0
+
                 symbol = _PIECE_TO_FEN_SYMBOL.get((piece.piece_type, piece.color))
                 if (symbol is None):
                     raise ValueError(f"Cannot serialize piece {piece} at {square}")
+
                 rank_str += symbol
 
         if (empty_count > 0):
@@ -207,6 +213,7 @@ def _parse_turn(turn_field: str) -> chessai.core.types.Color:
 
     raise ValueError(f"FEN turn field must be 'w' or 'b', found: '{turn_field}'.")
 
+# TODO(Lucas): Will need to add in board dimensions to parse square from name.
 def _parse_en_passant(ep_field: str) -> chessai.core.square.Square | None:
     if (ep_field == '-'):
         return None

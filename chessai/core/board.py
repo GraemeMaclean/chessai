@@ -25,6 +25,11 @@ FILE_EXTENSION = '.board'
 DEFAULT_BOARD_CLASS: str = 'chessai.core.board.Board'
 DEFAULT_FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
+DEFAULT_BOARD_FILES: int = 8
+DEFAULT_BOARD_RANKS: int = 8
+
+DEFAULT_BOARD_SIZE: int = DEFAULT_BOARD_RANKS * DEFAULT_BOARD_FILES
+
 # TODO(Lucas): Continue adding the necessary methods for students to interact with the board.
 class Board(edq.util.json.DictConverter):
     """
@@ -35,82 +40,45 @@ class Board(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-            source: str,
-            start_fen: str = DEFAULT_FEN,
-            search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
-            check_validity: bool = False,
+            num_files: int = DEFAULT_BOARD_FILES,
+            num_ranks: int = DEFAULT_BOARD_RANKS,
+            pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece] | None = None,
             **kwargs: typing.Any) -> None:
         """
-        Construct a board.
-        The board must be a valid board given by the starting FEN if check_validity is true.
+        Construct a board with the given dimensions and pieces.
         """
 
-        self.source: str = source
-        """ Where this board was loaded from. """
-
-        self._board = chess.Board(start_fen)
-        """ The current board which stores the current state and the history. """
-
-        self.num_files: int = chessai.core.types.DEFAULT_BOARD_SIZE
+        self.num_files: int = num_files
         """ The number of files of the chess board. """
 
-        self.num_ranks: int = chessai.core.types.DEFAULT_BOARD_SIZE
+        self.num_ranks: int = num_ranks
         """ The number of ranks of the chess board. """
 
-        if (search_targets is None):
-            search_targets = []
+        self.num_squares: int = self.num_files * self.num_ranks
+        """ The total number of squares on the board. """
 
-        self.search_targets: list[chessai.core.square.Square] = search_targets  # type: ignore
-        """ The targets of the piece tour search. """
+        if (pieces is None):
+            pieces = {}
 
-        # Convert the string case into the dict case.
-        if (isinstance(search_targets, str)):
-            search_targets = {
-                chessai.core.square.SQUARES_KEY: search_targets
-            }
+        self.pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece] = pieces
+        """ The pieces on the board, keyed by the square they occupy. """
 
-        if (isinstance(search_targets, dict)):
-            self.search_targets = chessai.core.square.squares_from_dict(search_targets)
-
-        if (check_validity and (not self.is_valid())):
-            raise ValueError("Invalid board format: '{start_fen}'.")
-
-    @property
-    def files(self) -> int:
-        """ The files (columns) of this square, in [0, 7]. a=0, h=7. """
-
-        return self.num_files
-
-    @property
-    def ranks(self) -> int:
-        """ The number of ranks (rows) of this board, in [0, 7]. Rank 1=0, Rank 8=7. """
-
-        return self.num_ranks
+        if (not self.is_valid()):
+            raise ValueError('Cannot construct an invalid board:'
+                + f" files '{self.num_files}', ranks '{self.num_ranks}',"
+                + f" pieces '{self.pieces}'.")
 
     def is_valid(self) -> bool:
-        """ Checks if the board is in a valid square. """
+        """ Checks if all of the pieces are in a valid position. """
 
-        return self._board.is_valid()
+        for (square, _) in self.pieces.items():
+            if ((square.file < 0) or (square.file > board.num_files)):
+                return False
 
-    def get_turn(self) -> chessai.core.types.Color:
-        """ The side to move (chessai.core.types.WHITE or chessai.core.types.BLACK). """
+            if ((square.rank < 0) or (square.rank > board.num_ranks)):
+                return False
 
-        return chessai.core.types.Color(self._board.turn)
-
-    def get_fullmove_number(self) -> int:
-        """ Counts move pairs. Starts at 1 and is incremented after every move of the black side. """
-
-        return self._board.fullmove_number
-
-    def get_legal_moves(self) -> chess.LegalMoveGenerator:
-        """ Returns a dynamic list of the legal moves. """
-
-        return self._board.legal_moves
-
-    def get_fen(self) -> str:
-        """ Gets a FEN representation of the current board square. """
-
-        return self._board.fen()
+        return True
 
     def get_pieces(self,
                    piece_type: chessai.core.types.PieceType,
@@ -177,27 +145,6 @@ class Board(edq.util.json.DictConverter):
             neighbors.append((action, end_square))
 
         return neighbors
-
-    def get_move_count(self) -> int:
-        """ Returns the number of moves in the game. """
-
-        return len(self._board.move_stack)
-
-    def get_search_targets(self) -> list[chessai.core.square.Square]:
-        """ Returns the search target of the board. """
-
-        return self.search_targets
-
-    def remove_search_target(self, square: chessai.core.square.Square) -> None:
-        """
-        Remove a search target from the board.
-        If the square is not a search target, the board is unchanged.
-        """
-
-        if (square not in self.search_targets):
-            return
-
-        self.search_targets.remove(square)
 
     def _push(self, action: chessai.core.action.Action) -> None:
         """ Updates the square with the given move and puts it onto the move stack. """
