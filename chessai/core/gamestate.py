@@ -36,7 +36,7 @@ class GameState(edq.util.json.DictConverter):
         # TODO(Lucas): Parse the board size from the FEN so we can give it to the board.
         parsed_fen = chessai.core.fen.parse(fen)
 
-        self.board: chessai.core.board.Board = chessai.core.board.Board(parsed_fen.pieces)
+        self.board: chessai.core.board.Board = chessai.core.board.Board(parsed_fen.pieces, parsed_fen.num_files, parsed_fen.num_ranks)
         """ The board responsible for holding the position of pieces. """
 
         self.turn: chessai.core.types.Color = parsed_fen.turn
@@ -80,6 +80,8 @@ class GameState(edq.util.json.DictConverter):
             en_passant_coordinate = self.en_passant_coordinate,
             halfmove_clock    = self.halfmove_clock,
             fullmove_number   = self.fullmove_number,
+            num_files         = self.num_files,
+            num_ranks         = self.num_ranks,
         )
 
     # -----------------------------------------------
