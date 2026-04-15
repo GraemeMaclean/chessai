@@ -5,7 +5,7 @@ import edq.util.json
 
 COORDINATES_KEY: str = 'coordinates'
 
-COORDINATE_PATTERN: re.Pattern = re.compile('([a-z]+)(\d+)')
+COORDINATE_PATTERN: re.Pattern = re.compile(r'([a-z]+)(\d+)')
 
 class Coordinate(edq.util.json.DictConverter):
     """
@@ -32,7 +32,7 @@ class Coordinate(edq.util.json.DictConverter):
 
         match = re.fullmatch(COORDINATE_PATTERN, uci.lower())
         if (match is None):
-            raise ValueError("Improper Coordinate name: '%s', expected '[a-z]+\d+'." % (uci))
+            raise ValueError(f"Improper Coordinate name: '{uci}', expected '[a-z]+\\d+'.")
 
         raw_file, raw_rank = match.groups()
 
