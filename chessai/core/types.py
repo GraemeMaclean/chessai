@@ -1,15 +1,12 @@
 import enum
 
-import chess
-
 class Color(int, enum.Enum):
     """ An enum representing the side to move or the color of a piece. """
     BLACK = 0
     WHITE = 1
 
-    @property
     def symbol(self) -> str:
-        """ Retruns 'w' for white and 'b' for black. """
+        """ Returns 'w' for white and 'b' for black. """
 
         return 'w' if (self == Color.WHITE) else 'b'
 
@@ -19,7 +16,7 @@ class Color(int, enum.Enum):
         return Color.BLACK if (self == Color.WHITE) else Color.WHITE
 
     def __str__(self) -> str:
-        return self.name.lower()  # "white" or "black"
+        return self.name.lower()
 
     def __repr__(self) -> str:
         return f"Color.{self.name}"
@@ -64,24 +61,6 @@ class TerminationReason(enum.Enum):
     UNKNOWN = enum.auto()
     """ The termination reason is unknown. """
 
-    @classmethod
-    def from_chess_termination(cls, termination: chess.Termination) -> 'TerminationReason':
-        """ Convert a chess.Termination to a TerminationReason. """
-
-        termination_map: dict[chess.Termination, TerminationReason] = {
-            chess.Termination.CHECKMATE: TerminationReason.CHECKMATE,
-            chess.Termination.STALEMATE: TerminationReason.STALEMATE,
-            chess.Termination.INSUFFICIENT_MATERIAL: TerminationReason.INSUFFICIENT_MATERIAL,
-            chess.Termination.SEVENTYFIVE_MOVES: TerminationReason.SEVENTYFIVE_MOVES,
-            chess.Termination.FIFTY_MOVES: TerminationReason.FIFTY_MOVES,
-            chess.Termination.THREEFOLD_REPETITION: TerminationReason.THREEFOLD_REPETITION,
-            chess.Termination.VARIANT_WIN: TerminationReason.VARIANT_WIN,
-            chess.Termination.VARIANT_LOSS: TerminationReason.VARIANT_LOSS,
-            chess.Termination.VARIANT_DRAW: TerminationReason.VARIANT_DRAW,
-        }
-
-        return termination_map.get(termination, TerminationReason.UNKNOWN)
-
 class PieceType(str, enum.Enum):
     """ An enum representing the different chess pieces. """
 
@@ -108,18 +87,6 @@ class PieceType(str, enum.Enum):
         """ Returns the unicode symbol for this piece type. """
 
         return UNICODE_PIECE_SYMBOLS[self.value.upper() if (team == Color.WHITE) else self.value]
-
-    @property
-    def chess_int(self) -> int:
-        """ Returns the python-chess integer for this piece type. """
-        return {
-            PieceType.PAWN:   chess.PAWN,
-            PieceType.KNIGHT: chess.KNIGHT,
-            PieceType.BISHOP: chess.BISHOP,
-            PieceType.ROOK:   chess.ROOK,
-            PieceType.QUEEN:  chess.QUEEN,
-            PieceType.KING:   chess.KING,
-        }[self]
 
     def __str__(self) -> str:
         return self.value
