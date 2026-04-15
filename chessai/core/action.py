@@ -4,7 +4,6 @@ Default actions are provided, but custom actions can be easily created.
 """
 
 import re
-import typing
 
 import edq.util.json
 
@@ -34,7 +33,7 @@ class Action(edq.util.json.DictConverter):
         start = self.start_coordinate.uci()
         end = self.end_coordinate.uci()
 
-        return '%s%s' % (start, end)
+        return f"{start}{end}"
 
     @classmethod
     def from_uci(cls, uci: str) -> 'Action':
@@ -43,10 +42,12 @@ class Action(edq.util.json.DictConverter):
         Note that this project supports arbitrary sized boards.
         """
 
-        coordinates = re.findall(chessai.core.coordinate.COORDINATE_PATTERN, uci)
+        matches = re.finditer(chessai.core.coordinate.COORDINATE_PATTERN, uci)
+        coordinates = [match.group(0) for match in matches]
         if (len(coordinates) != 2):
-            raise ValueError("An action must be a pair of coordinates '%s%s', got: '%s'." %
-                    (chessai.core.coordinate.COORDINATE_PATTERN, chessai.core.coordinate.COORDINATE_PATTERN, uci))
+            raise ValueError('An action must be a pair of coordinates'
+                    + f" '{chessai.core.coordinate.COORDINATE_PATTERN.pattern}{chessai.core.coordinate.COORDINATE_PATTERN.pattern}',"
+                    + f" got: '{uci}'.")
 
         start_coordinate = chessai.core.coordinate.Coordinate.from_uci(coordinates[0])
         end_coordinate = chessai.core.coordinate.Coordinate.from_uci(coordinates[1])
