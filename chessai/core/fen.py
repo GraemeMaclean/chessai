@@ -1,26 +1,23 @@
 """
 FEN (Forsyth-Edwards Notation) parsing and serialization.
 
-All functions in this module are pure Python and do not depend on the
-python-chess library.  They operate on the project's own types:
-Square, Piece, Color, PieceType, and CastlingRights.
-
 FEN format:
   <pieces> <turn> <castling> <en-passant> <halfmove-clock> <fullmove-number>
 
-  pieces       — ranks 8..1, files a..h; '/' separates ranks; digits = empty squares
+  pieces       — ranks 8..1, files a..h; '/' separates ranks; digits = empty coordinates
   turn         — 'w' or 'b'
   castling     — 'KQkq' subset or '-'
-  en-passant   — target square in algebraic notation or '-'
+  en-passant   — target coordinate in algebraic notation or '-'
   halfmove     — integer
   fullmove     — integer (starts at 1, increments after Black's move)
 
-See: https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
+See: https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation .
 """
 
+import chessai.core.board
 import chessai.core.castling
+import chessai.core.coordinate
 import chessai.core.piece
-import chessai.core.square
 import chessai.core.types
 
 # Maps the single-character FEN symbol to a (PieceType, Color) pair.
@@ -52,23 +49,23 @@ class ParsedFEN:
         'pieces',
         'turn',
         'castling_rights',
-        'en_passant_square',
+        'en_passant_coordinate',
         'halfmove_clock',
         'fullmove_number',
     )
 
     def __init__(self,
-            pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece],
+            pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece],
             turn: chessai.core.types.Color,
             castling_rights: chessai.core.castling.CastlingRights,
-            en_passant_square: chessai.core.square.Square | None,
+            en_passant_coordinate: chessai.core.coordinate.Coordinate | None,
             halfmove_clock: int,
             fullmove_number: int,
             ) -> None:
-        self.pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece] = pieces
+        self.pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = pieces
         self.turn: chessai.core.types.Color = turn
         self.castling_rights: chessai.core.castling.CastlingRights = castling_rights
-        self.en_passant_square: chessai.core.square.Square | None = en_passant_square
+        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = en_passant_coordinate
         self.halfmove_clock: int = halfmove_clock
         self.fullmove_number: int = fullmove_number
 
@@ -96,16 +93,16 @@ def parse(fen: str) -> ParsedFEN:
         pieces          = pieces,
         turn            = turn,
         castling_rights = castling_rights,
-        en_passant_square = en_passant,
+        en_passant_coordinate = en_passant,
         halfmove_clock  = halfmove_clock,
         fullmove_number = fullmove_number,
     )
 
 def serialize(
-        pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece],
+        pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece],
         turn: chessai.core.types.Color,
         castling_rights: chessai.core.castling.CastlingRights,
-        en_passant_square: chessai.core.square.Square | None,
+        en_passant_coordinate: chessai.core.coordinate.Coordinate | None,
         halfmove_clock: int,
         fullmove_number: int,
         ) -> str:
@@ -114,7 +111,7 @@ def serialize(
     piece_field    = _serialize_pieces(pieces)
     turn_field     = 'w' if (turn == chessai.core.types.Color.WHITE) else 'b'
     castling_field = castling_rights.to_fen_string()
-    ep_field       = en_passant_square.name if (en_passant_square is not None) else '-'
+    ep_field       = en_passant_coordinate.uci() if (en_passant_coordinate is not None) else '-'
 
     return f"{piece_field} {turn_field} {castling_field} {ep_field} {halfmove_clock} {fullmove_number}"
 
@@ -122,7 +119,7 @@ def _parse_pieces(
             piece_field: str,
             num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
             num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS,
-        ) -> dict[chessai.core.square.Square, chessai.core.piece.Piece]:
+        ) -> dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece]:
     """
     Parse the piece-placement field of a FEN string.
 
@@ -136,7 +133,7 @@ def _parse_pieces(
             + f" separated by '/', found {len(ranks)}: '{piece_field}'."
         )
 
-    pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece] = {}
+    pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = {}
 
     for (rank_index, rank_str) in enumerate(ranks):
         # FEN rank 8 is index 0 in the string, which is rank 7 in [0, 7].
@@ -150,9 +147,9 @@ def _parse_pieces(
                 if (file >= num_files):
                     raise ValueError(f"Too many pieces on rank {rank + 1} in FEN: '{piece_field}'.")
 
-                square = chessai.core.square.Square.from_file_rank(file, rank)
+                coordinate = chessai.core.coordinate.Coordinate(file, rank)
                 piece_type, color = _FEN_SYMBOL_TO_PIECE[char]
-                pieces[square] = chessai.core.piece.Piece(piece_type, color)
+                pieces[coordinate] = chessai.core.piece.Piece(piece_type, color)
                 file += 1
             else:
                 raise ValueError(f"Unknown character '{char}' in FEN piece field: '{piece_field}'.")
@@ -165,7 +162,7 @@ def _parse_pieces(
 
     return pieces
 
-def _serialize_pieces(pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece],
+def _serialize_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece],
         num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
         num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS) -> str:
     """
@@ -181,8 +178,8 @@ def _serialize_pieces(pieces: dict[chessai.core.square.Square, chessai.core.piec
         rank_str = ''
 
         for file in range(num_files):
-            square = chessai.core.square.Square.from_file_rank(file, rank)
-            piece = pieces.get(square)
+            coordinate = chessai.core.coordinate.Coordinate(file, rank)
+            piece = pieces.get(coordinate)
 
             if (piece is None):
                 empty_count += 1
@@ -193,7 +190,7 @@ def _serialize_pieces(pieces: dict[chessai.core.square.Square, chessai.core.piec
 
                 symbol = _PIECE_TO_FEN_SYMBOL.get((piece.piece_type, piece.color))
                 if (symbol is None):
-                    raise ValueError(f"Cannot serialize piece {piece} at {square}")
+                    raise ValueError(f"Cannot serialize piece {piece} at {coordinate}")
 
                 rank_str += symbol
 
@@ -213,12 +210,12 @@ def _parse_turn(turn_field: str) -> chessai.core.types.Color:
 
     raise ValueError(f"FEN turn field must be 'w' or 'b', found: '{turn_field}'.")
 
-# TODO(Lucas): Will need to add in board dimensions to parse square from name.
-def _parse_en_passant(ep_field: str) -> chessai.core.square.Square | None:
+# TODO(Lucas): Will need to add in board dimensions to parse coordinate from name.
+def _parse_en_passant(ep_field: str) -> chessai.core.coordinate.Coordinate | None:
     if (ep_field == '-'):
         return None
     try:
-        return chessai.core.square.Square.from_name(ep_field)
+        return chessai.core.coordinate.Coordinate.from_uci(ep_field)
     except Exception as exc:
         raise ValueError(f"Invalid FEN en-passant field: '{ep_field}'.") from exc
 

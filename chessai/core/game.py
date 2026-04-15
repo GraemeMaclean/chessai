@@ -30,7 +30,7 @@ class GameInfo(edq.util.json.DictConverter):
     def __init__(self,
             agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
             start_board: chessai.core.board.Board | str | None = None,
-            search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
+            search_targets: list[chessai.core.coordinate.Coordinate] | dict[str, typing.Any] | None = None,
             isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
             max_moves: int = DEFAULT_MAX_MOVES,
             agent_start_timeout: float = DEFAULT_AGENT_START_TIMEOUT,
@@ -63,11 +63,11 @@ class GameInfo(edq.util.json.DictConverter):
         if (search_targets is None):
             search_targets = []
 
-        self.search_targets: list[chessai.core.square.Square] = search_targets # type: ignore
+        self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets # type: ignore
         """ The search targets of this game. """
 
         if (isinstance(search_targets, dict)):
-            self.search_targets = chessai.core.square.squares_from_dict(search_targets)
+            self.search_targets = chessai.core.coordinate.squares_from_dict(search_targets)
 
         self.isolation_level: chessai.core.isolation.level.Level = isolation_level
         """ The isolation level to use for this game. """

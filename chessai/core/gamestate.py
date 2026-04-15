@@ -10,8 +10,10 @@ import chessai.core.board
 import chessai.core.castling
 import chessai.core.fen
 import chessai.core.piece
-import chessai.core.square
+import chessai.core.coordinate
 import chessai.core.types
+
+DEFAULT_FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 class GameState(edq.util.json.DictConverter):
     """
@@ -20,88 +22,36 @@ class GameState(edq.util.json.DictConverter):
     The board is not responsible for any mutable state.
 
     Game states should only be interacted with via their methods and not their member variables.
-
-    Fields:
-        board             — stateless rules engine
-        pieces            — current piece positions (Square -> Piece)
-        turn              — whose move it is (Color)
-        castling_rights   — which castling moves are still legal
-        en_passant_square — current en-passant target square, or None
-        halfmove_clock    — the number of plies since last pawn move or capture
-        fullmove_number   — increments after every black move (starts at 1)
-        move_stack        — ordered history of actions (oldest first)
-        game_over         — True once the game has ended
-        seed              — utility seed for agent RNGs
-
-    Initialization:
-        The FEN string is used to populate the gamestate.
-        Individual fields may override those found in the FEN.
     """
 
     def __init__(self,
-                 board: chessai.core.board.Board | None = None,
                  fen: str | None = None,
-                 pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece] | None = None,
-                 turn: chessai.core.types.Color | None = None,
-                 castling_rights: chessai.core.castling.CastlingRights | None = None,
-                 en_passant_square: chessai.core.square.Square | None | int = -1,
-                 halfmove_clock: int | None = None,
-                 fullmove_number: int | None = None,
                  move_stack: list[chessai.core.action.Action] | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  **kwargs: typing.Any) -> None:
-        if (board is None):
-            raise ValueError("Cannot construct a game state without a board.")
-
-        self.board: chessai.core.board.Board = board
-        """ The stateless board which enforces the rules. """
-
         if (fen is None):
-            fen = board.initial_fen
+            fen = DEFAULT_FEN
 
+        # TODO(Lucas): Parse the board size from the FEN so we can give it to the board.
         parsed_fen = chessai.core.fen.parse(fen)
 
-        if (pieces is None):
-            pieces = parsed_fen.pieces
+        self.board: chessai.core.board.Board = chessai.core.board.Board(parsed_fen.pieces)
+        """ The board responsible for holding the position of pieces. """
 
-        self.pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece]
-        """ The current piece positions. """
-
-        if (turn is None):
-            turn = parsed_fen.turn
-
-        self.turn: chessai.core.types.Color = turn
+        self.turn: chessai.core.types.Color = parsed_fen.turn
         """ The color of the current player. """
 
-        if (castling_rights is None):
-            castling_rights = parsed_fen.castling_rights
-
-        self.castling_rights: chessai.core.castling.CastlingRights = castling_rights
+        self.castling_rights: chessai.core.castling.CastlingRights = parsed_fen.castling_rights
         """ The available castling moves. """
 
-        # As None is a valid en passant square, we use a strange default value (-1).
-        # If it is any integer, a default value was passed so the user is not trying to override the square to be None.
-        if (isinstance(en_passant_square, int)):
-            en_passant_square = parsed_fen.en_passant_square
+        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = parsed_fen.en_passant_coordinate
+        """ The en-passant target coordinate, or None. """
 
-        self.en_passant_square: chessai.core.square.Square | None = en_passant_square
-        """
-        The en-passant target square, or None.
-        Passing None explicitly means to override the value to be None.
-        If the default value (any int) is used to signal that the en-passant square from the FEN should be used.
-        """
-
-        if (halfmove_clock is None):
-            halfmove_clock = parsed_fen.halfmove_clock
-
-        self.halfmove_clock: int = halfmove_clock
+        self.halfmove_clock: int = parsed_fen.halfmove_clock
         """ The number of plies since the last pawn move or capture (50-move rule). """
 
-        if (fullmove_number is None):
-            fullmove_number = parsed_fen.fullmove_number
-
-        self.fullmove_number: int = fullmove_number
+        self.fullmove_number: int = parsed_fen.fullmove_number
         """ Increments after every black move, starting at 1. """
 
         if (move_stack is None):
@@ -124,10 +74,10 @@ class GameState(edq.util.json.DictConverter):
         """
 
         return chessai.core.fen.serialize(
-            pieces            = self.pieces,
+            pieces            = self.board.pieces,
             turn              = self.turn,
             castling_rights   = self.castling_rights,
-            en_passant_square = self.en_passant_square,
+            en_passant_coordinate = self.en_passant_coordinate,
             halfmove_clock    = self.halfmove_clock,
             fullmove_number   = self.fullmove_number,
         )
@@ -141,65 +91,70 @@ class GameState(edq.util.json.DictConverter):
 
         return len(self.move_stack)
 
-    def get_pieces(self, piece_type: chessai.core.types.PieceType, color: chessai.core.types.Color) -> list[chessai.core.square.Square]:
-        """ Return the squares occupied by pieces of the given type and color. """
+    def get_piece_coordinates(self,
+                   piece_type: chessai.core.types.PieceType,
+                   color: chessai.core.types.Color) -> list[chessai.core.coordinate.Coordinate]:
+        """ Gets the pieces of the given type and color. """
 
-        squares = []
+        return self.board.get_piece_coordinates(piece_type, color)
 
-        for (square, piece) in self.pieces.items():
-            if ((piece_type != piece.piece_type) or (color != piece.color)):
-                continue
+    # TODO(Lucas)
+    def get_search_targets(self) -> list[chessai.core.coordinate.Coordinate]:
+        """ Gets the coordinates on the board that are search targets. """
 
-            squares.append(square)
+        pass
 
-        return squares
-
-    def get_search_targets(self) -> list[chessai.core.square.Square]:
-        """ Gets the squares on the board that are search targets. """
-
-        return self.board.get_search_targets()
-
+    # TODO(Lucas)
     def get_legal_actions(self) -> list[chessai.core.action.Action]:
         """ Return the list of legal actions for the current player. """
 
-        return self.board.get_legal_moves(self.get_fen())
+        pass
 
     def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Return whether the given action captures a piece. """
 
-        return self.board.is_capture(self.get_fen(), action)
+        return self.board.is_capture(action)
 
-    def get_neighbors(self,
-            start_square: chessai.core.square.Square,
-            ) -> list[tuple[chessai.core.action.Action, chessai.core.square.Square]]:
-        """
-        Return all squares reachable from the given square and the action needed to reach each one.
-        """
+    def get_neighbors(self, start_coordinate: chessai.core.coordinate.Coordinate) -> list[tuple[chessai.core.action.Action, chessai.core.coordinate.Coordinate]]:
+        """ Get coordinates that the piece at the given coordinate can reach legally, and the action it would take to get there. """
 
-        return self.board.get_neighbors(self.get_fen(), start_square)
+        neighbors: list[tuple[chessai.core.action.Action, chessai.core.coordinate.Coordinate]] = []
 
+        for action in self.get_legal_actions():
+            # Skip the legal moves that are not from the starting coordinate.
+            if (action.start_coordinate != start_coordinate):
+                continue
+
+            neighbors.append((action, action.end_coordinate))
+
+        return neighbors
+
+    # TODO(Lucas)
     def is_game_over(self) -> bool:
         """ Returns whether the game is over according to the board rules. """
 
-        return self.board.is_game_over(self.get_fen())
+        pass
 
+    # TODO(Lucas)
     def get_winners(self) -> list[chessai.core.types.Color]:
         """
         Gets the list of winners from the game.
         An empty list signifies the game is in progress or it is a tie.
         """
 
-        return self.board.get_winners(self.get_fen())
+        pass
 
+    # TODO(Lucas)
     def get_termination_reason(self) -> chessai.core.types.TerminationReason:
         """ Return the reason the game ended. """
 
-        return self.board.get_termination_reason(self.get_fen())
+        pass
 
     # -----------------------------------------------
     # State mutation
     # -----------------------------------------------
 
+    # TODO(Lucas): We may want to track the most recent piece taken.
     def push(self, action: chessai.core.action.Action) -> None:
         """ Updates the gamestate with the given action. """
 
@@ -208,17 +163,17 @@ class GameState(edq.util.json.DictConverter):
 
         # TODO(Lucas): Pass key info and not full FEN.
         # TODO(Lucas): Receive key info and update the gamestate accordingly.
-        result_fen = self.board.apply_move(self.get_fen(), action)
-        parsed = chessai.core.fen.parse(result_fen)
-
-        self.pieces            = parsed.pieces
-        self.turn              = parsed.turn
-        self.castling_rights   = parsed.castling_rights
-        self.en_passant_square = parsed.en_passant_square
-        self.halfmove_clock    = parsed.halfmove_clock
-        self.fullmove_number   = parsed.fullmove_number
+        self.board.push(action)
         self.move_stack.append(action)
 
+    # TODO(Lucas): We will want to tell the board if it needs to put a piece where we are undoing.
+    def pop(self) -> None:
+        """ Undoes the last action. """
+
+        last_action = self.move_stack.pop()
+        self.board.pop(last_action)
+
+    # TODO(Lucas)
     def copy(self) -> 'GameState':
         """
         Get a deep copy of this state.
@@ -228,7 +183,6 @@ class GameState(edq.util.json.DictConverter):
 
         new_state = copy.copy(self)
 
-        new_state.pieces          = dict(self.pieces)
         new_state.castling_rights = self.castling_rights.copy()
         new_state.move_stack      = list(self.move_stack)
         new_state.board           = self.board.copy()
@@ -327,11 +281,23 @@ class GameState(edq.util.json.DictConverter):
 
         self.process_turn(action, rng, **kwargs)
 
+    # TODO(Lucas)
+    def to_pgn(self) -> str:
+        """Serialize the gamestate to a PGN string."""
+
+        pass
+
+    # TODO(Lucas)
+    @classmethod
+    def from_pgn(cls, pgn_string: str) -> 'GameState':
+        """ Reconstruct a Board from a PGN string, restoring the full move history. """
+
+        pass
+
     def to_dict(self) -> dict[str, typing.Any]:
         return {
-            'board':      self.board.to_dict(),
             'fen':        self.get_fen(),
-            'move_stack': [a.to_dict() for a in self.move_stack],
+            'move_stack': [action.to_dict() for action in self.move_stack],
             'seed':       self.seed,
             'game_over':  self.game_over,
         }
@@ -344,7 +310,6 @@ class GameState(edq.util.json.DictConverter):
             for a in data.get('move_stack', [])
         ]
         return cls(
-            board      = board,
             fen        = data.get('fen', None),
             move_stack = move_stack,
             seed       = data.get('seed', -1),
@@ -390,13 +355,13 @@ def base_eval(
     # The difference in pieces from white's perspective.
     board_value = 0
     for (piece_type, piece_value) in piece_values.items():
-        white_piece_count = len(state.get_pieces(piece_type, chessai.core.types.Color.WHITE))
-        black_piece_count = len(state.get_pieces(piece_type, chessai.core.types.Color.BLACK))
+        white_piece_count = len(state.get_piece_coordinates(piece_type, chessai.core.types.Color.WHITE))
+        black_piece_count = len(state.get_piece_coordinates(piece_type, chessai.core.types.Color.BLACK))
         piece_count = white_piece_count - black_piece_count
 
         board_value += (piece_count * piece_value)
 
-    if (state.get_player() == chessai.core.types.Color.WHITE):
+    if (state.turn == chessai.core.types.Color.WHITE):
         return board_value
 
     # The piece difference is the opposite for black.

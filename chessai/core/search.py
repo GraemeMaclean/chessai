@@ -8,6 +8,7 @@ import typing
 
 import chessai.core.action
 import chessai.core.board
+import chessai.core.gamestate
 import chessai.util.comparable
 
 class SolutionNotFoundError(Exception):
@@ -68,7 +69,7 @@ class SearchProblem(abc.ABC, typing.Generic[NodeType]):
         This can help agents quickly check where they have previously been.
         """
 
-        self.position_history: list[chessai.core.square.Square] = []
+        self.position_history: list[chessai.core.coordinate.Coordinate] = []
         """
         Keep track of the order that positions have been visited.
         This let's us know exactly how the agent has moved about.
@@ -123,23 +124,22 @@ class SearchSolution(typing.Generic[NodeType]):
         """
 
     # TODO(Lucas): May want to consider passing around gamestates instead of boards.
-    def get_path(self, start_board: chessai.core.board.Board, start_position: chessai.core.square.Square) -> list[chessai.core.square.Square]:
+    def get_path(self, state: chessai.core.gamestate.GameState, start_position: chessai.core.coordinate.Coordinate) -> list[chessai.core.coordinate.Coordinate]:
         """
         Given the starting location, get the path this search solution represents.
         The resulting path will start at the starting position.
         It is assumed that unknown actions will not result in a move.
         """
 
-        path = [start_position]
-        board = start_board.copy()
+        path = []
 
         for action in self.actions:
-            path.append(action.get_start_square())
-            board._push(action)
+            path.append(action.start_coordinate)
+            state.push(action)
 
         # Append the final square after all moves have been made.
         if self.actions:
-            path.append(self.actions[-1].get_end_square())
+            path.append(self.actions[-1].end_coordinate)
 
         return path
 

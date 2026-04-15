@@ -10,7 +10,7 @@ import chessai.core.agentinfo
 import chessai.core.board
 import chessai.core.gamestate
 import chessai.core.search
-import chessai.core.square
+import chessai.core.coordinate
 import chessai.search.common
 import chessai.search.random
 import chessai.search.position
@@ -93,7 +93,7 @@ class SearchProblemAgent(chessai.core.agent.Agent):
 
     def _do_search(self,
             state: chessai.core.gamestate.GameState,
-            ) -> tuple[chessai.core.search.SearchSolution, list[chessai.core.square.Square], int]:
+            ) -> tuple[chessai.core.search.SearchSolution, list[chessai.core.coordinate.Coordinate], int]:
         """
         Perform the actual search operation.
         Children may override this to change searching behavior.
@@ -118,7 +118,7 @@ class GreedySubproblemSearchAgent(SearchProblemAgent):
 
     def _do_search(self,
             state: chessai.core.gamestate.GameState,
-            ) -> tuple[chessai.core.search.SearchSolution, list[chessai.core.square.Square], int]:
+            ) -> tuple[chessai.core.search.SearchSolution, list[chessai.core.coordinate.Coordinate], int]:
         actions = []
         total_cost = 0.0
         goal_node = None

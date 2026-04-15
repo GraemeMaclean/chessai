@@ -9,7 +9,7 @@ import typing
 import chessai.core.board
 import chessai.core.gamestate
 import chessai.core.search
-import chessai.core.square
+import chessai.core.coordinate
 import chessai.core.types
 import chessai.search.common
 import chessai.search.position
@@ -25,15 +25,15 @@ class DistanceFunction(typing.Protocol):
     """
 
     def __call__(self,
-            a: chessai.core.square.Square,
-            b: chessai.core.square.Square,
+            a: chessai.core.coordinate.Coordinate,
+            b: chessai.core.coordinate.Coordinate,
             state: chessai.core.gamestate.GameState | None = None,
             **kwargs: typing.Any) -> float:
         ...
 
 def manhattan_distance(
-        a: chessai.core.square.Square,
-        b: chessai.core.square.Square,
+        a: chessai.core.coordinate.Coordinate,
+        b: chessai.core.coordinate.Coordinate,
         state: chessai.core.gamestate.GameState | None = None,
         **kwargs: typing.Any) -> float:
     """
@@ -44,8 +44,8 @@ def manhattan_distance(
     return abs(a.rank - b.rank) + abs(a.file - b.file)
 
 def euclidean_distance(
-        a: chessai.core.square.Square,
-        b: chessai.core.square.Square,
+        a: chessai.core.coordinate.Coordinate,
+        b: chessai.core.coordinate.Coordinate,
         state: chessai.core.gamestate.GameState | None = None,
         **kwargs: typing.Any) -> float:
     """
@@ -56,8 +56,8 @@ def euclidean_distance(
     return float(((a.rank - b.rank) ** 2 + (a.file - b.file) ** 2) ** 0.5)
 
 def knight_distance(
-        a: chessai.core.square.Square,
-        b: chessai.core.square.Square,
+        a: chessai.core.coordinate.Coordinate,
+        b: chessai.core.coordinate.Coordinate,
         state: chessai.core.gamestate.GameState | None = None,
         solver: chessai.core.search.SearchProblemSolver | str = chessai.util.alias.SEARCH_SOLVER_BFS.long,
         **kwargs: typing.Any) -> float:
@@ -99,11 +99,11 @@ def distance_heuristic(
     and returns the result of the given distance function if that information is found.
     Otherwise, the result of the null heuristic will be returned.
 
-    In the search node, a "position" attribute of type chessai.core.square.Square will be checked,
-    and in the search problem, a "goal_positions" attribute of type list[chessai.core.square.Square] will be checked.
+    In the search node, a "position" attribute of type chessai.core.coordinate.Coordinate will be checked,
+    and in the search problem, a "goal_positions" attribute of type list[chessai.core.coordinate.Coordinate] will be checked.
     """
 
-    if ((not hasattr(node, 'position')) or (not isinstance(getattr(node, 'position'), chessai.core.square.Square))):
+    if ((not hasattr(node, 'position')) or (not isinstance(getattr(node, 'position'), chessai.core.coordinate.Coordinate))):
         return [chessai.search.common.null_heuristic(node, problem, **kwargs)]
 
     if ((not hasattr(problem, 'goal_positions')) or (not isinstance(getattr(problem, 'goal_positions'), list))):
@@ -113,7 +113,7 @@ def distance_heuristic(
     list_b = getattr(problem, 'goal_positions')
 
     for b in list_b:
-        if (not isinstance(b, chessai.core.square.Square)):
+        if (not isinstance(b, chessai.core.coordinate.Coordinate)):
             return [chessai.search.common.null_heuristic(node, problem, **kwargs)]
 
     return [distance_function(a, b) for b in list_b]
@@ -145,7 +145,7 @@ class DistancePreComputer:
     """
 
     def __init__(self) -> None:
-        self._distances: dict[chessai.core.square.Square, dict[chessai.core.square.Square, int]] = {}
+        self._distances: dict[chessai.core.coordinate.Coordinate, dict[chessai.core.coordinate.Coordinate, int]] = {}
         """
         The distances for the computed layout.
         The lower (according to `<`) position is always indexed first.
@@ -153,8 +153,8 @@ class DistancePreComputer:
         """
 
     def get_distance(self,
-            a: chessai.core.square.Square,
-            b: chessai.core.square.Square,
+            a: chessai.core.coordinate.Coordinate,
+            b: chessai.core.coordinate.Coordinate,
             ) -> float | None:
         """
         Get the distance between two points in the computed board.
@@ -172,8 +172,8 @@ class DistancePreComputer:
         return self._distances.get(lower, {}).get(upper, None)
 
     def get_distance_default(self,
-            a: chessai.core.square.Square,
-            b: chessai.core.square.Square,
+            a: chessai.core.coordinate.Coordinate,
+            b: chessai.core.coordinate.Coordinate,
             default: float
             ) -> float:
         """ Get the distance, but return the default if there is no path. """
@@ -184,19 +184,19 @@ class DistancePreComputer:
 
         return default
 
-    def compute(self, board: chessai.core.board.Board) -> None:
+    def compute(self, state: chessai.core.gamestate.GameState) -> None:
         """
-        Compute ALL non-wall distances in this board.
+        Compute ALL non-wall distances in this gamestate.
         This must be called before get_distance().
         """
 
-        logging.debug("Computing distances on board '%s'.", board.source)
+        logging.debug("Computing distances on gamestate '%s'.", state.get_fen())
 
         if (len(self._distances) > 0):
             raise ValueError("Cannot compute distances more than once.")
 
         # First, load in all the neighbors.
-        self._load_identities_and_adjacencies(board)
+        self._load_identities_and_adjacencies(state)
 
         # Now continually go through all current distances and see if one more node can be added to the path.
         # Stop when no distances get added.
@@ -215,7 +215,7 @@ class DistancePreComputer:
 
                     # Take turns trying to add to each end of the path.
                     for (start, end) in ((a, b), (b, a)):
-                        for (_, neighbor) in board.get_neighbors(end):
+                        for (_, neighbor) in state.get_neighbors(end):
                             old_distance = self.get_distance(start, neighbor)
 
                             # Skip shorter distances.
@@ -225,24 +225,24 @@ class DistancePreComputer:
                             self._put_distance(start, neighbor, target_length + 1)
                             added_distance = True
 
-        logging.debug("Finished computing distances on board '%s'.", board.source)
+        logging.debug("Finished computing distances on gamestate '%s'.", state.get_fen())
 
-    def _load_identities_and_adjacencies(self, board: chessai.core.board.Board) -> None:
+    def _load_identities_and_adjacencies(self, state: chessai.core.gamestate.GameState) -> None:
         """ Load identity (0) and adjacency (1) distances. """
 
-        for rank in range(board.ranks):
-            for file in range(board.files):
-                position = chessai.core.square.Square.from_file_rank(file, rank)
+        for rank in range(state.board.ranks):
+            for file in range(state.board.files):
+                position = chessai.core.coordinate.Coordinate(file, rank)
 
                 # if (board.is_wall(position)):
                     # continue
 
                 self._put_distance(position, position, 0)
 
-                for (_, neighbor) in board.get_neighbors(position):
+                for (_, neighbor) in state.get_neighbors(position):
                     self._put_distance(position, neighbor, 1)
 
-    def _put_distance(self, a: chessai.core.square.Square, b: chessai.core.square.Square, distance: int) -> None:
+    def _put_distance(self, a: chessai.core.coordinate.Coordinate, b: chessai.core.coordinate.Coordinate, distance: int) -> None:
         lower, upper = sorted((a, b))
 
         if (lower not in self._distances):

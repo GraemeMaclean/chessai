@@ -47,7 +47,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
     board_kwargs: dict[str, typing.Any] = {}
 
     if (args.target_squares is not None):
-        board_kwargs[chessai.core.square.SQUARES_KEY] = args.target_squares
+        board_kwargs[chessai.core.coordinate.COORDINATES_KEY] = args.target_squares
 
     return base_agent_infos, [], board_kwargs
 

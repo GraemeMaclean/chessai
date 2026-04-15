@@ -4,12 +4,11 @@ import os
 import re
 import typing
 
-import chess
-import chess.pgn
 import edq.util.json
 
 import chessai.core.action
-import chessai.core.square
+import chessai.core.coordinate
+import chessai.core.piece
 import chessai.core.types
 import chessai.util.reflection
 
@@ -23,7 +22,6 @@ SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
 FILE_EXTENSION = '.board'
 
 DEFAULT_BOARD_CLASS: str = 'chessai.core.board.Board'
-DEFAULT_FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 DEFAULT_BOARD_FILES: int = 8
 DEFAULT_BOARD_RANKS: int = 8
@@ -40,13 +38,19 @@ class Board(edq.util.json.DictConverter):
     """
 
     def __init__(self,
+            pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] | None = None,
             num_files: int = DEFAULT_BOARD_FILES,
             num_ranks: int = DEFAULT_BOARD_RANKS,
-            pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece] | None = None,
             **kwargs: typing.Any) -> None:
         """
         Construct a board with the given dimensions and pieces.
         """
+
+        if (pieces is None):
+            pieces = {}
+
+        self.pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = pieces
+        """ The pieces on the board, keyed by the coordinate they occupy. """
 
         self.num_files: int = num_files
         """ The number of files of the chess board. """
@@ -54,14 +58,8 @@ class Board(edq.util.json.DictConverter):
         self.num_ranks: int = num_ranks
         """ The number of ranks of the chess board. """
 
-        self.num_squares: int = self.num_files * self.num_ranks
-        """ The total number of squares on the board. """
-
-        if (pieces is None):
-            pieces = {}
-
-        self.pieces: dict[chessai.core.square.Square, chessai.core.piece.Piece] = pieces
-        """ The pieces on the board, keyed by the square they occupy. """
+        self.num_coordinates: int = self.num_files * self.num_ranks
+        """ The total number of coordinates on the board. """
 
         if (not self.is_valid()):
             raise ValueError('Cannot construct an invalid board:'
@@ -71,140 +69,70 @@ class Board(edq.util.json.DictConverter):
     def is_valid(self) -> bool:
         """ Checks if all of the pieces are in a valid position. """
 
-        for (square, _) in self.pieces.items():
-            if ((square.file < 0) or (square.file > board.num_files)):
+        for (coordinate, _) in self.pieces.items():
+            if ((coordinate.file < 0) or (coordinate.file > self.num_files)):
                 return False
 
-            if ((square.rank < 0) or (square.rank > board.num_ranks)):
+            if ((coordinate.rank < 0) or (coordinate.rank > self.num_ranks)):
                 return False
 
         return True
 
-    def get_pieces(self,
+    def get(self, coordinate: chessai.core.coordinate.Coordinate) -> chessai.core.piece.Piece | None:
+        """ Gets the piece at the given coordinate. """
+
+        return self.pieces.get(coordinate, None)
+
+    def get_piece_coordinates(self,
                    piece_type: chessai.core.types.PieceType,
-                   color: chessai.core.types.Color) -> list[chessai.core.square.Square]:
+                   color: chessai.core.types.Color) -> list[chessai.core.coordinate.Coordinate]:
         """ Gets the pieces of the given type and color. """
 
-        squares: list[chessai.core.square.Square] = []
+        coordinates: list[chessai.core.coordinate.Coordinate] = []
 
-        chess_squares = self._board.pieces(piece_type.chess_int, bool(color))
-        for chess_square in chess_squares:
-            squares.append(chessai.core.square.Square.from_square(chess_square))
+        for (coordinate, piece) in self.pieces.items():
+            if (piece.piece_type != piece_type):
+                continue
 
-        return squares
+            if (piece.color != color):
+                continue
 
-    def get_winners(self) -> list[chessai.core.types.Color]:
-        """
-        Gets the list of winners from the game.
-        If the game is not over, it will be considered a tie.
-        """
+            coordinates.append(coordinate)
 
-        outcome = self._board.outcome()
-        if (outcome is None):
-            return []
-
-        if (outcome.winner is None):
-            return []
-
-        return [chessai.core.types.Color(outcome.winner)]
-
-    def get_termination_reason(self) -> chessai.core.types.TerminationReason:
-        """ Get the reason for the game ending. """
-
-        outcome = self._board.outcome()
-        if (outcome is None):
-            return chessai.core.types.TerminationReason.IN_PROGRESS
-
-        return chessai.core.types.TerminationReason.from_chess_termination(outcome.termination)
-
-    def is_game_over(self, claim_draw: bool = False) -> bool:
-        """ Returns if the game is over. """
-
-        return self._board.is_game_over(claim_draw)
+        return coordinates
 
     def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Returns if the move captures a piece. """
 
-        return self._board.is_capture(action.get_move())
+        if (self.get(action.start_coordinate) is None):
+            raise ValueError("Action has a start coordinate that does not have a piece on the board: '%s'." % (action.start_coordinate))
 
-    def get_neighbors(self, start_square: chessai.core.square.Square) -> list[tuple[chessai.core.action.Action, chessai.core.square.Square]]:
-        """
-        Get squares that the piece at the given square can reach legally,
-        and the action it would take to get there.
-        """
+        return (self.get(action.end_coordinate) is not None)
 
-        neighbors: list[tuple[chessai.core.action.Action, chessai.core.square.Square]] = []
+    def push(self, action: chessai.core.action.Action) -> None:
+        """ Apply the update of an action to the board. """
 
-        for move in self.get_legal_moves():
-            # Skip the legal moves that are not from the starting square.
-            if (chessai.core.square.Square.from_square(move.from_square) != start_square):
-                continue
+        piece = self.pieces.pop(action.start_coordinate, None)
+        if (piece is None):
+            raise ValueError("There is no piece from the action's start coordinate: '%s'." % (action.start_coordinate.uci()))
 
-            end_square = chessai.core.square.Square.from_square(move.to_square)
-            action = chessai.core.action.Action(move.uci())
-            neighbors.append((action, end_square))
-
-        return neighbors
-
-    def _push(self, action: chessai.core.action.Action) -> None:
-        """ Updates the square with the given move and puts it onto the move stack. """
-
-        return self._board.push(action.get_move())
+        self.pieces[action.end_coordinate] = piece
 
     def copy(self) -> 'Board':
         """ Create a deep copy of the board. """
 
-        instance = self.__class__.__new__(self.__class__)
-        instance.source = self.source
-        instance._board = self._board.copy()
-        instance.num_files = self.num_files
-        instance.num_ranks = self.num_ranks
-        instance.search_targets = copy.deepcopy(self.search_targets)
-        return instance
-
-    def to_pgn(self) -> str:
-        """Serialize the board's game history to a PGN string."""
-
-        game = chess.pgn.Game.from_board(self._board)
-        exporter = chess.pgn.StringExporter()
-        return game.accept(exporter)
-
-    @classmethod
-    def from_pgn(cls, pgn_string: str,
-             search_targets: list[chessai.core.square.Square] | dict[str, typing.Any] | None = None,
-             ) -> 'Board':
-        """ Reconstruct a Board from a PGN string, restoring the full move history. """
-
-        game = chess.pgn.read_game(io.StringIO(pgn_string))
-        if (game is None):
-            raise ValueError(f"Unable to read PGN of board: '{pgn_string}'.")
-
-        # Replay the move history to get the final FEN.
-        board = game.board()
-        for move in game.mainline_moves():
-            board.push(move)
-
-        return cls('pgn', board.fen(), search_targets)
+        return copy.deepcopy(self)
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
-            'pgn': self.to_pgn(),
-            'search_targets': self.search_targets,
+            'pieces': self.pieces,
+            'num_files': self.num_files,
+            'num_ranks': self.num_ranks,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
-        return cls.from_pgn(data.get('pgn', ''), data.get('search_targets', None))
-
-def is_valid_fen(fen: str) -> bool:
-    """ Checks if a FEN is valid. """
-
-    try:
-        _ = Board('TEST', fen)
-    except ValueError:
-        return False
-
-    return True
+        return cls(**data)
 
 def load_path(path: str, **kwargs: typing.Any) -> Board:
     """
@@ -227,9 +155,9 @@ def load_path(path: str, **kwargs: typing.Any) -> Board:
         raise ValueError(f"Could not find board, path does not exist: '{raw_path}'.")
 
     text = edq.util.dirent.read_file(path, strip = False)
-    return load_string(raw_path, text, **kwargs)
+    return load_string(text, **kwargs)
 
-def load_string(source: str, text: str, **kwargs: typing.Any) -> Board:
+def load_string(text: str, **kwargs: typing.Any) -> Board:
     """ Load a board from a string. """
 
     separator_index = -1
@@ -256,30 +184,5 @@ def load_string(source: str, text: str, **kwargs: typing.Any) -> Board:
 
     options.update(kwargs)
 
-    target_squares = options.get(chessai.core.square.SQUARES_KEY, None)
-
-    # If search targets were given by the CLI, override the search targets found in the file.
-    if (target_squares is not None):
-        options['search_targets'] = target_squares
-
-    search_targets = options.pop('search_targets', None)
-
     board_class = options.get('class', DEFAULT_BOARD_CLASS)
-    return chessai.util.reflection.new_object(board_class, source, board_text, search_targets, **options)  # type: ignore[no-any-return]
-
-def parse_board(raw_board: typing.Any, **kwargs) -> Board:
-    """
-    Try to parse a board from a number of formats.
-    Takes the board as given, or loads it from a path.
-    """
-
-    if (raw_board is None):
-        board = Board('none')
-    elif (is_valid_fen(raw_board)):
-        board = Board('FEN', raw_board, kwargs.get(chessai.core.square.SQUARES_KEY, None))
-    elif (isinstance(raw_board, Board)):
-        board = raw_board
-    else:
-        board = load_path(raw_board, **kwargs)
-
-    return board
+    return chessai.util.reflection.new_object(board_class, board_text, **options)  # type: ignore[no-any-return]

@@ -3,14 +3,12 @@ The core actions that agents are allowed to take.
 Default actions are provided, but custom actions can be easily created.
 """
 
+import re
 import typing
 
-import chess
 import edq.util.json
 
-import chessai.core.square
-
-UCI_NULL_MOVE: str = '0000'
+import chessai.core.coordinate
 
 class Action(edq.util.json.DictConverter):
     """
@@ -21,42 +19,38 @@ class Action(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-                 uci: str = UCI_NULL_MOVE):
-        self.move = chess.Move.from_uci(uci)
-        """ The move for the action. """
+                 start_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE,
+                 end_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE) -> None:
+
+        self.start_coordinate: chessai.core.coordinate.Coordinate = start_coordinate
+        """ The starting coordinate for the action. """
+
+        self.end_coordinate: chessai.core.coordinate.Coordinate = end_coordinate
+        """ The ending coordinate for the action. """
 
     def uci(self) -> str:
         """ Represent the agent action as a chess move in UCI format. """
-        return self.move.uci()
 
-    def get_move(self) -> chess.Move:
-        """ Return the chess move corresponding to the action. """
-        return self.move
+        start = self.start_coordinate.uci()
+        end = self.end_coordinate.uci()
 
-    def get_start_square(self) -> chessai.core.square.Square:
-        """ Returns the source square. """
-        chess_move = self.move.from_square
-        return chessai.core.square.Square.from_square(chess_move)
-
-    def get_end_square(self) -> chessai.core.square.Square:
-        """ Returns the end square. """
-        chess_move = self.move.to_square
-        return chessai.core.square.Square.from_square(chess_move)
+        return '%s%s' % (start, end)
 
     @classmethod
-    def from_squares(cls, from_square: chessai.core.square.Square, to_square: chessai.core.square.Square) -> 'Action':
-        """ Get an action from the starting and ending squares. """
-        move = chess.Move(from_square.to_chess_square(), to_square.to_chess_square())
-        return cls(move.uci())
+    def from_uci(cls, uci: str) -> 'Action':
+        """
+        Get an action from the UCI format.
+        Note that this project supports arbitrary sized boards.
+        """
 
-    def to_dict(self) -> dict[str, typing.Any]:
-        return {
-            'uci': self.uci(),
-        }
+        coordinates = re.findall(chessai.core.coordinate.COORDINATE_PATTERN, uci)
+        if (len(coordinates) != 2):
+            raise ValueError("An action must be a pair of coordinates '%s%s', got: '%s'." %
+                    (chessai.core.coordinate.COORDINATE_PATTERN, chessai.core.coordinate.COORDINATE_PATTERN, uci))
 
-    @classmethod
-    def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
-        data = data.copy()
-        return cls(**data)
+        start_coordinate = chessai.core.coordinate.Coordinate.from_uci(coordinates[0])
+        end_coordinate = chessai.core.coordinate.Coordinate.from_uci(coordinates[1])
+
+        return cls(start_coordinate, end_coordinate)
 
 NULL_ACTION = Action()

@@ -14,12 +14,12 @@ def piece_tour_search(
     """
 
     actions = [
-        chessai.core.action.Action('a1b3'),
-        chessai.core.action.Action('b3c5'),
-        chessai.core.action.Action('c5e6'),
-        chessai.core.action.Action('e6f4'),
-        chessai.core.action.Action('f4g6'),
-        chessai.core.action.Action('g6h8'),
+        chessai.core.action.Action.from_uci('a1b3'),
+        chessai.core.action.Action.from_uci('b3c5'),
+        chessai.core.action.Action.from_uci('c5e6'),
+        chessai.core.action.Action.from_uci('e6f4'),
+        chessai.core.action.Action.from_uci('f4g6'),
+        chessai.core.action.Action.from_uci('g6h8'),
     ]
 
     return chessai.core.search.SearchSolution(actions, 0.0)
