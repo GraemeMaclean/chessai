@@ -1,5 +1,4 @@
 import copy
-import io
 import os
 import re
 import typing
@@ -15,8 +14,6 @@ import chessai.util.reflection
 THIS_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 BOARDS_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'boards')
 
-AGENT_PATTERN: re.Pattern = re.compile(r'^\d$')
-INT_PATTERN: re.Pattern = re.compile(r'\d+')
 SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
 
 FILE_EXTENSION = '.board'
@@ -28,14 +25,23 @@ DEFAULT_BOARD_RANKS: int = 8
 
 DEFAULT_BOARD_SIZE: int = DEFAULT_BOARD_RANKS * DEFAULT_BOARD_FILES
 
+class MoveRecord(edq.util.json.DictConverter):
+    """ A record of a move, including the captured piece during the move. """
+
+    def __init__(self,
+                 action: chessai.core.action.Action,
+                 captured_piece: chessai.core.piece.Piece | None = None) -> None:
+        """ Construct a move record with the action and an optional captured piece. """
+
+        self.action: chessai.core.action.Action = action
+        """ The action that occurred during this move. """
+
+        self.captured_piece: chessai.core.piece.Piece | None = captured_piece
+        """ An optional record of the piece that was captured during this move. """
+
 # TODO(Lucas): Continue adding the necessary methods for students to interact with the board.
 class Board(edq.util.json.DictConverter):
-    """
-    The board for all chess games in chessai.
-    A board holds the current state and history of the game.
-
-    Boards should only be interacted with via their methods and not their member variables.
-    """
+    """ The board holds the current coordinates of pieces on the board. """
 
     def __init__(self,
             pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] | None = None,
@@ -58,9 +64,6 @@ class Board(edq.util.json.DictConverter):
         self.num_ranks: int = num_ranks
         """ The number of ranks of the chess board. """
 
-        self.num_coordinates: int = self.num_files * self.num_ranks
-        """ The total number of coordinates on the board. """
-
         if (not self.is_valid()):
             raise ValueError('Cannot construct an invalid board:'
                 + f" files '{self.num_files}', ranks '{self.num_ranks}',"
@@ -70,10 +73,7 @@ class Board(edq.util.json.DictConverter):
         """ Checks if all of the pieces are in a valid position. """
 
         for (coordinate, _) in self.pieces.items():
-            if ((coordinate.file < 0) or (coordinate.file > self.num_files)):
-                return False
-
-            if ((coordinate.rank < 0) or (coordinate.rank > self.num_ranks)):
+            if (not self._is_within_bounds(coordinate)):
                 return False
 
         return True
@@ -83,40 +83,69 @@ class Board(edq.util.json.DictConverter):
 
         return self.pieces.get(coordinate, None)
 
-    def get_piece_coordinates(self,
-                   piece_type: chessai.core.types.PieceType,
-                   color: chessai.core.types.Color) -> list[chessai.core.coordinate.Coordinate]:
-        """ Gets the pieces of the given type and color. """
+    def has_piece(self, coordinate: chessai.core.coordinate.Coordinate) -> bool:
+        """ Returns if the given coordinate has a piece. """
 
-        coordinates: list[chessai.core.coordinate.Coordinate] = []
+        return (self.get(coordinate) is not None)
 
-        for (coordinate, piece) in self.pieces.items():
-            if (piece.piece_type != piece_type):
-                continue
+    def all_pieces(self) -> list[chessai.core.piece.Piece]:
+        """ Gets all of the pieces on the board. """
 
-            if (piece.color != color):
-                continue
+        return list(self.pieces.values())
 
-            coordinates.append(coordinate)
+    def all_coordinates(self) -> list[chessai.core.coordinate.Coordinate]:
+        """ Gets all of the coordinates with a piece on the board. """
 
-        return coordinates
+        return list(self.pieces.keys())
+
+    def push(self, action: chessai.core.action.Action) -> MoveRecord:
+        """ Apply the update of an action to the board. """
+
+        piece = self.pieces.pop(action.start_coordinate, None)
+        if (piece is None):
+            raise ValueError(f"There is no piece from the action's start coordinate: '{action.start_coordinate.uci()}'.")
+
+        captured_piece = self.pieces.get(action.end_coordinate, None)
+        self.pieces[action.end_coordinate] = piece
+
+        return MoveRecord(action, captured_piece)
+
+    def pop(self, record: MoveRecord) -> None:
+        """ Undo the effects of the record. """
+
+        # Get the piece from the end of the action.
+        piece = self.pieces.pop(record.action.end_coordinate, None)
+        if (piece is None):
+            raise ValueError(f"Cannot pop an action that does not have a piece at the specified end coordinate: '{record.action.end_coordinate}'.")
+
+        # Make sure the start coordinate of the action is empty.
+        empty_piece = self.pieces.pop(record.action.start_coordinate, None)
+        if (empty_piece is not None):
+            raise ValueError(f"The start coordinate of the action must be empty: '{record.action.start_coordinate}'.")
+
+        self.pieces[record.action.start_coordinate] = piece
+
+        if (record.captured_piece is not None):
+            self.pieces[record.action.end_coordinate] = record.captured_piece
+
+    def _is_within_bounds(self, coordinate) -> bool:
+        """ Checks whether a coordinate is within the bounds of the board. """
+
+        if ((coordinate.file < 0) or (coordinate.file > self.num_files)):
+            return False
+
+        if ((coordinate.rank < 0) or (coordinate.rank > self.num_ranks)):
+            return False
+
+        return True
 
     def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Returns if the move captures a piece. """
 
         if (self.get(action.start_coordinate) is None):
-            raise ValueError("Action has a start coordinate that does not have a piece on the board: '%s'." % (action.start_coordinate))
+            raise ValueError(f"Action has a start coordinate that does not have a piece on the board: '{action.start_coordinate.uci()}'.")
 
         return (self.get(action.end_coordinate) is not None)
-
-    def push(self, action: chessai.core.action.Action) -> None:
-        """ Apply the update of an action to the board. """
-
-        piece = self.pieces.pop(action.start_coordinate, None)
-        if (piece is None):
-            raise ValueError("There is no piece from the action's start coordinate: '%s'." % (action.start_coordinate.uci()))
-
-        self.pieces[action.end_coordinate] = piece
 
     def copy(self) -> 'Board':
         """ Create a deep copy of the board. """
