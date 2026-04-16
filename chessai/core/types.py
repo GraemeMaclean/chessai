@@ -29,31 +29,31 @@ class TerminationReason(enum.Enum):
     """ An enum representing the reason for a game to be over. """
 
     CHECKMATE = enum.auto()
-    """ See chessai.core.board.Board.is_checkmate(). """
+    """ See chessai.core.gamestate.GameState.is_checkmate(). """
 
     STALEMATE = enum.auto()
-    """ See chessai.core.board.Board.is_stalemate(). """
+    """ See chessai.core.gamestate.GameState.is_stalemate(). """
 
     INSUFFICIENT_MATERIAL = enum.auto()
-    """ See chessai.core.board.Board.is_insufficient_material(). """
+    """ See chessai.core.gamestate.GameState.is_insufficient_material(). """
 
     SEVENTYFIVE_MOVES = enum.auto()
-    """ See chessai.core.board.Board.is_fivefold_repition(). """
+    """ See chessai.core.gamestate.GameState.is_fivefold_repition(). """
 
     FIFTY_MOVES = enum.auto()
-    """ See chessai.core.board.Board.can_claim_fifty_moves()`. """
+    """ See chessai.core.gamestate.GameState.can_claim_fifty_moves()`. """
 
     THREEFOLD_REPETITION = enum.auto()
-    """ See chessai.core.board.Board.can_claim_threefold_repetition()`. """
+    """ See chessai.core.gamestate.GameState.can_claim_threefold_repetition()`. """
 
     VARIANT_WIN = enum.auto()
-    """ See chessai.core.board.Board.is_variant_win()`. """
+    """ See chessai.core.gamestate.GameState.is_variant_win()`. """
 
     VARIANT_LOSS = enum.auto()
-    """ See chessai.core.board.Board.is_variant_loss()`. """
+    """ See chessai.core.gamestate.GameState.is_variant_loss()`. """
 
     VARIANT_DRAW = enum.auto()
-    """ See chessai.core.board.Board.is_variant_draw()`. """
+    """ See chessai.core.gamestate.GameState.is_variant_draw()`. """
 
     IN_PROGRESS = enum.auto()
     """ Indicates the game is still in progress (i.e., it has not yet terminated). """
