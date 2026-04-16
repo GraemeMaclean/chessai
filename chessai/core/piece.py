@@ -27,8 +27,8 @@ class Piece(edq.util.json.DictConverter):
 
         if (self.color == chessai.core.types.Color.WHITE):
             return symbol.upper()
-        else:
-            return symbol.lower()
+
+        return symbol.lower()
 
     def unicode_symbol(self, *, invert_color: bool = False) -> str:
         """ Gets the Unicode character for the piece. """
@@ -60,7 +60,7 @@ class Piece(edq.util.json.DictConverter):
 
 class MoveKind(enum.Enum):
     """ An enum to encode the types of movement. """
-    
+
     NORMAL  = enum.auto()
     """ Standard move, capable of capture and movement. """
 
@@ -100,6 +100,8 @@ class PieceMover(abc.ABC):
         """ Returns the movement vectors for this piece. """
 
 class KingMover(PieceMover):
+    """ The movement a King can make. """
+
     def move_vectors(self, color: chessai.core.types.Color, origin: chessai.core.coordinate.Coordinate) -> list[MoveVector]:
         return [
             MoveVector( 1,  0),
@@ -113,6 +115,8 @@ class KingMover(PieceMover):
         ]
 
 class QueenMover(PieceMover):
+    """ The movement a Queen can make. """
+
     def move_vectors(self, color: chessai.core.types.Color, origin: chessai.core.coordinate.Coordinate) -> list[MoveVector]:
         return [
             MoveVector( 1,  0, slides = True),
@@ -126,6 +130,8 @@ class QueenMover(PieceMover):
         ]
 
 class RookMover(PieceMover):
+    """ The movement a Rook can make. """
+
     def move_vectors(self, color: chessai.core.types.Color, origin: chessai.core.coordinate.Coordinate) -> list[MoveVector]:
         return [
             MoveVector( 1,  0, slides = True),
@@ -135,6 +141,8 @@ class RookMover(PieceMover):
         ]
 
 class BishopMover(PieceMover):
+    """ The movement a Bishop can make. """
+
     def move_vectors(self, color: chessai.core.types.Color, origin: chessai.core.coordinate.Coordinate) -> list[MoveVector]:
         return [
             MoveVector( 1,  1, slides = True),
@@ -144,6 +152,8 @@ class BishopMover(PieceMover):
         ]
 
 class KnightMover(PieceMover):
+    """ The movement a Knight can make. """
+
     def move_vectors(self, color: chessai.core.types.Color, origin: chessai.core.coordinate.Coordinate) -> list[MoveVector]:
         return [
             MoveVector( 2,  1),
@@ -157,6 +167,8 @@ class KnightMover(PieceMover):
         ]
 
 class PawnMover(PieceMover):
+    """ The movement a Pawn can make. """
+
     def move_vectors(self, color: chessai.core.types.Color, origin: chessai.core.coordinate.Coordinate) -> list[MoveVector]:
         if (color == chessai.core.types.Color.WHITE):
             direction = 1

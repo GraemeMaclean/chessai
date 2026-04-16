@@ -16,18 +16,18 @@ class DistanceTest(edq.testing.unittest.BaseTest):
         # [(a, b, expected), ...]
         test_cases = [
             # Identity
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 0), chessai.core.coordinate.Coordinate.from_file_rank(0, 0), [0.0]),
+            (chessai.core.coordinate.Coordinate(0, 0), chessai.core.coordinate.Coordinate(0, 0), [0.0]),
 
             # Lateral
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 0), chessai.core.coordinate.Coordinate.from_file_rank(1, 0), [1.0]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 0), chessai.core.coordinate.Coordinate.from_file_rank(0, 1), [1.0]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(1, 0), chessai.core.coordinate.Coordinate.from_file_rank(0, 0), [1.0]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 1), chessai.core.coordinate.Coordinate.from_file_rank(0, 0), [1.0]),
+            (chessai.core.coordinate.Coordinate(0, 0), chessai.core.coordinate.Coordinate(1, 0), [1.0]),
+            (chessai.core.coordinate.Coordinate(0, 0), chessai.core.coordinate.Coordinate(0, 1), [1.0]),
+            (chessai.core.coordinate.Coordinate(1, 0), chessai.core.coordinate.Coordinate(0, 0), [1.0]),
+            (chessai.core.coordinate.Coordinate(0, 1), chessai.core.coordinate.Coordinate(0, 0), [1.0]),
 
             # Diagonal
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 0), chessai.core.coordinate.Coordinate.from_file_rank(1, 1), [2.0]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(2, 2), [2.0]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(0, 0), [2.0]),
+            (chessai.core.coordinate.Coordinate(0, 0), chessai.core.coordinate.Coordinate(1, 1), [2.0]),
+            (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(2, 2), [2.0]),
+            (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(0, 0), [2.0]),
         ]
 
         for (i, test_case) in enumerate(test_cases):
@@ -56,18 +56,18 @@ class DistanceTest(edq.testing.unittest.BaseTest):
         # [(a, b, expected), ...]
         test_cases = [
             # Identity
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 0), chessai.core.coordinate.Coordinate.from_file_rank(0, 0), [0.0]),
+            (chessai.core.coordinate.Coordinate(0, 0), chessai.core.coordinate.Coordinate(0, 0), [0.0]),
 
             # Lateral
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 0), chessai.core.coordinate.Coordinate.from_file_rank(1, 0), [1.0]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 0), chessai.core.coordinate.Coordinate.from_file_rank(0, 1), [1.0]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(1, 0), chessai.core.coordinate.Coordinate.from_file_rank(0, 0), [1.0]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 1), chessai.core.coordinate.Coordinate.from_file_rank(0, 0), [1.0]),
+            (chessai.core.coordinate.Coordinate(0, 0), chessai.core.coordinate.Coordinate(1, 0), [1.0]),
+            (chessai.core.coordinate.Coordinate(0, 0), chessai.core.coordinate.Coordinate(0, 1), [1.0]),
+            (chessai.core.coordinate.Coordinate(1, 0), chessai.core.coordinate.Coordinate(0, 0), [1.0]),
+            (chessai.core.coordinate.Coordinate(0, 1), chessai.core.coordinate.Coordinate(0, 0), [1.0]),
 
             # Diagonal
-            (chessai.core.coordinate.Coordinate.from_file_rank(0, 0), chessai.core.coordinate.Coordinate.from_file_rank(1, 1), [2.0 ** 0.5]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(2, 2), [2.0 ** 0.5]),
-            (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(0, 0), [2.0 ** 0.5]),
+            (chessai.core.coordinate.Coordinate(0, 0), chessai.core.coordinate.Coordinate(1, 1), [2.0 ** 0.5]),
+            (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(2, 2), [2.0 ** 0.5]),
+            (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(0, 0), [2.0 ** 0.5]),
         ]
 
         for (i, test_case) in enumerate(test_cases):
@@ -98,17 +98,17 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     #     # [(a, b, expected), ...]
     #     test_cases = [
     #         # Identity
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(1, 1), 0.0),
+    #         (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(1, 1), 0.0),
 
     #         # Lateral
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(2, 1), 5.0),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(1, 2), 1.0),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(2, 1), chessai.core.coordinate.Coordinate.from_file_rank(1, 1), 1.0),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 2), chessai.core.coordinate.Coordinate.from_file_rank(1, 1), 5.0),
+    #         (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(2, 1), 5.0),
+    #         (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(1, 2), 1.0),
+    #         (chessai.core.coordinate.Coordinate(2, 1), chessai.core.coordinate.Coordinate(1, 1), 1.0),
+    #         (chessai.core.coordinate.Coordinate(1, 2), chessai.core.coordinate.Coordinate(1, 1), 5.0),
 
     #         # Diagonal
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(2, 1), chessai.core.coordinate.Coordinate.from_file_rank(3, 2), 44.0),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(3, 5), chessai.core.coordinate.Coordinate.from_file_rank(4, 4), 78.0),
+    #         (chessai.core.coordinate.Coordinate(2, 1), chessai.core.coordinate.Coordinate(3, 2), 44.0),
+    #         (chessai.core.coordinate.Coordinate(3, 5), chessai.core.coordinate.Coordinate(4, 4), 78.0),
     #     ]
 
     #     for (i, test_case) in enumerate(test_cases):
@@ -126,17 +126,17 @@ class DistanceTest(edq.testing.unittest.BaseTest):
 
     #     # [(a, b, expected), ...]
     #     test_cases = [
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(-1, -1), chessai.core.coordinate.Coordinate.from_file_rank(-2, -2), None),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(0, 0), chessai.core.coordinate.Coordinate.from_file_rank(0, 0), None),
+    #         (chessai.core.coordinate.Coordinate(-1, -1), chessai.core.coordinate.Coordinate(-2, -2), None),
+    #         (chessai.core.coordinate.Coordinate(0, 0), chessai.core.coordinate.Coordinate(0, 0), None),
 
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(1, 2), 1.0),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(3, 5), 6.0),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(3, 4), 7.0),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(4, 4), 6.0),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(5, 2), 5.0),
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(1, 1), chessai.core.coordinate.Coordinate.from_file_rank(5, 1), 6.0),
+    #         (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(1, 2), 1.0),
+    #         (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(3, 5), 6.0),
+    #         (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(3, 4), 7.0),
+    #         (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(4, 4), 6.0),
+    #         (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(5, 2), 5.0),
+    #         (chessai.core.coordinate.Coordinate(1, 1), chessai.core.coordinate.Coordinate(5, 1), 6.0),
 
-    #         (chessai.core.coordinate.Coordinate.from_file_rank(3, 5), chessai.core.coordinate.Coordinate.from_file_rank(4, 4), 2.0),
+    #         (chessai.core.coordinate.Coordinate(3, 5), chessai.core.coordinate.Coordinate(4, 4), 2.0),
     #     ]
 
     #     for (i, test_case) in enumerate(test_cases):
