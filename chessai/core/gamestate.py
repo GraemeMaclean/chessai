@@ -110,7 +110,27 @@ class GameState(edq.util.json.DictConverter):
     def get_legal_actions(self) -> list[chessai.core.action.Action]:
         """ Return the list of legal actions for the current player. """
 
-        pass
+        legal_actions: list[chessai.core.action.Action] = []
+        pseudo_legal_moves = self._get_pseudo_legal_moves()
+
+        for action in pseudo_legal_moves:
+            # Get the piece before pushing (needed for special move processing)
+            piece = successor.board.get(action.start_coordinate)
+            if piece is None:
+                continue
+
+            # Generate a successor state to test if this move is legal
+            successor: 'GameState' = self.generate_successor(action)
+
+            # Apply the move to the test state
+            successor.board.push(action)
+            successor._process_special_move(action, piece)
+
+            # Check if this move leaves our king in check (making it illegal)
+            if not successor._is_in_check(self.turn):
+                legal_actions.append(action)
+
+        return legal_actions
 
     def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Return whether the given action captures a piece. """
@@ -146,7 +166,7 @@ class GameState(edq.util.json.DictConverter):
         An empty list signifies the game is in progress or it is a tie.
         """
 
-        pass
+        return []
 
     # TODO(Lucas)
     def get_termination_reason(self) -> chessai.core.types.TerminationReason:
@@ -170,7 +190,7 @@ class GameState(edq.util.json.DictConverter):
         if (piece is None):
             raise ValueError(f"Cannot push an action from an empty square: '{action}'.")
 
-        # Check if it is a capture.
+        self.board_stack.append(self.board.copy())
 
         # Apply the action to the board and receive the updates.
         is_capture = self.board.push(action)
@@ -194,6 +214,11 @@ class GameState(edq.util.json.DictConverter):
         self.turn = self.turn.opposite()
 
         self.move_stack.append(action)
+
+    def _is_in_check(self, color: chessai.core.types.Color) -> bool:
+        """ Determines if the given color, not the state's color, is in check. """
+
+        return False
 
     def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:
         """ Get all of the actions that can be taken on this gamestate, regardless if it violates pins or checks. """

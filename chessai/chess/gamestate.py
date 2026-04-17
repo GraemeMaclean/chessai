@@ -33,6 +33,23 @@ class GameState(chessai.core.gamestate.GameState):
 
         return (winners, score)
 
+    def _is_in_check(self, color: chessai.core.types.Color) -> bool:
+        # Find the king of the given color.
+        king_coordinate: chessai.core.coordinate.Coordinate | None = None
+        for coordinate, piece in self.board.pieces.items():
+            if ((piece.color == color) and (piece == chessai.chess.piece.King)):
+                king_coordinate = coordinate
+                break
+
+        # If there's no king, the position is invalid, which should never happen.
+        if king_coordinate is None:
+            return False
+
+        # Check if any opponent piece can attack the king's square.
+        # TODO(Lucas)
+
+        return False
+
     def _should_reset_halfmove_clock(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
         return (piece == chessai.chess.piece.Pawn)
 
@@ -407,7 +424,7 @@ class GameState(chessai.core.gamestate.GameState):
         return chessai.core.coordinate.Coordinate(action.start_coordinate.file, passed_rank)
 
 def base_eval(
-        state: GameState,
+        state: chessai.core.gamestate.GameState,
         action: chessai.core.action.Action | None = None,
         agent: typing.Any | None = None,
         **kwargs: typing.Any) -> float:
