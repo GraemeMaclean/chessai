@@ -85,7 +85,7 @@ class Board(edq.util.json.DictConverter):
 
         return list(self.pieces.keys())
 
-    def push(self, action: chessai.core.action.Action) -> None:
+    def push(self, action: chessai.core.action.Action) -> bool:
         """ Apply an action to the board. """
 
         piece = self.pieces.pop(action.start_coordinate, None)
@@ -99,7 +99,11 @@ class Board(edq.util.json.DictConverter):
         if (not self._is_within_bounds(action.end_coordinate)):
             raise ValueError(f"Cannot push an action that moves the piece off of the board of size '{self.num_files}x{self.num_ranks}': '{action.end_coordinate}'.")
 
+        target_piece = self.pieces.get(action.end_coordinate, None)
+
         self.pieces[action.end_coordinate] = piece
+
+        return (target_piece is not None)
 
     def remove(self, coordinate: chessai.core.coordinate.Coordinate) -> None:
         """

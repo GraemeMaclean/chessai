@@ -2,6 +2,7 @@ import typing
 
 import chessai.agents.greedy
 import chessai.agents.minimax
+import chessai.chess.gamestate
 import chessai.core.action
 import chessai.core.gamestate
 
@@ -97,4 +98,4 @@ def better_state_eval(
     """
 
     # *** Your Code Here ***
-    return chessai.core.gamestate.base_eval(state, agent, kwargs)
+    return chessai.chess.gamestate.base_eval(state, agent, kwargs)

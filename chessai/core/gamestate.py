@@ -161,11 +161,7 @@ class GameState(edq.util.json.DictConverter):
     # TODO(Lucas): We need to update gamestate fields (e.g., move counters, turn, etc.)
     # We also need to track if an action updates en-passant or castling rights.
     def push(self, action: chessai.core.action.Action) -> None:
-        """
-        Apply action to the game state and update all metadata.
-
-        Stores all previous metadata on the MoveRecord so pop() is a perfect inverse without any recomputation.
-        """
+        """ Apply action to the game state and update all metadata. """
 
         if (action not in self.get_legal_actions()):
             raise ValueError(f"Cannot push an illegal action: '{action}'.")
@@ -174,17 +170,19 @@ class GameState(edq.util.json.DictConverter):
         if (piece is None):
             raise ValueError(f"Cannot push an action from an empty square: '{action}'.")
 
+        # Check if it is a capture.
+
         # Apply the action to the board and receive the updates.
-        self.board.push(action)
+        is_capture = self.board.push(action)
 
         # Allow games to add any additional processing.
-        self._process_special_move(action, piece)
+        is_special_capture = self._process_special_move(action, piece)
+
+        # Allow for subclasses to reset clocks on special actions.
+        reset_clock = self._should_reset_halfmove_clock(action, piece)
 
         # Update the clocks.
-        reset_clock = self._should_reset_halfmove_clock(action, piece)
-        is_capture  = (record.captured_piece is not None)
-
-        if (reset_clock or is_capture):
+        if (reset_clock or is_capture or is_special_capture):
             self.halfmove_clock = 0
         else:
             self.halfmove_clock += 1
@@ -197,107 +195,20 @@ class GameState(edq.util.json.DictConverter):
 
         self.move_stack.append(action)
 
-    def pop(self) -> None:
-        """ Undo the most recent action, restoring all game state metadata. """
-
-        if (not self.move_stack):
-            raise ValueError('Cannot pop from an empty move stack.')
-
-        record = self.move_stack.pop()
-
-        self.board.pop(record)
-
-        if (record.previous_castling_rights is None):
-            record.previous_castling_rights = chessai.core.castling.CastlingRights()
-
-        # Restore all metadata from the record.
-        self.turn                  = self.turn.opposite()
-        self.castling_rights       = record.previous_castling_rights
-        self.en_passant_coordinate = record.previous_en_passant
-        self.halfmove_clock        = record.previous_halfmove_clock
-
-        if (self.turn == chessai.core.types.Color.BLACK):
-            self.fullmove_number -= 1
-
     def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:
         """ Get all of the actions that can be taken on this gamestate, regardless if it violates pins or checks. """
 
-        # Get the base movement from all pieces.
-        actions = self._expand_movement_vectors()
+        return []
 
-        # Get any special moves.
-        actions.extend(self._get_special_game_moves())
-
-        return actions
-
-    def _expand_movement_vectors(self) -> list[chessai.core.action.Action]:
-        """ Expand the movement vectors into the pseudo-legal moves. """
-
-        actions: list[chessai.core.action.Action] = []
-
-        # Determine the rank for pawn promotions.
-        if (self.turn == chessai.core.types.Color.WHITE):
-            promotion_rank = self.board.num_ranks - 1
-        else:
-            promotion_rank = 0
-
-        for (coordinate, piece) in self.board.pieces.items():
-            if (piece.color != self.turn):
-                continue
-
-            piece_mover = chessai.core.piece.get_mover(piece.piece_type)
-
-            movement_vectors = piece_mover.move_vectors(piece.color, coordinate)
-            for movement_vector in movement_vectors:
-                current_coordinate = coordinate
-
-                while True:
-                    current_coordinate = current_coordinate.offset(movement_vector.file_delta, movement_vector.rank_delta)
-                    if (not self.board._is_within_bounds(current_coordinate)):
-                        break
-
-                    occupant = self.board.get(current_coordinate)
-
-                    is_occupied = occupant is not None
-                    is_enemy    = (occupant is not None) and (occupant.color != piece.color)
-                    is_ally     = (occupant is not None) and (occupant.color == piece.color)
-
-                    # No movement type can move on top of an ally.
-                    if (is_ally):
-                        break
-
-                    # Push movement types cannot capture.
-                    if ((movement_vector.kind == chessai.core.piece.MoveKind.PUSH) and is_occupied):
-                        break
-
-                    # Capture movement types must target an enemy.
-                    if ((movement_vector.kind == chessai.core.piece.MoveKind.CAPTURE) and (not is_enemy)):
-                        break
-
-                    # Check if this action would lead to a pawn promotion.
-                    if ((piece.piece_type == chessai.core.types.PieceType.PAWN) and (current_coordinate.rank == promotion_rank)):
-                        actions.extend(self._get_promotion_actions(coordinate, current_coordinate))
-                    else:
-                        actions.append(chessai.core.action.Action(coordinate, current_coordinate))
-
-                    if ((is_occupied) or (not movement_vector.slides)):
-                        break
-
-        return actions
-
-
-    def _should_reset_halfmove_clock(action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
+    def _should_reset_halfmove_clock(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
         """ A helper function that allows gamestates to signal if the halfmove clock should be reset after an action. """
 
         return False
 
-    def _get_special_game_moves(self) -> list[chessai.core.action.Action]:
-        """ A helper function that allows gamestates to add additional pseudo-legal actions. """
-
-        return []
-
-    def _process_special_move(action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:
+    def _process_special_move(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
         """ A helper function that allows gamestates to do any additional processing for special moves. """
+
+        return False
 
     # TODO(Lucas)
     def copy(self) -> 'GameState':
@@ -466,36 +377,3 @@ class AgentStateEvaluationFunction(typing.Protocol):
         Passing the agent asking for this evaluation is a simple way to pass persistent state
         (like pre-computed heuristics) from the agent to this function.
         """
-
-def base_eval(
-        state: GameState,
-        action: chessai.core.action.Action | None = None,
-        agent: typing.Any | None = None,
-        **kwargs: typing.Any) -> float:
-    """
-    The most basic evaluation function, which just uses the difference in piece value on the board.
-    """
-
-    piece_values: dict[chessai.core.types.PieceType, int] = {
-        chessai.core.types.PieceType.PAWN: 1,
-        chessai.core.types.PieceType.KNIGHT: 3,
-        chessai.core.types.PieceType.BISHOP: 3,
-        chessai.core.types.PieceType.ROOK: 5,
-        chessai.core.types.PieceType.QUEEN: 9,
-        chessai.core.types.PieceType.KING: 9999,
-    }
-
-    # The difference in pieces from white's perspective.
-    board_value = 0
-    for (_, piece) in state.board.pieces.items():
-        piece_value = piece_values.get(piece.piece_type, 0)
-        if (piece.color == chessai.core.types.Color.WHITE):
-            board_value += piece_value
-        else:
-            board_value -= piece_value
-
-    if (state.turn == chessai.core.types.Color.WHITE):
-        return board_value
-
-    # The piece difference is the opposite for black.
-    return -1 * board_value
