@@ -25,82 +25,39 @@ class Color(int, enum.Enum):
         return bool(self.value)
 
 # TODO(Lucas): Implement the functions detailed in the attribute docstrings.
-class TerminationReason(enum.Enum):
+# Update string enums.
+class TerminationReason(enum.StrEnum):
     """ An enum representing the reason for a game to be over. """
 
-    CHECKMATE = enum.auto()
+    CHECKMATE = 'Checkmate'
     """ See chessai.core.gamestate.GameState.is_checkmate(). """
 
-    STALEMATE = enum.auto()
+    STALEMATE = 'Stalemate'
     """ See chessai.core.gamestate.GameState.is_stalemate(). """
 
-    INSUFFICIENT_MATERIAL = enum.auto()
+    INSUFFICIENT_MATERIAL = 'Insufficient Material'
     """ See chessai.core.gamestate.GameState.is_insufficient_material(). """
 
-    SEVENTYFIVE_MOVES = enum.auto()
+    SEVENTYFIVE_MOVES = 'Five-fold Repetition'
     """ See chessai.core.gamestate.GameState.is_fivefold_repition(). """
 
-    FIFTY_MOVES = enum.auto()
+    FIFTY_MOVES = 'Fifty Moves'
     """ See chessai.core.gamestate.GameState.can_claim_fifty_moves()`. """
 
-    THREEFOLD_REPETITION = enum.auto()
+    THREEFOLD_REPETITION = 'Three-fold Repetition'
     """ See chessai.core.gamestate.GameState.can_claim_threefold_repetition()`. """
 
-    VARIANT_WIN = enum.auto()
+    VARIANT_WIN = 'Variant Win'
     """ See chessai.core.gamestate.GameState.is_variant_win()`. """
 
-    VARIANT_LOSS = enum.auto()
+    VARIANT_LOSS = 'Variant Loss'
     """ See chessai.core.gamestate.GameState.is_variant_loss()`. """
 
-    VARIANT_DRAW = enum.auto()
+    VARIANT_DRAW = 'Variant Draw'
     """ See chessai.core.gamestate.GameState.is_variant_draw()`. """
 
-    IN_PROGRESS = enum.auto()
+    IN_PROGRESS = 'In Progress'
     """ Indicates the game is still in progress (i.e., it has not yet terminated). """
 
-    UNKNOWN = enum.auto()
+    UNKNOWN = 'Unknown'
     """ The termination reason is unknown. """
-
-class PieceType(str, enum.Enum):
-    """ An enum representing the different chess pieces. """
-
-    KING = 'k'
-    QUEEN = 'q'
-    KNIGHT = 'n'
-    BISHOP = 'b'
-    ROOK = 'r'
-    PAWN = 'p'
-
-    @property
-    def symbol(self) -> str:
-        """ Returns the lowercase symbol for this piece type. """
-
-        return self.value
-
-    @property
-    def name_str(self) -> str:
-        """ Returns the full name of this piece type. """
-
-        return self.name.lower()
-
-    def unicode_symbol(self, team: Color = Color.WHITE) -> str:
-        """ Returns the unicode symbol for this piece type. """
-
-        return UNICODE_PIECE_SYMBOLS[self.value.upper() if (team == Color.WHITE) else self.value]
-
-    def __str__(self) -> str:
-        return self.value
-
-    def __repr__(self) -> str:
-        return f"PieceType.{self.name}"
-
-PIECE_SYMBOLS: dict[str, PieceType] = {piece.value: piece for piece in PieceType}
-
-UNICODE_PIECE_SYMBOLS: dict[str, str] = {
-    "R": "♖", "r": "♜",
-    "N": "♘", "n": "♞",
-    "B": "♗", "b": "♝",
-    "Q": "♕", "q": "♛",
-    "K": "♔", "k": "♚",
-    "P": "♙", "p": "♟",
-}

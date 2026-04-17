@@ -8,6 +8,7 @@ import re
 import edq.util.json
 
 import chessai.core.coordinate
+import chessai.core.piece
 import chessai.core.types
 
 ACTION_PATTERN: re.Pattern = re.compile(r'^([a-z]+\d+)([a-z]+\d+)([a-z]?)$')
@@ -25,7 +26,7 @@ class Action(edq.util.json.DictConverter):
     def __init__(self,
                  start_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE,
                  end_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE,
-                 promotion: chessai.core.types.PieceType | None = None) -> None:
+                 promotion: chessai.core.piece.Piece | None = None) -> None:
 
         self.start_coordinate: chessai.core.coordinate.Coordinate = start_coordinate
         """ The starting coordinate for the action. """
@@ -33,7 +34,7 @@ class Action(edq.util.json.DictConverter):
         self.end_coordinate: chessai.core.coordinate.Coordinate = end_coordinate
         """ The ending coordinate for the action. """
 
-        self.promotion: chessai.core.types.PieceType | None = promotion
+        self.promotion: chessai.core.piece.Piece | None = promotion
         """ The piece to promote to, or None if this is not a promotion move. """
 
     def uci(self) -> str:
@@ -71,13 +72,13 @@ class Action(edq.util.json.DictConverter):
 
         # If there is a trailing character, try to parse it as a promotion piece type.
         tail = match.group(3)
-        promotion: chessai.core.types.PieceType | None = None
+        promotion: chessai.core.piece.Piece | None = None
 
         if (len(tail) == 1):
-            if (tail not in chessai.core.types.PIECE_SYMBOLS):
+            if (tail not in chessai.core.piece.get_registered_piece_symbols()):
                 raise ValueError(f"Unknown promotion piece symbol '{tail}' in UCI string: '{uci}'.")
 
-            promotion = chessai.core.types.PIECE_SYMBOLS[tail]
+            promotion = chessai.core.piece.get_registered_piece(tail)
 
         return cls(start_coordinate, end_coordinate, promotion)
 

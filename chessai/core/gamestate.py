@@ -26,7 +26,8 @@ class GameState(edq.util.json.DictConverter):
 
     def __init__(self,
                  fen: str | None = None,
-                 move_stack: list[chessai.core.board.MoveRecord] | None = None,
+                 move_stack: list[chessai.core.action.Action] | None = None,
+                 board_stack: list[chessai.core.board.Board] | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  **kwargs: typing.Any) -> None:
@@ -57,8 +58,14 @@ class GameState(edq.util.json.DictConverter):
         if (move_stack is None):
             move_stack = []
 
-        self.move_stack: list[chessai.core.board.MoveRecord] = move_stack
+        self.move_stack: list[chessai.core.action.Action] = move_stack
         """ The ordered history of all actions taken, starting with the oldest action. """
+
+        if (board_stack is None):
+            board_stack = []
+
+        self.board_stack: list[chessai.core.board.Board] = board_stack
+        """ The ordered history of all boards, starting with the oldest board. """
 
         self.seed: int = seed
         """ A utility seed that components using the game state may use to seed their own RNGs. """
@@ -167,30 +174,17 @@ class GameState(edq.util.json.DictConverter):
         if (piece is None):
             raise ValueError(f"Cannot push an action from an empty square: '{action}'.")
 
-        # Snapshot everything that push may invalidate, before mutating.
-        previous_castling_rights = self.castling_rights.copy()
-        previous_en_passant      = self.en_passant_coordinate
-        previous_halfmove_clock  = self.halfmove_clock
-
         # Apply the action to the board and receive the updates.
-        record = self.board.push(action)
+        self.board.push(action)
 
-        # Write the snapshots onto the record so pop() can restore them.
-        record.previous_castling_rights = previous_castling_rights
-        record.previous_en_passant      = previous_en_passant
-        record.previous_halfmove_clock  = previous_halfmove_clock
-
-        # Update castling rights, based on the action.
-        self._update_castling_rights(action, piece)
-
-        # Update the en-passant target square, based on the action.
-        self.en_passant_coordinate = self._compute_en_passant(action, piece)
+        # Allow games to add any additional processing.
+        self._process_special_move(action, piece)
 
         # Update the clocks.
-        is_pawn_move = (piece.piece_type == chessai.core.types.PieceType.PAWN)
-        is_capture   = (record.captured_piece is not None)
+        reset_clock = self._should_reset_halfmove_clock(action, piece)
+        is_capture  = (record.captured_piece is not None)
 
-        if (is_pawn_move or is_capture):
+        if (reset_clock or is_capture):
             self.halfmove_clock = 0
         else:
             self.halfmove_clock += 1
@@ -201,7 +195,7 @@ class GameState(edq.util.json.DictConverter):
         # Advance the turn.
         self.turn = self.turn.opposite()
 
-        self.move_stack.append(record)
+        self.move_stack.append(action)
 
     def pop(self) -> None:
         """ Undo the most recent action, restoring all game state metadata. """
@@ -231,14 +225,8 @@ class GameState(edq.util.json.DictConverter):
         # Get the base movement from all pieces.
         actions = self._expand_movement_vectors()
 
-        # Add any castling moves.
-        actions.extend(self._get_castling_moves())
-
-        # Add any pawn double pushes.
-        actions.extend(self._get_pawn_double_pushes())
-
-        # Add any en-passant captures.
-        actions.extend(self._get_en_passant_captures())
+        # Get any special moves.
+        actions.extend(self._get_special_game_moves())
 
         return actions
 
@@ -269,6 +257,7 @@ class GameState(edq.util.json.DictConverter):
                         break
 
                     occupant = self.board.get(current_coordinate)
+
                     is_occupied = occupant is not None
                     is_enemy    = (occupant is not None) and (occupant.color != piece.color)
                     is_ally     = (occupant is not None) and (occupant.color == piece.color)
@@ -296,243 +285,19 @@ class GameState(edq.util.json.DictConverter):
 
         return actions
 
-    def _get_castling_moves(self) -> list[chessai.core.action.Action]:
-        """ Get all pseudo-legal castling moves for the current player. """
 
-        # Determine the back rank and castling rights for the current player.
-        if (self.turn == chessai.core.types.Color.WHITE):
-            back_rank           = 0
-            kingside_rights     = self.castling_rights.white_kingside
-            queenside_rights    = self.castling_rights.white_queenside
-        else:
-            back_rank           = self.board.num_ranks - 1
-            kingside_rights     = self.castling_rights.black_kingside
-            queenside_rights    = self.castling_rights.black_queenside
+    def _should_reset_halfmove_clock(action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
+        """ A helper function that allows gamestates to signal if the halfmove clock should be reset after an action. """
 
-        if ((not kingside_rights) and (not queenside_rights)):
-            return []
+        return False
 
-        # Find the king.
-        king_coord: chessai.core.coordinate.Coordinate | None = None
-        for (coordinate, piece) in self.board.pieces.items():
-            if (piece.piece_type != chessai.core.types.PieceType.KING):
-                continue
+    def _get_special_game_moves(self) -> list[chessai.core.action.Action]:
+        """ A helper function that allows gamestates to add additional pseudo-legal actions. """
 
-            if (piece.color != self.turn):
-                continue
+        return []
 
-            king_coord = coordinate
-
-        if ((king_coord is None) or (king_coord.rank != back_rank)):
-            return []
-
-        actions: list[chessai.core.action.Action] = []
-
-        # Add Kingside castling.
-        if (kingside_rights):
-            rook_coord = chessai.core.coordinate.Coordinate((self.board.num_files - 1), back_rank)
-            rook_piece = self.board.get(rook_coord)
-
-            # Check that the files to the right of the king and left of the rook are empty.
-            all_empty = True
-            file = king_coord.file + 1
-            while (file < rook_coord.file):
-                empty_coord = chessai.core.coordinate.Coordinate(file, back_rank)
-
-                if (self.board.has_piece(empty_coord)):
-                    all_empty = False
-                    break
-
-                file = file + 1
-
-            if ((rook_piece is not None)
-                    and (rook_piece.piece_type == chessai.core.types.PieceType.ROOK)
-                    and (rook_piece.color == self.turn)
-                    and (all_empty)):
-                king_dest = chessai.core.coordinate.Coordinate((self.board.num_files - 2), back_rank)
-                actions.append(chessai.core.action.Action(king_coord, king_dest))
-
-        # Add Queenside castling.
-        if (queenside_rights):
-            rook_coord = chessai.core.coordinate.Coordinate(0, back_rank)
-            rook_piece = self.board.get(rook_coord)
-
-            # Check that the files to the right of the king and left of the rook are empty.
-            all_empty = True
-            file = king_coord.file - 1
-            while (file > 0):
-                empty_coord = chessai.core.coordinate.Coordinate(file, back_rank)
-
-                if (self.board.has_piece(empty_coord)):
-                    all_empty = False
-                    break
-
-                file = file - 1
-
-            if ((rook_piece is not None)
-                    and (rook_piece.piece_type == chessai.core.types.PieceType.ROOK)
-                    and (rook_piece.color == self.turn)
-                    and (all_empty)):
-                king_dest = chessai.core.coordinate.Coordinate(2, back_rank)
-                actions.append(chessai.core.action.Action(king_coord, king_dest))
-
-        return actions
-
-    def _get_pawn_double_pushes(self) -> list[chessai.core.action.Action]:
-        """ Get all pseudo-legal pawn double push moves for the current player. """
-
-        if (self.turn == chessai.core.types.Color.WHITE):
-            start_rank = 1
-            direction  = 1
-        else:
-            start_rank = self.board.num_ranks - 2
-            direction  = -1
-
-        actions: list[chessai.core.action.Action] = []
-
-        for (coordinate, piece) in self.board.pieces.items():
-            if (piece.piece_type != chessai.core.types.PieceType.PAWN):
-                continue
-
-            if (piece.color != self.turn):
-                continue
-
-            if (coordinate.rank != start_rank):
-                continue
-
-            # Both the single and double push squares must be empty.
-            single_push_coord = coordinate.offset(0, direction)
-            if (self.board.has_piece(single_push_coord)):
-                continue
-
-            double_push_coord = coordinate.offset(0, direction * 2)
-            if (self.board.has_piece(double_push_coord)):
-                continue
-
-            actions.append(chessai.core.action.Action(coordinate, double_push_coord))
-
-        return actions
-
-    def _get_en_passant_captures(self) -> list[chessai.core.action.Action]:
-        """ Get all pseudo-legal en-passant captures for the current player. """
-
-        actions: list[chessai.core.action.Action] = []
-
-        if (self.en_passant_coordinate is None):
-            return actions
-
-        if (self.turn == chessai.core.types.Color.WHITE):
-            # The en-passant square encodes the square that must be taken.
-            # So, the pawn that can attack it will be one rank below for white.
-            capturing_rank = self.en_passant_coordinate.rank - 1
-        else:
-            capturing_rank = self.en_passant_coordinate.rank + 1
-
-        # The pawn will have to be on an adjacent file.
-        for file_delta in [-1, 1]:
-            candidate_capture_coord = chessai.core.coordinate.Coordinate(
-                self.en_passant_coordinate.file + file_delta,
-                capturing_rank,
-            )
-
-            if (not self.board._is_within_bounds(candidate_capture_coord)):
-                continue
-
-            piece = self.board.get(candidate_capture_coord)
-            if (piece is None):
-                continue
-
-            if (piece.piece_type != chessai.core.types.PieceType.PAWN):
-                continue
-
-            if (piece.color != self.turn):
-                continue
-
-            actions.append(chessai.core.action.Action(candidate_capture_coord, self.en_passant_coordinate))
-
-        return actions
-
-    def _get_promotion_actions(self,
-            start_coordinate: chessai.core.coordinate.Coordinate,
-            end_coordinate: chessai.core.coordinate.Coordinate) -> list[chessai.core.action.Action]:
-        """
-        Expand a pawn move that reaches the back rank into one action per promotable piece type.
-
-        Called when a pawn reaches the back rank of the opposing side.
-        Always returns exactly four actions (queen, rook, bishop, knight).
-        """
-
-        return [
-            chessai.core.action.Action(start_coordinate, end_coordinate, chessai.core.types.PieceType.QUEEN),
-            chessai.core.action.Action(start_coordinate, end_coordinate, chessai.core.types.PieceType.ROOK),
-            chessai.core.action.Action(start_coordinate, end_coordinate, chessai.core.types.PieceType.BISHOP),
-            chessai.core.action.Action(start_coordinate, end_coordinate, chessai.core.types.PieceType.KNIGHT),
-        ]
-
-    def _update_castling_rights(self,
-            action: chessai.core.action.Action,
-            piece: chessai.core.piece.Piece) -> None:
-        """ Revoke castling rights that are no longer valid after the given move. """
-
-        white_kingside_rook  = chessai.core.coordinate.Coordinate(self.board.num_files - 1, 0)
-        white_queenside_rook = chessai.core.coordinate.Coordinate(0, 0)
-        black_kingside_rook  = chessai.core.coordinate.Coordinate(self.board.num_files - 1, self.board.num_ranks - 1)
-        black_queenside_rook = chessai.core.coordinate.Coordinate(0, self.board.num_ranks - 1)
-
-        # King moves, which forfeits both rights for that color.
-        if (piece.piece_type == chessai.core.types.PieceType.KING):
-            if (piece.color == chessai.core.types.Color.WHITE):
-                self.castling_rights.white_kingside  = False
-                self.castling_rights.white_queenside = False
-            else:
-                self.castling_rights.black_kingside  = False
-                self.castling_rights.black_queenside = False
-
-        # Rook moves from its starting square.
-        if (action.start_coordinate == white_kingside_rook):
-            self.castling_rights.white_kingside = False
-
-        if (action.start_coordinate == white_queenside_rook):
-            self.castling_rights.white_queenside = False
-
-        if (action.start_coordinate == black_kingside_rook):
-            self.castling_rights.black_kingside = False
-
-        if (action.start_coordinate == black_queenside_rook):
-            self.castling_rights.black_queenside = False
-
-        # Rook captured on its starting square.
-        if (action.end_coordinate == white_kingside_rook):
-            self.castling_rights.white_kingside = False
-
-        if (action.end_coordinate == white_queenside_rook):
-            self.castling_rights.white_queenside = False
-
-        if (action.end_coordinate == black_kingside_rook):
-            self.castling_rights.black_kingside = False
-
-        if (action.end_coordinate == black_queenside_rook):
-            self.castling_rights.black_queenside = False
-
-    def _compute_en_passant(self,
-            action: chessai.core.action.Action,
-            piece: chessai.core.piece.Piece) -> chessai.core.coordinate.Coordinate | None:
-        """
-        Return the new en-passant target square after this move, or None.
-
-        A target square is set only when a pawn advances two ranks.
-        The target is the square the pawn passed through (i.e. one rank behind the destination), which is standard FEN notation.
-        """
-
-        if (piece.piece_type != chessai.core.types.PieceType.PAWN):
-            return None
-
-        if (action.start_coordinate.rank_distance(action.end_coordinate) != 2):
-            return None
-
-        # The en-passant target is the square the pawn skipped over.
-        passed_rank = (action.start_coordinate.rank + action.end_coordinate.rank) // 2
-        return chessai.core.coordinate.Coordinate(action.start_coordinate.file, passed_rank)
+    def _process_special_move(action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:
+        """ A helper function that allows gamestates to do any additional processing for special moves. """
 
     # TODO(Lucas)
     def copy(self) -> 'GameState':
@@ -659,21 +424,29 @@ class GameState(edq.util.json.DictConverter):
         return {
             'fen':        self.get_fen(),
             'move_stack': [action.to_dict() for action in self.move_stack],
+            'board_stack': [board.to_dict() for board in self.board_stack],
             'seed':       self.seed,
             'game_over':  self.game_over,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
+        raw_move_stack = data.get('move_stack', [])
         move_stack = []
-        for record in data.get('move_stack', []):
-            move_stack.append(chessai.core.board.MoveRecord.from_dict(record))
+        for move in raw_move_stack:
+            move_stack.append(move.from_dict())
+
+        raw_board_stack = data.get('board_stack', [])
+        board_stack = []
+        for board in raw_board_stack:
+            board_stack.append(board.from_dict())
 
         return cls(
-            fen        = data.get('fen', None),
-            move_stack = move_stack,
-            seed       = data.get('seed', -1),
-            game_over  = data.get('game_over', False),
+            fen         = data.get('fen', None),
+            move_stack  = move_stack,
+            board_stack = board_stack,
+            seed        = data.get('seed', -1),
+            game_over   = data.get('game_over', False),
         )
 
 @typing.runtime_checkable

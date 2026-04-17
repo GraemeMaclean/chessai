@@ -2,15 +2,15 @@
 FEN (Forsyth-Edwards Notation) parsing and serialization.
 
 FEN format:
-  <pieces> <turn> <castling> <en-passant> <halfmove-clock> <fullmove-number> [<files>x<ranks>]
+  [#<files>x<ranks>] <pieces> <turn> <castling> <en-passant> <halfmove-clock> <fullmove-number>
 
+  dimensions   -- optional '#<files>x<ranks>' (e.g. '#8x8'); defaults to 8x8 if omitted
   pieces       -- ranks 8..1, files a..h; '/' separates ranks; digits = empty coordinates
   turn         -- 'w' or 'b'
   castling     -- 'KQkq' subset or '-'
   en-passant   -- target coordinate in algebraic notation or '-'
   halfmove     -- integer
   fullmove     -- integer (starts at 1, increments after Black's move)
-  dimensions   -- optional '<files>x<ranks>' (e.g. '8x8'); defaults to 8x8 if omitted
 
 The dimensions field is a chessai extension and is not part of the standard FEN spec.
 Standard FEN strings (6 fields) are accepted without modification.
@@ -26,27 +26,7 @@ import chessai.core.coordinate
 import chessai.core.piece
 import chessai.core.types
 
-DIMENSIONS_PATTERN: re.Pattern = re.compile(r'^(\d+)x(\d+)$')
-
-# Maps the single-character FEN symbol to a (PieceType, Color) pair.
-_FEN_SYMBOL_TO_PIECE: dict[str, tuple[chessai.core.types.PieceType, chessai.core.types.Color]] = {
-    'P': (chessai.core.types.PieceType.PAWN,   chessai.core.types.Color.WHITE),
-    'N': (chessai.core.types.PieceType.KNIGHT, chessai.core.types.Color.WHITE),
-    'B': (chessai.core.types.PieceType.BISHOP, chessai.core.types.Color.WHITE),
-    'R': (chessai.core.types.PieceType.ROOK,   chessai.core.types.Color.WHITE),
-    'Q': (chessai.core.types.PieceType.QUEEN,  chessai.core.types.Color.WHITE),
-    'K': (chessai.core.types.PieceType.KING,   chessai.core.types.Color.WHITE),
-    'p': (chessai.core.types.PieceType.PAWN,   chessai.core.types.Color.BLACK),
-    'n': (chessai.core.types.PieceType.KNIGHT, chessai.core.types.Color.BLACK),
-    'b': (chessai.core.types.PieceType.BISHOP, chessai.core.types.Color.BLACK),
-    'r': (chessai.core.types.PieceType.ROOK,   chessai.core.types.Color.BLACK),
-    'q': (chessai.core.types.PieceType.QUEEN,  chessai.core.types.Color.BLACK),
-    'k': (chessai.core.types.PieceType.KING,   chessai.core.types.Color.BLACK),
-}
-
-_PIECE_TO_FEN_SYMBOL: dict[tuple[chessai.core.types.PieceType, chessai.core.types.Color], str] = {
-    v: k for (k, v) in _FEN_SYMBOL_TO_PIECE.items()
-}
+DIMENSIONS_PATTERN: re.Pattern = re.compile(r'^#(\d+)x(\d+)$')
 
 class ParsedFEN:
     """
@@ -103,7 +83,7 @@ def parse(fen: str) -> ParsedFEN:
     num_ranks = chessai.core.board.DEFAULT_BOARD_RANKS
 
     if (len(fields) == 7):
-        (num_files, num_ranks) = _parse_dimensions(fields[6])
+        (num_files, num_ranks) = _parse_dimensions(fields.pop(0))
 
     pieces          = _parse_pieces(fields[0], num_files, num_ranks)
     turn            = _parse_turn(fields[1])
@@ -169,7 +149,7 @@ def _parse_dimensions(dimensions_field: str) -> tuple[int, int]:
     match = DIMENSIONS_PATTERN.fullmatch(dimensions_field)
     if (match is None):
         raise ValueError(
-            "FEN dimensions field must be '<files>x<ranks>' (e.g. '8x8'),"
+            "FEN dimensions field must be '#<files>x<ranks>' (e.g. '#8x8'),"
             + f" got: '{dimensions_field}'."
         )
 
@@ -202,6 +182,7 @@ def _parse_pieces(
             + f" separated by '/', found {len(ranks)}: '{piece_field}'."
         )
 
+    known_piece_symbols = chessai.core.piece.get_registered_piece_symbols()
     pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = {}
 
     for (rank_index, rank_str) in enumerate(ranks):
@@ -212,13 +193,12 @@ def _parse_pieces(
         for char in rank_str:
             if (char.isdigit()):
                 file += int(char)
-            elif (char in _FEN_SYMBOL_TO_PIECE):
+            elif (char in known_piece_symbols):
                 if (file >= num_files):
                     raise ValueError(f"Too many pieces on rank {rank + 1} in FEN: '{piece_field}'.")
 
                 coordinate = chessai.core.coordinate.Coordinate(file, rank)
-                piece_type, color = _FEN_SYMBOL_TO_PIECE[char]
-                pieces[coordinate] = chessai.core.piece.Piece(piece_type, color)
+                pieces[coordinate] = chessai.core.piece.get_registered_piece(char)
                 file += 1
             else:
                 raise ValueError(f"Unknown character '{char}' in FEN piece field: '{piece_field}'.")
@@ -257,7 +237,7 @@ def _serialize_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chessai.c
                     rank_str += str(empty_count)
                     empty_count = 0
 
-                symbol = _PIECE_TO_FEN_SYMBOL.get((piece.piece_type, piece.color))
+                symbol = piece.symbol()
                 if (symbol is None):
                     raise ValueError(f"Cannot serialize piece {piece} at {coordinate}")
 

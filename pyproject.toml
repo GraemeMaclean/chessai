@@ -13,7 +13,7 @@ requires = [
 name = "chessai"
 description = "An AI educational project disguised as chess."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {file = "LICENSE.md"}
 
 authors = [
@@ -25,7 +25,7 @@ classifiers = [
     'Intended Audience :: Science/Research',
     'Intended Audience :: Education',
     'Operating System :: OS Independent',
-    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
     'Topic :: Education',
     'Topic :: Scientific/Engineering :: Artificial Intelligence',
 ]
@@ -42,8 +42,8 @@ dependencies = {file = ["requirements.txt"]}
 optional-dependencies = {dev = {file = ["requirements-dev.txt"]}}
 
 [project.urls]
-Homepage = "https://github.com/linqs/pacman"
-Repository = "https://github.com/linqs/pacman"
+Homepage = "https://github.com/Lucas-Ellenberger/chessai"
+Repository = "https://github.com/Lucas-Ellenberger/chessai"
 
 [tool.setuptools]
 include-package-data = true
