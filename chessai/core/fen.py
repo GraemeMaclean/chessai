@@ -134,7 +134,7 @@ def serialize(
     )
 
     if (not is_standard_size):
-        fen += f" {num_files}x{num_ranks}"
+        fen = f"#{num_files}x{num_ranks} {fen}"
 
     return fen
 

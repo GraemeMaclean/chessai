@@ -1,5 +1,6 @@
 import edq.testing.unittest
 
+import chessai.chess.piece
 import chessai.core.castling
 import chessai.core.coordinate
 import chessai.core.fen
@@ -17,11 +18,11 @@ class ParseDimensionsTest(edq.testing.unittest.BaseTest):
 
         # [(dimensions_field, expected_num_files, expected_num_ranks), ...]
         test_cases: list[tuple[str, int, int]] = [
-            ('8x8',   8,  8),
-            ('10x10', 10, 10),
-            ('4x6',   4,  6),
-            ('1x1',   1,  1),
-            ('16x4',  16, 4),
+            ('#8x8',   8,  8),
+            ('#10x10', 10, 10),
+            ('#4x6',   4,  6),
+            ('#1x1',   1,  1),
+            ('#16x4',  16, 4),
         ]
 
         for (i, (dimensions_field, expected_files, expected_ranks)) in enumerate(test_cases):
@@ -36,31 +37,31 @@ class ParseDimensionsTest(edq.testing.unittest.BaseTest):
         # [(dimensions_field, error_substring), ...]
         test_cases: list[tuple[str, str]] = [
             (
-                '8',
-                "FEN dimensions field must be '<files>x<ranks>' (e.g. '8x8'), got: '8'.",
+                '#8',
+                "FEN dimensions field must be '#<files>x<ranks>' (e.g. '#8x8'), got: '#8'.",
             ),
             (
-                '8x',
-                "FEN dimensions field must be '<files>x<ranks>' (e.g. '8x8'), got: '8x'.",
+                '#8x',
+                "FEN dimensions field must be '#<files>x<ranks>' (e.g. '#8x8'), got: '#8x'.",
             ),
             (
-                'x8',
-                "FEN dimensions field must be '<files>x<ranks>' (e.g. '8x8'), got: 'x8'.",
+                '#x8',
+                "FEN dimensions field must be '#<files>x<ranks>' (e.g. '#8x8'), got: '#x8'.",
             ),
             (
-                '8x8x8',
-                "FEN dimensions field must be '<files>x<ranks>' (e.g. '8x8'), got: '8x8x8'.",
+                '#8x8x8',
+                "FEN dimensions field must be '#<files>x<ranks>' (e.g. '#8x8'), got: '#8x8x8'.",
             ),
             (
-                'axb',
-                "FEN dimensions field must be '<files>x<ranks>' (e.g. '8x8'), got: 'axb'.",
+                '#axb',
+                "FEN dimensions field must be '#<files>x<ranks>' (e.g. '#8x8'), got: '#axb'.",
             ),
             (
-                '0x8',
+                '#0x8',
                 "FEN dimensions num_files must be >= 1, got: 0.",
             ),
             (
-                '8x0',
+                '#8x0',
                 "FEN dimensions num_ranks must be >= 1, got: 0.",
             ),
         ]
@@ -100,16 +101,14 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
         # Spot-check a few well-known piece positions.
         white_king_coords = [
             coord for (coord, piece) in result.pieces.items()
-            if (piece.piece_type == chessai.core.types.PieceType.KING
-                    and piece.color == chessai.core.types.Color.WHITE)
+            if (piece == chessai.chess.piece.King(chessai.core.types.Color.WHITE))
         ]
         self.assertEqual(1, len(white_king_coords))
         self.assertEqual(chessai.core.coordinate.Coordinate(4, 0), white_king_coords[0])
 
         black_king_coords = [
             coord for (coord, piece) in result.pieces.items()
-            if (piece.piece_type == chessai.core.types.PieceType.KING
-                    and piece.color == chessai.core.types.Color.BLACK)
+            if (piece == chessai.chess.piece.King(chessai.core.types.Color.BLACK))
         ]
         self.assertEqual(1, len(black_king_coords))
         self.assertEqual(chessai.core.coordinate.Coordinate(4, 7), black_king_coords[0])
@@ -205,10 +204,10 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
             ('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', 8, 8),
 
             # Explicit 8x8 — same result as omitting the field.
-            ('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 8x8', 8, 8),
+            ('#8x8 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', 8, 8),
 
             # Non-standard board.
-            ('ppppkpppp/9/9/9/9/9/9/9/PPPPKPPPP w - - 0 1 9x9', 9, 9),
+            ('#9x9 ppppkpppp/9/9/9/9/9/9/9/PPPPKPPPP w - - 0 1', 9, 9),
         ]
 
         for (i, (fen, expected_files, expected_ranks)) in enumerate(test_cases):
@@ -228,7 +227,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
                 "FEN must have 6 or 7 fields, found 4:",
             ),
             (
-                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 8x8 extra',
+                '#8x8 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 extra',
                 "FEN must have 6 or 7 fields, found 8:",
             ),
 
@@ -270,8 +269,8 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
 
             # Bad dimensions field.
             (
-                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 8',
-                "FEN dimensions field must be '<files>x<ranks>' (e.g. '8x8'), got: '8'.",
+                '#8 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+                "FEN dimensions field must be '#<files>x<ranks>' (e.g. '#8x8'), got: '#8'.",
             ),
         ]
 
@@ -315,7 +314,7 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
         Serializing a non-standard board should append the dimensions field.
         """
 
-        fen_with_dimensions = 'ppppkpppp/9/9/9/9/9/9/9/PPPPKPPPP w - - 0 1 9x9'
+        fen_with_dimensions = '#9x9 ppppkpppp/9/9/9/9/9/9/9/PPPPKPPPP w - - 0 1'
         result = chessai.core.fen.parse(fen_with_dimensions)
         serialized = chessai.core.fen.serialize(
             pieces                = result.pieces,
@@ -367,7 +366,7 @@ class RoundTripFENTest(edq.testing.unittest.BaseTest):
             'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 10 5',
 
             # Non-standard board size.
-            'ppppkpppp/9/9/9/9/9/9/9/PPPPKPPPP w - - 0 1 9x9',
+            '#9x9 ppppkpppp/9/9/9/9/9/9/9/PPPPKPPPP w - - 0 1',
         ]
 
         for (i, fen) in enumerate(test_cases):
