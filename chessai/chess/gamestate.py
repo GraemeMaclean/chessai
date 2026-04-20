@@ -37,7 +37,7 @@ class GameState(chessai.core.gamestate.GameState):
         # Find the king of the given color.
         king_coordinate: chessai.core.coordinate.Coordinate | None = None
         for coordinate, piece in self.board.pieces.items():
-            if ((piece.color == color) and (piece == chessai.chess.piece.King)):
+            if ((piece.color == color) and (isinstance(piece, chessai.chess.piece.King))):
                 king_coordinate = coordinate
                 break
 
@@ -51,14 +51,14 @@ class GameState(chessai.core.gamestate.GameState):
         return False
 
     def _should_reset_halfmove_clock(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
-        return (piece == chessai.chess.piece.Pawn)
+        return (isinstance(piece, chessai.chess.piece.Pawn))
 
     def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:
         # Get the base movement from all pieces.
         actions = self._expand_movement_vectors()
 
         # Add any castling moves.
-        actions = self._get_castling_moves()
+        actions.extend(self._get_castling_moves())
 
         # Add any pawn double pushes.
         actions.extend(self._get_pawn_double_pushes())
@@ -113,7 +113,7 @@ class GameState(chessai.core.gamestate.GameState):
                         break
 
                     # Check if this action would lead to a pawn promotion.
-                    if ((piece == chessai.chess.piece.Pawn) and (current_coordinate.rank == promotion_rank)):
+                    if ((isinstance(piece, chessai.chess.piece.Pawn)) and (current_coordinate.rank == promotion_rank)):
                         actions.extend(self._get_promotion_actions(coordinate, current_coordinate))
                     else:
                         actions.append(chessai.core.action.Action(coordinate, current_coordinate))
@@ -131,13 +131,13 @@ class GameState(chessai.core.gamestate.GameState):
             self._handle_promotion(action, piece)
 
         # Detect castling by seeing if the king moved more than two files.
-        if ((piece == chessai.chess.piece.King)
+        if ((isinstance(piece, chessai.chess.piece.King))
                 and (action.start_coordinate.file_distance(action.end_coordinate) > 1)):
             self._handle_castling(action, piece)
             return False
 
         # Detect En-passant by checking if a pawn moves diagonally to an empty coordinate.
-        if ((piece == chessai.chess.piece.Pawn)
+        if ((isinstance(piece, chessai.chess.piece.Pawn))
                 and (action.start_coordinate.file_distance(action.end_coordinate) == 1)
                 and (self.board.get(action.end_coordinate) is None)):
             self._handle_en_passant(action, piece)
@@ -235,7 +235,7 @@ class GameState(chessai.core.gamestate.GameState):
                 file = file + 1
 
             if ((rook_piece is not None)
-                    and (rook_piece == chessai.chess.piece.Rook)
+                    and (isinstance(rook_piece, chessai.chess.piece.Rook))
                     and (rook_piece.color == self.turn)
                     and (all_empty)):
                 king_dest = chessai.core.coordinate.Coordinate((self.board.num_files - 2), back_rank)
@@ -259,7 +259,7 @@ class GameState(chessai.core.gamestate.GameState):
                 file = file - 1
 
             if ((rook_piece is not None)
-                    and (rook_piece == chessai.chess.piece.Rook)
+                    and (isinstance(rook_piece, chessai.chess.piece.Rook))
                     and (rook_piece.color == self.turn)
                     and (all_empty)):
                 king_dest = chessai.core.coordinate.Coordinate(2, back_rank)
@@ -369,7 +369,7 @@ class GameState(chessai.core.gamestate.GameState):
         black_queenside_rook = chessai.core.coordinate.Coordinate(0, self.board.num_ranks - 1)
 
         # King moves, which forfeits both rights for that color.
-        if (piece == chessai.chess.piece.King):
+        if (isinstance(piece, chessai.chess.piece.King)):
             if (piece.color == chessai.core.types.Color.WHITE):
                 self.castling_rights.white_kingside  = False
                 self.castling_rights.white_queenside = False

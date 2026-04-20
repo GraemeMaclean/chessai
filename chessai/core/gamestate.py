@@ -107,20 +107,20 @@ class GameState(edq.util.json.DictConverter):
         pseudo_legal_moves = self._get_pseudo_legal_moves()
 
         for action in pseudo_legal_moves:
-            # Get the piece before pushing (needed for special move processing)
-            piece = successor.board.get(action.start_coordinate)
+            # Get the piece before pushing (needed for special move processing).
+            piece = self.board.get(action.start_coordinate)
             if piece is None:
                 continue
 
-            # Generate a successor state to test if this move is legal
-            successor: 'GameState' = self.generate_successor(action)
+            # Generate a successor state to test if this move is legal.
+            successor: 'GameState' = self.copy()
 
-            # Apply the move to the test state
+            # Apply the move to the test state.
             successor.board.push(action)
             successor._process_special_move(action, piece)
 
-            # Check if this move leaves our king in check (making it illegal)
-            if not successor._is_in_check(self.turn):
+            # Check if this move leaves our king in check (making it illegal).
+            if (not successor._is_in_check(self.turn)):
                 legal_actions.append(action)
 
         return legal_actions
@@ -212,7 +212,57 @@ class GameState(edq.util.json.DictConverter):
     def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:
         """ Get all of the actions that can be taken on this gamestate, regardless if it violates pins or checks. """
 
-        return []
+        return self._expand_movement_vectors()
+
+    def _expand_movement_vectors(self) -> list[chessai.core.action.Action]:
+        """
+        Expands all movement vectors from the pieces on the board.
+        Pieces will move until they can capture or reach the end of the board.
+        There are no other special rules applied.
+        """
+
+        actions: list[chessai.core.action.Action] = []
+
+        for (coordinate, piece) in self.board.pieces.items():
+            if (piece.color != self.turn):
+                continue
+
+            movement_vectors = piece.move_vectors(coordinate)
+            for movement_vector in movement_vectors:
+                current_coordinate = coordinate
+
+                num_repetitions = movement_vector.num_repetitions
+                while ((num_repetitions == -1) or (num_repetitions > 0)):
+                    current_coordinate = current_coordinate.offset(movement_vector.file_delta, movement_vector.rank_delta)
+                    if (not self.board._is_within_bounds(current_coordinate)):
+                        break
+
+                    occupant = self.board.get(current_coordinate)
+
+                    is_occupied = occupant is not None
+                    is_enemy    = (occupant is not None) and (occupant.color != piece.color)
+                    is_ally     = (occupant is not None) and (occupant.color == piece.color)
+
+                    # No movement type can move on top of an ally.
+                    if (is_ally):
+                        break
+
+                    # Push movement types cannot capture.
+                    if ((movement_vector.kind == chessai.core.piece.MoveKind.PUSH) and is_occupied):
+                        break
+
+                    # Capture movement types must target an enemy.
+                    if ((movement_vector.kind == chessai.core.piece.MoveKind.CAPTURE) and (not is_enemy)):
+                        break
+
+                    actions.append(chessai.core.action.Action(coordinate, current_coordinate))
+
+                    if (is_occupied):
+                        break
+
+                    num_repetitions -= 1
+
+        return actions
 
     def _should_reset_halfmove_clock(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
         """ A helper function that allows gamestates to signal if the halfmove clock should be reset after an action. """
