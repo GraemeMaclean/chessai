@@ -464,7 +464,7 @@ class Game(abc.ABC):
         replay_info = typing.cast(GameResult, edq.util.json.load_object_path(args.replay_path, GameResult))
 
         # Overrides from the replay info.
-        args.fen = replay_info.game_info.start_fen
+        args.board = replay_info.game_info.start_fen
         args.seed = replay_info.game_info.seed
 
         # Special settings for replays.
@@ -591,7 +591,7 @@ def init_from_args(
     logging.debug("Using source seed for games: %d.", seed)
     rng = random.Random(seed)
 
-    # TODO(Lucas): Since args.fen stores as a string,
+    # TODO(Lucas): Since args.board stores as a string,
     # we could write a utility to check if the arg is a valid FEN.
     # If not, we could try to load from the path.
 
@@ -609,7 +609,7 @@ def init_from_args(
         game_seed = rng.randint(0, 2**64)
 
         all_agent_infos.append(copy.deepcopy(agent_infos))
-        all_fens.append(args.fen)
+        all_fens.append(args.board)
 
         game_info = GameInfo(
                 all_agent_infos[-1],
@@ -630,7 +630,7 @@ def init_from_args(
 
         game_args = {
             'game_info': game_info,
-            'fen': args.fen,
+            'fen': args.board,
             'save_path': save_path,
         }
 
