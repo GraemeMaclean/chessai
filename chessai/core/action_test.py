@@ -1,7 +1,9 @@
 import edq.testing.unittest
 
+import chessai.chess.piece
 import chessai.core.action
 import chessai.core.coordinate
+import chessai.core.piece
 import chessai.core.types
 
 class ActionTest(edq.testing.unittest.BaseTest):
@@ -14,7 +16,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
         test_cases: list[tuple[
             chessai.core.coordinate.Coordinate,
             chessai.core.coordinate.Coordinate,
-            chessai.core.types.PieceType | None,
+            chessai.core.piece.Piece | None,
             str
         ]] = [
             # Base
@@ -49,25 +51,25 @@ class ActionTest(edq.testing.unittest.BaseTest):
             (
                 chessai.core.coordinate.Coordinate(4, 6),
                 chessai.core.coordinate.Coordinate(4, 7),
-                chessai.core.types.PieceType.QUEEN,
+                chessai.chess.piece.Queen(color = chessai.core.types.Color.BLACK),
                 'e7e8q',
             ),
             (
                 chessai.core.coordinate.Coordinate(4, 6),
                 chessai.core.coordinate.Coordinate(4, 7),
-                chessai.core.types.PieceType.ROOK,
+                chessai.chess.piece.Rook(color = chessai.core.types.Color.BLACK),
                 'e7e8r',
             ),
             (
                 chessai.core.coordinate.Coordinate(4, 6),
                 chessai.core.coordinate.Coordinate(4, 7),
-                chessai.core.types.PieceType.BISHOP,
+                chessai.chess.piece.Bishop(color = chessai.core.types.Color.BLACK),
                 'e7e8b',
             ),
             (
                 chessai.core.coordinate.Coordinate(4, 6),
                 chessai.core.coordinate.Coordinate(4, 7),
-                chessai.core.types.PieceType.KNIGHT,
+                chessai.chess.piece.Knight(color = chessai.core.types.Color.BLACK),
                 'e7e8n',
             ),
         ]
@@ -86,7 +88,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
             str | None,
             chessai.core.coordinate.Coordinate | None,
             chessai.core.coordinate.Coordinate | None,
-            chessai.core.types.PieceType | None,
+            chessai.core.piece.Piece | None,
         ]] = [
             # Base
             (
@@ -133,28 +135,28 @@ class ActionTest(edq.testing.unittest.BaseTest):
                 None,
                 chessai.core.coordinate.Coordinate(4, 6),
                 chessai.core.coordinate.Coordinate(4, 7),
-                chessai.core.types.PieceType.QUEEN,
+                chessai.chess.piece.Queen(color = chessai.core.types.Color.BLACK),
             ),
             (
                 'e7e8r',
                 None,
                 chessai.core.coordinate.Coordinate(4, 6),
                 chessai.core.coordinate.Coordinate(4, 7),
-                chessai.core.types.PieceType.ROOK,
+                chessai.chess.piece.Rook(color = chessai.core.types.Color.BLACK),
             ),
             (
                 'e7e8b',
                 None,
                 chessai.core.coordinate.Coordinate(4, 6),
                 chessai.core.coordinate.Coordinate(4, 7),
-                chessai.core.types.PieceType.BISHOP,
+                chessai.chess.piece.Bishop(color = chessai.core.types.Color.BLACK),
             ),
             (
                 'e7e8n',
                 None,
                 chessai.core.coordinate.Coordinate(4, 6),
                 chessai.core.coordinate.Coordinate(4, 7),
-                chessai.core.types.PieceType.KNIGHT,
+                chessai.chess.piece.Knight(color = chessai.core.types.Color.BLACK),
             ),
 
             # Promotion on large board (file > 'z').
@@ -163,7 +165,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
                 None,
                 chessai.core.coordinate.Coordinate(26, 0),
                 chessai.core.coordinate.Coordinate(27, 1),
-                chessai.core.types.PieceType.QUEEN,
+                chessai.chess.piece.Queen(color = chessai.core.types.Color.BLACK),
             ),
 
             # Errors

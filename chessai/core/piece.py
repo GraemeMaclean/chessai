@@ -95,13 +95,13 @@ def get_registered_piece(symbol: str) -> 'Piece':
 
     if symbol not in _PIECE_REGISTRY:
         raise ValueError(f"Unknown piece symbol: '{symbol}'")
-    
+
     # Determine color from symbol case
     if (symbol.isupper()):
         color = chessai.core.types.Color.WHITE
     else:
         color = chessai.core.types.Color.BLACK
-    
+
     return _PIECE_REGISTRY[symbol](color=color)
 
 def clear_registry() -> None:

@@ -46,7 +46,7 @@ class Action(edq.util.json.DictConverter):
 
         start = self.start_coordinate.uci()
         end = self.end_coordinate.uci()
-        promotion = self.promotion.symbol if (self.promotion is not None) else ''
+        promotion = self.promotion.symbol() if (self.promotion is not None) else ''
 
         return f"{start}{end}{promotion}"
 

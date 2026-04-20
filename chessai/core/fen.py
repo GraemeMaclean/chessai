@@ -66,7 +66,7 @@ class ParsedFEN:
             fullmove_number: int,
             num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
             num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS,
-            search_targets: list[chessai.core.coordinate.Coordinate] = [],
+            search_targets: list[chessai.core.coordinate.Coordinate] | None = None,
             options: typing.Any = None,
             ) -> None:
         self.pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = pieces
@@ -100,7 +100,7 @@ class ParsedFEN:
             self.search_targets == other.search_targets
         )
 
-def parse(fen: str, search_targets: list[chessai.core.coordinate.Coordinate] = [], options: typing.Any = None) -> ParsedFEN:
+def parse(fen: str, search_targets: list[chessai.core.coordinate.Coordinate] | None = None, options: typing.Any = None) -> ParsedFEN:
     """
     Parse a FEN string into a ParsedFEN.
 
@@ -209,7 +209,6 @@ def load_path(path: str, **kwargs: typing.Any) -> ParsedFEN:
 def load_string(text: str, **kwargs: typing.Any) -> ParsedFEN:
     """ Load a FEN string from a string. """
 
-    
     separator_index = -1
     lines = text.split("\n")
 

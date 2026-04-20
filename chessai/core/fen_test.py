@@ -353,14 +353,14 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
 
     def test_load_from_file(self):
         """ Test loading FEN from a file. """
- 
+
         fen_content = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
- 
+
         # Create a temporary file.
         with tempfile.NamedTemporaryFile(mode = 'w', suffix = '.board', delete = False) as temp_file:
             temp_file.write(fen_content)
             temp_path = temp_file.name
- 
+
         try:
             # Load directly from the path.
             loaded_fen = chessai.core.fen.load_path(temp_path)
@@ -368,7 +368,7 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
             # Check to make sure we get the same results as loading from a standard FEN.
             standard_parse = chessai.core.fen.parse(fen_content)
             self.assertEqual(standard_parse, loaded_fen)
- 
+
             # Parse using the path (should auto-detect and load).
             parsed = chessai.core.fen.parse(temp_path)
             self.assertEqual(32, len(parsed.pieces))

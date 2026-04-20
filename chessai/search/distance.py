@@ -230,8 +230,8 @@ class DistancePreComputer:
     def _load_identities_and_adjacencies(self, state: chessai.core.gamestate.GameState) -> None:
         """ Load identity (0) and adjacency (1) distances. """
 
-        for rank in range(state.board.ranks):
-            for file in range(state.board.files):
+        for rank in range(state.board.num_ranks):
+            for file in range(state.board.num_files):
                 position = chessai.core.coordinate.Coordinate(file, rank)
 
                 # if (board.is_wall(position)):
