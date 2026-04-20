@@ -75,26 +75,36 @@ class Piece(edq.util.json.DictConverter):
     def __str__(self) -> str:
         return self.symbol()
 
-_REGISTERED_PIECES: dict[str, type[Piece]] = {}
+_PIECE_REGISTRY: dict[str, type['Piece']] = {}
 
-def register_piece(symbol: str, piece: type[Piece]) -> None:
-    """ Register a piece type under a unique symbol. """
+def register_piece(symbol: str, piece_class: type['Piece']) -> None:
+    """ Register a piece class with its symbol. """
 
-    _REGISTERED_PIECES[symbol] = piece
+    if symbol in _PIECE_REGISTRY:
+        raise ValueError(f"Piece symbol '{symbol}' is already registered.")
 
-def get_registered_piece(symbol: str) -> Piece:
-    """ Get a piece based on the unique symbol. """
+    _PIECE_REGISTRY[symbol] = piece_class
 
-    piece = _REGISTERED_PIECES.get(symbol, None)
-    if (piece is None):
-        raise ValueError(f"Unknown piece symbol: 'symbol'. Known symbols are: '{list(_REGISTERED_PIECES.keys())}'")
+def get_registered_piece_symbols() -> set[str]:
+    """ Get all registered piece symbols. """
 
+    return set(_PIECE_REGISTRY.keys())
+
+def get_registered_piece(symbol: str) -> 'Piece':
+    """ Create a piece instance from a symbol. """
+
+    if symbol not in _PIECE_REGISTRY:
+        raise ValueError(f"Unknown piece symbol: '{symbol}'")
+    
+    # Determine color from symbol case
     if (symbol.isupper()):
-        return piece(chessai.core.types.Color.WHITE)
+        color = chessai.core.types.Color.WHITE
+    else:
+        color = chessai.core.types.Color.BLACK
+    
+    return _PIECE_REGISTRY[symbol](color=color)
 
-    return piece(chessai.core.types.Color.BLACK)
+def clear_registry() -> None:
+    """ Clear the piece registry. """
 
-def get_registered_piece_symbols() -> list[str]:
-    """ Get a list of all registered piece symbols. """
-
-    return list(_REGISTERED_PIECES.keys())
+    _PIECE_REGISTRY.clear()

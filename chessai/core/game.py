@@ -386,7 +386,7 @@ class Game(abc.ABC):
         state.agents_game_start(records)
 
         while (not self.check_end(state)):
-            logging.trace("Turn %d, agent %s.", state.get_fullmove_number(), state.get_player()) # type: ignore[attr-defined]  # pylint: disable=no-member
+            logging.trace("Turn %d, agent %s.", state.fullmove_number, state.turn) # type: ignore[attr-defined]  # pylint: disable=no-member
 
             # Get the next action from the agent.
             action_record = isolator.get_action(state, self.game_info.agent_action_timeout)

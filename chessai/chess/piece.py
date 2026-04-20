@@ -104,9 +104,9 @@ class Knight(chessai.core.piece.Piece):
 
     def symbol(self) -> str:
         if (self.color == chessai.core.types.Color.WHITE):
-            return 'K'
+            return 'N'
 
-        return 'k'
+        return 'n'
 
     def unicode_symbol(self) -> str:
         return UNICODE_PIECE_SYMBOLS[self.symbol()]
@@ -146,3 +146,21 @@ class Pawn(chessai.core.piece.Piece):
             chessai.core.piece.MoveVector(1,  direction, kind = chessai.core.piece.MoveKind.CAPTURE),
             chessai.core.piece.MoveVector(-1, direction, kind = chessai.core.piece.MoveKind.CAPTURE),
         ]
+
+# Register pieces whenever imported.
+def _register_pieces():
+    """Register all chess piece types with the core registry."""
+    chessai.core.piece.register_piece('K', King)
+    chessai.core.piece.register_piece('k', King)
+    chessai.core.piece.register_piece('Q', Queen)
+    chessai.core.piece.register_piece('q', Queen)
+    chessai.core.piece.register_piece('R', Rook)
+    chessai.core.piece.register_piece('r', Rook)
+    chessai.core.piece.register_piece('B', Bishop)
+    chessai.core.piece.register_piece('b', Bishop)
+    chessai.core.piece.register_piece('N', Knight)
+    chessai.core.piece.register_piece('n', Knight)
+    chessai.core.piece.register_piece('P', Pawn)
+    chessai.core.piece.register_piece('p', Pawn)
+
+_register_pieces()
