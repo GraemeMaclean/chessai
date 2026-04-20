@@ -338,6 +338,7 @@ class Game(abc.ABC):
         By default, this will just check chessai.core.gamestate.GameState.game_over,
         but child games can override for more complex functionality.
         """
+
         return (state.game_over or state.is_game_over())
 
     def game_complete(self, state: chessai.core.gamestate.GameState, result: GameResult) -> None:

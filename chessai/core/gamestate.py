@@ -120,7 +120,7 @@ class GameState(edq.util.json.DictConverter):
             successor._process_special_move(action, piece)
 
             # Check if this move leaves our king in check (making it illegal).
-            if (not successor._is_in_check(self.turn)):
+            if (not successor.is_check(self.turn)):
                 legal_actions.append(action)
 
         return legal_actions
@@ -146,8 +146,34 @@ class GameState(edq.util.json.DictConverter):
 
         return neighbors
 
+    def is_check(self, color: chessai.core.types.Color) -> bool:
+        """ Determines if the given color, not the state's color, is in check. """
+
+        return False
+
+    def is_checkmate(self) -> bool:
+        """ Determines if the current player is in checkmate. """
+
+        legal_actions = self.get_legal_actions()
+        return ((len(legal_actions) == 0) and self.is_check(self.turn))
+
+    def is_stalemate(self) -> bool:
+        """ Determines if the current player is in stalemate. """
+
+        legal_actions = self.get_legal_actions()
+        return ((len(legal_actions) == 0) and (not self.is_check(self.turn)))
+
     def is_game_over(self) -> bool:
         """ Returns whether the game is over according to the board rules. """
+
+        if (self.game_over):
+            return True
+
+        if (self.is_checkmate()):
+            return True
+
+        if (self.is_stalemate()):
+            return True
 
         return False
 
@@ -156,6 +182,9 @@ class GameState(edq.util.json.DictConverter):
         Gets the list of winners from the game.
         An empty list signifies the game is in progress or it is a tie.
         """
+
+        if (self.is_checkmate()):
+            return [self.turn.opposite()]
 
         return []
 
@@ -203,11 +232,6 @@ class GameState(edq.util.json.DictConverter):
         self.turn = self.turn.opposite()
 
         self.move_stack.append(action)
-
-    def _is_in_check(self, color: chessai.core.types.Color) -> bool:
-        """ Determines if the given color, not the state's color, is in check. """
-
-        return False
 
     def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:
         """ Get all of the actions that can be taken on this gamestate, regardless if it violates pins or checks. """
@@ -377,7 +401,7 @@ class GameState(edq.util.json.DictConverter):
 
         # If the game is over, don't do anything.
         # This case can come up when planning agent actions and generating successors.
-        if (self.game_over):
+        if (self.is_game_over()):
             return
 
         self.process_turn(action, rng, **kwargs)
@@ -398,11 +422,11 @@ class GameState(edq.util.json.DictConverter):
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
-            'fen':        self.get_fen(),
-            'move_stack': [action.to_dict() for action in self.move_stack],
+            'fen':         self.get_fen(),
+            'move_stack':  [action.to_dict() for action in self.move_stack],
             'board_stack': [board.to_dict() for board in self.board_stack],
-            'seed':       self.seed,
-            'game_over':  self.game_over,
+            'seed':        self.seed,
+            'game_over':   self.game_over,
         }
 
     @classmethod

@@ -33,7 +33,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         return (winners, score)
 
-    def _is_in_check(self, color: chessai.core.types.Color) -> bool:
+    def is_check(self, color: chessai.core.types.Color) -> bool:
         # Find the king of the given color.
         king_coordinate: chessai.core.coordinate.Coordinate | None = None
         for coordinate, piece in self.board.pieces.items():
@@ -42,13 +42,22 @@ class GameState(chessai.core.gamestate.GameState):
                 break
 
         # If there's no king, the position is invalid, which should never happen.
-        if king_coordinate is None:
+        if (king_coordinate is None):
             return False
 
         # Check if any opponent piece can attack the king's coordinate.
-        # TODO(Lucas)
+        old_turn = self.turn
+        self.turn = color.opposite()
 
-        return False
+        try:
+            opponent_actions = self._get_pseudo_legal_moves()
+            for action in opponent_actions:
+                if (action.end_coordinate == king_coordinate):
+                    return True
+
+            return False
+        finally:
+            self.turn = old_turn
 
     def _should_reset_halfmove_clock(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
         return (isinstance(piece, chessai.chess.piece.Pawn))
@@ -280,7 +289,7 @@ class GameState(chessai.core.gamestate.GameState):
         actions: list[chessai.core.action.Action] = []
 
         for (coordinate, piece) in self.board.pieces.items():
-            if (piece != chessai.chess.piece.Pawn):
+            if (not isinstance(piece, chessai.chess.piece.Pawn)):
                 continue
 
             if (piece.color != self.turn):
@@ -331,7 +340,7 @@ class GameState(chessai.core.gamestate.GameState):
             if (piece is None):
                 continue
 
-            if (piece != chessai.chess.piece.Pawn):
+            if (not isinstance(piece, chessai.chess.piece.Pawn)):
                 continue
 
             if (piece.color != self.turn):
@@ -413,7 +422,7 @@ class GameState(chessai.core.gamestate.GameState):
         The target is the coordinate the pawn passed through (i.e. one rank behind the destination), which is standard FEN notation.
         """
 
-        if (piece != chessai.chess.piece.Pawn):
+        if (not isinstance(piece, chessai.chess.piece.Pawn)):
             return None
 
         if (action.start_coordinate.rank_distance(action.end_coordinate) != 2):

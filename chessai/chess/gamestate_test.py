@@ -1,17 +1,18 @@
 import edq.testing.unittest
 
+import chessai.chess.gamestate
 import chessai.core.gamestate
 import chessai.core.coordinate
 import chessai.core.action
 import chessai.core.types
 
 class GameStateTest(edq.testing.unittest.BaseTest):
-    """ Test chessai.core.gamestate.GameState functionality. """
+    """ Test chessai.chess.gamestate.GameState functionality. """
 
     def test_default_state(self):
         """ Test default gamestate for some basic properties. """
 
-        state = chessai.core.gamestate.GameState()
+        state = chessai.chess.gamestate.GameState()
 
         # Basic State
         self.assertEqual(state.get_fen(), chessai.core.gamestate.DEFAULT_FEN)
@@ -49,7 +50,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_generate_successor_does_not_modify_original(self):
         """ Test generate successor properly deep copies the state. """
 
-        state = chessai.core.gamestate.GameState()
+        state = chessai.chess.gamestate.GameState()
         moves = state.get_legal_actions()
 
         move = moves[0]
@@ -64,7 +65,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_get_neighbors_filters_by_start_coordinate(self):
         """ Test get neighbors returns actions only from the start coordinate. """
 
-        state = chessai.core.gamestate.GameState()
+        state = chessai.chess.gamestate.GameState()
         moves = state.get_legal_actions()
 
         move = moves[0]
@@ -78,7 +79,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_push_illegal_move_raises(self):
         """ Test illegal moves raise errors. """
 
-        state = chessai.core.gamestate.GameState()
+        state = chessai.chess.gamestate.GameState()
 
         fake_move = chessai.core.action.Action(
             start_coordinate = chessai.core.coordinate.Coordinate(0, 0),
@@ -87,3 +88,49 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         with self.assertRaises(ValueError):
             state.push(fake_move)
+
+    def test_legal_moves(self):
+        """ Test the legal move generator. """
+
+        # [(FEN, expected_moves, is_checkmate, is_stalemate), ...]
+        test_cases: list[tuple[str | None, list[str], bool, bool]] = [
+            (
+                None,
+                [
+                    'a2a3', 'a2a4', 'b2b3', 'b2b4', 'c2c3', 'c2c4',
+                    'd2d3', 'd2d4', 'e2e3', 'e2e4', 'f2f3', 'f2f4',
+                    'g2g3', 'g2g4', 'h2h3', 'h2h4', 'b1a3', 'b1c3',
+                    'g1f3', 'g1h3',
+                ],
+                False,
+                False,
+            ),
+            (
+                'rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3',
+                [],
+                True,
+                False,
+            ),
+        ]
+
+        for test_case in test_cases:
+            (start_fen, uci_moves, checkmate, stalemate) = test_case
+
+            expected_actions: list[chessai.core.action.Action] = []
+            for uci_move in uci_moves:
+                expected_actions.append(chessai.core.action.Action.from_uci(uci_move))
+
+            state = chessai.chess.gamestate.GameState(fen = start_fen)
+
+            print(len(state.get_legal_actions()))
+            print(state.is_check(state.turn))
+            print(state.is_check(state.turn.opposite))
+
+            self.assertEqual(state.is_checkmate(), checkmate)
+            self.assertEqual(state.is_stalemate(), stalemate)
+
+            actual_actions = state.get_legal_actions()
+            self.assertEqual(len(actual_actions), len(expected_actions))
+
+            for expected_action in expected_actions:
+                self.assertIn(expected_action, actual_actions)
