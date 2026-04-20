@@ -18,13 +18,24 @@ Standard FEN strings (6 fields) are accepted without modification.
 See: https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation .
 """
 
+import os
 import re
+import typing
+
+import edq.util.json
 
 import chessai.core.board
 import chessai.core.castling
 import chessai.core.coordinate
 import chessai.core.piece
 import chessai.core.types
+
+THIS_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)))
+BOARDS_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'boards')
+
+SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
+
+FILE_EXTENSION = '.board'
 
 DIMENSIONS_PATTERN: re.Pattern = re.compile(r'^#(\d+)x(\d+)$')
 
@@ -42,6 +53,8 @@ class ParsedFEN:
         'fullmove_number',
         'num_files',
         'num_ranks',
+        'search_targets',
+        'options',
     )
 
     def __init__(self,
@@ -53,6 +66,8 @@ class ParsedFEN:
             fullmove_number: int,
             num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
             num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS,
+            search_targets: list[chessai.core.coordinate.Coordinate] = [],
+            options: typing.Any = None,
             ) -> None:
         self.pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = pieces
         self.turn: chessai.core.types.Color = turn
@@ -63,7 +78,29 @@ class ParsedFEN:
         self.num_files: int = num_files
         self.num_ranks: int = num_ranks
 
-def parse(fen: str) -> ParsedFEN:
+        if (search_targets is None):
+            search_targets = []
+
+        self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets
+        self.options: typing.Any = options
+
+    def __eq__(self, other):
+        if not isinstance(other, ParsedFEN):
+            raise ValueError(f"Cannot compare equality of a ParsedFEN with an object of another type: '{type(other)}'.")
+
+        return (
+            self.pieces == other.pieces and
+            self.turn == other.turn and
+            self.castling_rights == other.castling_rights and
+            self.en_passant_coordinate == other.en_passant_coordinate and
+            self.halfmove_clock == other.halfmove_clock and
+            self.fullmove_number == other.fullmove_number and
+            self.num_files == other.num_files and
+            self.num_ranks == other.num_ranks and
+            self.search_targets == other.search_targets
+        )
+
+def parse(fen: str, search_targets: list[chessai.core.coordinate.Coordinate] = [], options: typing.Any = None) -> ParsedFEN:
     """
     Parse a FEN string into a ParsedFEN.
 
@@ -74,6 +111,11 @@ def parse(fen: str) -> ParsedFEN:
 
     See https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation .
     """
+
+    # Check if this might be a file path.
+    if ' ' not in fen.strip():
+        # Try to load from file
+        return load_path(fen)
 
     fields = fen.strip().split()
     if (len(fields) not in (6, 7)):
@@ -101,6 +143,8 @@ def parse(fen: str) -> ParsedFEN:
         fullmove_number       = fullmove_number,
         num_files             = num_files,
         num_ranks             = num_ranks,
+        search_targets        = search_targets,
+        options               = options,
     )
 
 def serialize(
@@ -138,9 +182,71 @@ def serialize(
 
     return fen
 
+def load_path(path: str, **kwargs: typing.Any) -> ParsedFEN:
+    """
+    Load a FEN string from a file.
+
+    If the given path does not exist,
+    try to prefix the path with the standard board directory and suffix with the standard extension.
+    """
+
+    raw_path = path
+
+    # If the path does not exist, try the boards directory.
+    if (not os.path.exists(path)):
+        path = os.path.join(BOARDS_DIR, path)
+
+        # If this path does not have a good extension, add one.
+        if os.path.splitext(path)[-1] != FILE_EXTENSION:
+            path = path + FILE_EXTENSION
+
+    if (not os.path.exists(path)):
+        raise ValueError(f"Could not find FEN file, path does not exist: '{raw_path}'.")
+
+    text = edq.util.dirent.read_file(path, strip = False)
+    return load_string(text, **kwargs)
+
+def load_string(text: str, **kwargs: typing.Any) -> ParsedFEN:
+    """ Load a FEN string from a string. """
+
+    
+    separator_index = -1
+    lines = text.split("\n")
+
+    for (i, line) in enumerate(lines):
+        if (SEPARATOR_PATTERN.match(line)):
+            separator_index = i
+            break
+
+    if (separator_index == -1):
+        # No separator was found.
+        options_text = ''
+        board_text = "\n".join(lines)
+    else:
+        options_text = "\n".join(lines[:separator_index])
+        board_text = "\n".join(lines[(separator_index + 1):])
+
+    options_text = options_text.strip()
+    if (len(options_text) == 0):
+        options = {}
+    else:
+        options = edq.util.json.loads(options_text)
+
+    options.update(kwargs)
+
+    target_coordinates = options.get(chessai.core.coordinate.COORDINATES_KEY, None)
+
+    # If search targets were given by the CLI, override the search targets found in the file.
+    if (target_coordinates is not None):
+        options['search_targets'] = target_coordinates
+
+    search_targets = options.pop('search_targets', None)
+
+    return parse(board_text, search_targets, options)
+
 def _parse_dimensions(dimensions_field: str) -> tuple[int, int]:
     """
-    Parse the optional chessai dimensions field '<files>x<ranks>'.
+    Parse the optional chessai dimensions field '#<files>x<ranks>'.
 
     Returns a (num_files, num_ranks) tuple.
     Raises ValueError if the field is malformed or contains non-positive values.

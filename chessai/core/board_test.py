@@ -1,163 +1,149 @@
 import edq.testing.unittest
 
+import chessai.chess.piece
 import chessai.core.board
 import chessai.core.action
 import chessai.core.coordinate
-import chessai.core.piece
 import chessai.core.types
 
 class BoardTest(edq.testing.unittest.BaseTest):
     """ Test Board functionality. """
 
-    def test_push_and_pop_no_capture(self):
-        """ Test push + pop with no capture. """
+    def test_push_no_capture(self):
+        """ Test push with no capture. """
 
-        # [(start_coordinate, end_coordinate, piece), ...]
-        test_cases: list[tuple[
-            chessai.core.coordinate.Coordinate,
-            chessai.core.coordinate.Coordinate,
-            chessai.core.piece.Piece,
-        ]] = [
-            (
-                chessai.core.coordinate.Coordinate(1, 1),
-                chessai.core.coordinate.Coordinate(1, 2),
-                chessai.core.piece.Piece(
-                    chessai.core.types.PieceType.PAWN,
-                    chessai.core.types.Color.WHITE,
-                ),
-            ),
-            (
-                chessai.core.coordinate.Coordinate(3, 3),
-                chessai.core.coordinate.Coordinate(4, 5),
-                chessai.core.piece.Piece(
-                    chessai.core.types.PieceType.KNIGHT,
-                    chessai.core.types.Color.BLACK,
-                ),
-            ),
-        ]
+        start_coordinate = chessai.core.coordinate.Coordinate(1, 1)
+        end_coordinate = chessai.core.coordinate.Coordinate(1, 2)
+        piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
 
-        for (i, (start_coordinate, end_coordinate, piece)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}"):
-                board = chessai.core.board.Board(pieces = {
-                    start_coordinate: piece
-                })
+        board = chessai.core.board.Board(pieces={
+            start_coordinate: piece
+        })
 
-                action = chessai.core.action.Action(start_coordinate, end_coordinate)
+        action = chessai.core.action.Action(start_coordinate, end_coordinate)
+        was_capture = board.push(action)
 
-                record = board.push(action)
+        # Not a capture
+        self.assertFalse(was_capture)
 
-                # Pushed correctly
-                self.assertIsNone(board.get(start_coordinate))
-                self.assertEqual(piece, board.get(end_coordinate))
+        # Piece moved correctly
+        self.assertIsNone(board.get(start_coordinate))
+        self.assertEqual(piece, board.get(end_coordinate))
 
-                # Pop restores
-                board.pop(record)
+    def test_push_with_capture(self):
+        """ Test push with capture. """
 
-                self.assertIsNone(board.get(end_coordinate))
-                self.assertEqual(piece, board.get(start_coordinate))
+        start_coordinate = chessai.core.coordinate.Coordinate(1, 1)
+        end_coordinate = chessai.core.coordinate.Coordinate(2, 2)
 
-    def test_push_and_pop_with_capture(self):
-        """ Test push + pop with capture restoration. """
+        attacker_piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
+        victim_piece = chessai.chess.piece.Knight(chessai.core.types.Color.BLACK)
 
-        # [(attacker_piece, victim_piece), ...]
-        test_cases: list[tuple[
-            chessai.core.piece.Piece,
-            chessai.core.piece.Piece,
-        ]] = [
-            (
-                chessai.core.piece.Piece(
-                    chessai.core.types.PieceType.PAWN,
-                    chessai.core.types.Color.WHITE,
-                ),
-                chessai.core.piece.Piece(
-                    chessai.core.types.PieceType.KNIGHT,
-                    chessai.core.types.Color.BLACK,
-                ),
-            ),
-        ]
+        board = chessai.core.board.Board(pieces={
+            start_coordinate: attacker_piece,
+            end_coordinate: victim_piece,
+        })
 
-        for (i, (attacker_piece, victim_piece)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}"):
+        action = chessai.core.action.Action(start_coordinate, end_coordinate)
+        was_capture = board.push(action)
 
-                start_coordinate = chessai.core.coordinate.Coordinate(1, 1)
-                end_coordinate = chessai.core.coordinate.Coordinate(2, 2)
+        # Was a capture
+        self.assertTrue(was_capture)
 
-                board = chessai.core.board.Board(pieces = {
-                    start_coordinate: attacker_piece,
-                    end_coordinate: victim_piece,
-                })
+        # Capture happened
+        self.assertIsNone(board.get(start_coordinate))
+        self.assertEqual(attacker_piece, board.get(end_coordinate))
 
-                action = chessai.core.action.Action(start_coordinate, end_coordinate)
+    def test_push_with_promotion(self):
+        """ Test push with pawn promotion. """
 
-                record = board.push(action)
+        start_coordinate = chessai.core.coordinate.Coordinate(0, 6)
+        end_coordinate = chessai.core.coordinate.Coordinate(0, 7)
 
-                # Capture happened
-                self.assertIsNone(board.get(start_coordinate))
-                self.assertEqual(attacker_piece, board.get(end_coordinate))
+        pawn = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
+        promotion_piece = chessai.chess.piece.Queen(chessai.core.types.Color.WHITE)
 
-                # Pop restores capture
-                board.pop(record)
+        board = chessai.core.board.Board(pieces={
+            start_coordinate: pawn
+        })
 
-                self.assertEqual(attacker_piece, board.get(start_coordinate))
-                self.assertEqual(victim_piece, board.get(end_coordinate))
+        action = chessai.core.action.Action(start_coordinate, end_coordinate, promotion=promotion_piece)
+        was_capture = board.push(action)
+
+        # Not a capture
+        self.assertFalse(was_capture)
+
+        # Promoted piece is on the board
+        self.assertIsNone(board.get(start_coordinate))
+        promoted = board.get(end_coordinate)
+        self.assertIsInstance(promoted, chessai.chess.piece.Queen)
+        self.assertEqual(chessai.core.types.Color.WHITE, promoted.color)
 
     def test_is_valid(self):
         """ Test board validity constraints. """
 
-        start = chessai.core.coordinate.Coordinate(-1, -1)
-        piece = chessai.core.piece.Piece(
-            chessai.core.types.PieceType.PAWN,
-            chessai.core.types.Color.WHITE
-        )
+        out_of_bounds = chessai.core.coordinate.Coordinate(-1, -1)
+        piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
 
         with self.assertRaises(ValueError):
-            chessai.core.board.Board(pieces = {
-                start: piece
+            chessai.core.board.Board(pieces={
+                out_of_bounds: piece
             })
 
     def test_has_piece(self):
         """ Test has_piece helper. """
 
-        # [bool, ...]
-        test_cases: list[bool] = [
-            True,
-            False,
-        ]
+        coord = chessai.core.coordinate.Coordinate(0, 0)
+        piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
 
-        for (i, exists) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}"):
+        # Empty board
+        board = chessai.core.board.Board(pieces={})
+        self.assertFalse(board.has_piece(coord))
 
-                coord = chessai.core.coordinate.Coordinate(0, 0)
+        # Board with piece
+        board = chessai.core.board.Board(pieces={coord: piece})
+        self.assertTrue(board.has_piece(coord))
 
-                pieces = {}
-                if exists:
-                    pieces[coord] = chessai.core.piece.Piece(
-                        chessai.core.types.PieceType.PAWN,
-                        chessai.core.types.Color.WHITE
-                    )
+    def test_is_capture(self):
+        """ Test is_capture helper. """
 
-                board = chessai.core.board.Board(pieces = pieces)
+        start = chessai.core.coordinate.Coordinate(0, 0)
+        end_empty = chessai.core.coordinate.Coordinate(1, 1)
+        end_occupied = chessai.core.coordinate.Coordinate(2, 2)
 
-                self.assertEqual(exists, board.has_piece(coord))
+        attacker = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
+        victim = chessai.chess.piece.Knight(chessai.core.types.Color.BLACK)
+
+        board = chessai.core.board.Board(pieces={
+            start: attacker,
+            end_occupied: victim,
+        })
+
+        # Not a capture
+        action_no_capture = chessai.core.action.Action(start, end_empty)
+        self.assertFalse(board.is_capture(action_no_capture))
+
+        # Is a capture
+        action_capture = chessai.core.action.Action(start, end_occupied)
+        self.assertTrue(board.is_capture(action_capture))
 
     def test_copy_is_deep(self):
         """ Test deep copy independence. """
 
         start = chessai.core.coordinate.Coordinate(0, 0)
         end = chessai.core.coordinate.Coordinate(1, 1)
-
-        piece = chessai.core.piece.Piece(
-            chessai.core.types.PieceType.PAWN,
-            chessai.core.types.Color.WHITE
-        )
+        piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
 
         board = chessai.core.board.Board(pieces={start: piece})
         board_copy = board.copy()
 
+        # Boards are independent
         self.assertIsNot(board, board_copy)
+        self.assertIsNot(board.pieces, board_copy.pieces)
 
+        # Modify the copy
         action = chessai.core.action.Action(start, end)
-        _ = board_copy.push(action)
+        board_copy.push(action)
 
         # Original unchanged
         self.assertIsNotNone(board.get(start))
@@ -173,25 +159,50 @@ class BoardTest(edq.testing.unittest.BaseTest):
         coord1 = chessai.core.coordinate.Coordinate(0, 0)
         coord2 = chessai.core.coordinate.Coordinate(1, 1)
 
-        piece1 = chessai.core.piece.Piece(
-            chessai.core.types.PieceType.PAWN,
-            chessai.core.types.Color.WHITE
-        )
-
-        piece2 = chessai.core.piece.Piece(
-            chessai.core.types.PieceType.KNIGHT,
-            chessai.core.types.Color.BLACK
-        )
+        piece1 = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
+        piece2 = chessai.chess.piece.Knight(chessai.core.types.Color.BLACK)
 
         board = chessai.core.board.Board(pieces={
             coord1: piece1,
             coord2: piece2
         })
 
-        pieces = list(board.all_pieces())
-        coords = list(board.all_coordinates())
+        pieces = board.all_pieces()
+        coords = board.all_coordinates()
 
         self.assertEqual(2, len(pieces))
         self.assertEqual(2, len(coords))
+        self.assertIn(piece1, pieces)
+        self.assertIn(piece2, pieces)
         self.assertIn(coord1, coords)
         self.assertIn(coord2, coords)
+
+    def test_set_and_remove(self):
+        """ Test set and remove operations. """
+
+        coord = chessai.core.coordinate.Coordinate(3, 3)
+        piece = chessai.chess.piece.Rook(chessai.core.types.Color.WHITE)
+
+        board = chessai.core.board.Board()
+
+        # Set a piece
+        board.set(piece, coord)
+        self.assertEqual(piece, board.get(coord))
+
+        # Remove the piece
+        board.remove(coord)
+        self.assertIsNone(board.get(coord))
+
+        # Remove from empty coordinate (should not raise)
+        board.remove(coord)
+        self.assertIsNone(board.get(coord))
+
+    def test_set_out_of_bounds_raises(self):
+        """ Test that setting a piece out of bounds raises an error. """
+
+        board = chessai.core.board.Board()
+        piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
+        out_of_bounds = chessai.core.coordinate.Coordinate(10, 10)
+
+        with self.assertRaises(ValueError):
+            board.set(piece, out_of_bounds)
