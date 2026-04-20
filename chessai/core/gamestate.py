@@ -100,13 +100,6 @@ class GameState(edq.util.json.DictConverter):
 
         return len(self.move_stack)
 
-    # TODO(Lucas)
-    def get_search_targets(self) -> list[chessai.core.coordinate.Coordinate]:
-        """ Gets the coordinates on the board that are search targets. """
-
-        pass
-
-    # TODO(Lucas)
     def get_legal_actions(self) -> list[chessai.core.action.Action]:
         """ Return the list of legal actions for the current player. """
 
@@ -153,13 +146,11 @@ class GameState(edq.util.json.DictConverter):
 
         return neighbors
 
-    # TODO(Lucas)
     def is_game_over(self) -> bool:
         """ Returns whether the game is over according to the board rules. """
 
-        pass
+        return False
 
-    # TODO(Lucas)
     def get_winners(self) -> list[chessai.core.types.Color]:
         """
         Gets the list of winners from the game.
@@ -168,17 +159,15 @@ class GameState(edq.util.json.DictConverter):
 
         return []
 
-    # TODO(Lucas)
     def get_termination_reason(self) -> chessai.core.types.TerminationReason:
         """ Return the reason the game ended. """
 
-        pass
+        return chessai.core.types.TerminationReason.UNKNOWN
 
     # -----------------------------------------------
     # State mutation
     # -----------------------------------------------
 
-    # TODO(Lucas): We need to update gamestate fields (e.g., move counters, turn, etc.)
     # We also need to track if an action updates en-passant or castling rights.
     def push(self, action: chessai.core.action.Action) -> None:
         """ Apply action to the game state and update all metadata. """
@@ -188,7 +177,7 @@ class GameState(edq.util.json.DictConverter):
 
         piece = self.board.get(action.start_coordinate)
         if (piece is None):
-            raise ValueError(f"Cannot push an action from an empty square: '{action}'.")
+            raise ValueError(f"Cannot push an action from an empty coordinate: '{action}'.")
 
         self.board_stack.append(self.board.copy())
 
@@ -342,6 +331,7 @@ class GameState(edq.util.json.DictConverter):
             return
 
         self.process_turn(action, rng, **kwargs)
+        return
 
     # TODO(Lucas)
     def to_pgn(self) -> str:

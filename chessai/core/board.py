@@ -97,7 +97,8 @@ class Board(edq.util.json.DictConverter):
             piece = action.promotion
 
         if (not self._is_within_bounds(action.end_coordinate)):
-            raise ValueError(f"Cannot push an action that moves the piece off of the board of size '{self.num_files}x{self.num_ranks}': '{action.end_coordinate}'.")
+            raise ValueError("Cannot push an action that moves the piece off of the board of size"
+                + f" '{self.num_files}x{self.num_ranks}': '{action.end_coordinate}'.")
 
         target_piece = self.pieces.get(action.end_coordinate, None)
 
@@ -117,7 +118,8 @@ class Board(edq.util.json.DictConverter):
         """ Adds a piece to the specified coordinate, which must be within bounds. """
 
         if (not self._is_within_bounds(coordinate)):
-            raise ValueError(f"Cannot remove a piece from an out of bounds coordinate on a board of size '{self.num_files}x{self.num_ranks}': '{coordinate}'.")
+            raise ValueError("Cannot remove a piece from an out of bounds coordinate on a board of size"
+                + f" '{self.num_files}x{self.num_ranks}': '{coordinate}'.")
 
         self.pieces[coordinate] = piece
 

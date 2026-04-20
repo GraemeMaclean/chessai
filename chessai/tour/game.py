@@ -1,4 +1,5 @@
 import random
+import typing
 
 import chessai.core.agentinfo
 import chessai.core.board
@@ -11,11 +12,33 @@ class Game(chessai.core.game.Game):
     A game following the standard rules of Pac-Man.
     """
 
+    def __init__(self,
+            game_info: chessai.core.game.GameInfo,
+            fen: str,
+            save_path: str | None = None,
+            is_replay: bool = False,
+                 search_targets: list[chessai.core.coordinate.Coordinate] | dict[str, typing.Any] | None = None) -> None:
+        super().__init__(game_info, fen, save_path, is_replay)
+
+        if (search_targets is None):
+            search_targets = []
+
+        # Convert the string case into the dict case.
+        if (isinstance(search_targets, str)):
+            search_targets = {
+                chessai.core.coordinate.COORDINATES_KEY: search_targets
+            }
+
+        if (isinstance(search_targets, dict)):
+            search_targets = chessai.core.coordinate.coordinates_from_dict(search_targets)
+
+        self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets
+        """ The search targets of this game. """
+
     def get_initial_state(self,
             rng: random.Random,
-            board: chessai.core.board.Board,
-            agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo]) -> chessai.core.gamestate.GameState:
-        return chessai.tour.gamestate.GameState(board = board, agent_infos = agent_infos)
+            fen: str | None = None) -> chessai.core.gamestate.GameState:
+        return chessai.tour.gamestate.GameState(fen = fen, search_targets = self.search_targets)
 
     def process_turn(self,
             state: chessai.core.gamestate.GameState,
@@ -60,10 +83,12 @@ class Game(chessai.core.game.Game):
         White wins by reaching all target squares.
         """
 
+        state = typing.cast(chessai.tour.gamestate.GameState, state)
+
         if (state.game_over):
             return True
 
-        return (len(state.get_search_targets()) == 0)
+        return (len(state.search_targets) == 0)
 
     def _handle_black_turn(self, state: chessai.core.gamestate.GameState,
                     action: chessai.core.action.Action,

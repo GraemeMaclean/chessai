@@ -74,9 +74,13 @@ def _detect_solver_color(args: argparse.Namespace) -> chessai.core.types.Color:
     """
 
     board_arg = getattr(args, 'board', None)
+    if (board_arg is None):
+        board_arg = chessai.core.gamestate.DEFAULT_FEN
 
-    board = chessai.core.board.parse_board(board_arg)
-    return board.get_turn()
+    board_arg = typing.cast(str, board_arg)
+
+    parsed_fen = chessai.core.fen.parse(board_arg)
+    return parsed_fen.turn
 
 def log_puzzle_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[chessai.core.types.Color], prefix: str = '') -> None:
     """

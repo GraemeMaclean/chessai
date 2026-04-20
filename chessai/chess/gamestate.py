@@ -45,7 +45,7 @@ class GameState(chessai.core.gamestate.GameState):
         if king_coordinate is None:
             return False
 
-        # Check if any opponent piece can attack the king's square.
+        # Check if any opponent piece can attack the king's coordinate.
         # TODO(Lucas)
 
         return False
@@ -136,7 +136,7 @@ class GameState(chessai.core.gamestate.GameState):
             self._handle_castling(action, piece)
             return False
 
-        # Detect En-passant by checking if a pawn moves diagonally to an empty square.
+        # Detect En-passant by checking if a pawn moves diagonally to an empty coordinate.
         if ((piece == chessai.chess.piece.Pawn)
                 and (action.start_coordinate.file_distance(action.end_coordinate) == 1)
                 and (self.board.get(action.end_coordinate) is None)):
@@ -174,10 +174,10 @@ class GameState(chessai.core.gamestate.GameState):
             action.start_coordinate.rank,
         )
 
-        # Remove the en-passant captured pawn from its actual square.
+        # Remove the en-passant captured pawn from its actual coordinate.
         self.board.remove(captured_piece_coordinate)
 
-        # Update the en-passant target square, based on the action.
+        # Update the en-passant target coordinate, based on the action.
         self.en_passant_coordinate = self._compute_en_passant(action, piece)
 
     def _handle_promotion(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:
@@ -289,7 +289,7 @@ class GameState(chessai.core.gamestate.GameState):
             if (coordinate.rank != start_rank):
                 continue
 
-            # Both the single and double push squares must be empty.
+            # Both the single and double push coordinates must be empty.
             single_push_coord = coordinate.offset(0, direction)
             if (self.board.has_piece(single_push_coord)):
                 continue
@@ -311,7 +311,7 @@ class GameState(chessai.core.gamestate.GameState):
             return actions
 
         if (self.turn == chessai.core.types.Color.WHITE):
-            # The en-passant square encodes the square that must be taken.
+            # The en-passant coordinate encodes the coordinate that must be taken.
             # So, the pawn that can attack it will be one rank below for white.
             capturing_rank = self.en_passant_coordinate.rank - 1
         else:
@@ -377,7 +377,7 @@ class GameState(chessai.core.gamestate.GameState):
                 self.castling_rights.black_kingside  = False
                 self.castling_rights.black_queenside = False
 
-        # Rook moves from its starting square.
+        # Rook moves from its starting coordinate.
         if (action.start_coordinate == white_kingside_rook):
             self.castling_rights.white_kingside = False
 
@@ -390,7 +390,7 @@ class GameState(chessai.core.gamestate.GameState):
         if (action.start_coordinate == black_queenside_rook):
             self.castling_rights.black_queenside = False
 
-        # Rook captured on its starting square.
+        # Rook captured on its starting coordinate.
         if (action.end_coordinate == white_kingside_rook):
             self.castling_rights.white_kingside = False
 
@@ -407,10 +407,10 @@ class GameState(chessai.core.gamestate.GameState):
             action: chessai.core.action.Action,
             piece: chessai.core.piece.Piece) -> chessai.core.coordinate.Coordinate | None:
         """
-        Return the new en-passant target square after this move, or None.
+        Return the new en-passant target coordinate after this move, or None.
 
-        A target square is set only when a pawn advances two ranks.
-        The target is the square the pawn passed through (i.e. one rank behind the destination), which is standard FEN notation.
+        A target coordinate is set only when a pawn advances two ranks.
+        The target is the coordinate the pawn passed through (i.e. one rank behind the destination), which is standard FEN notation.
         """
 
         if (piece != chessai.chess.piece.Pawn):
@@ -419,7 +419,7 @@ class GameState(chessai.core.gamestate.GameState):
         if (action.start_coordinate.rank_distance(action.end_coordinate) != 2):
             return None
 
-        # The en-passant target is the square the pawn skipped over.
+        # The en-passant target is the coordinate the pawn skipped over.
         passed_rank = (action.start_coordinate.rank + action.end_coordinate.rank) // 2
         return chessai.core.coordinate.Coordinate(action.start_coordinate.file, passed_rank)
 
@@ -433,7 +433,7 @@ def base_eval(
     """
 
     # TODO(Lucas): Fix typing info and move alias.
-    piece_values: dict[chessai.core.piece.Piece, int] = {
+    piece_values: dict[type[chessai.core.piece.Piece], int] = {
         chessai.chess.piece.Pawn: 1,
         chessai.chess.piece.Knight: 3,
         chessai.chess.piece.Bishop: 3,
@@ -445,7 +445,7 @@ def base_eval(
     # The difference in pieces from white's perspective.
     board_value = 0
     for (_, piece) in state.board.pieces.items():
-        piece_value = piece_values.get(piece, 0)
+        piece_value = piece_values.get(type(piece), 0)
         if (piece.color == chessai.core.types.Color.WHITE):
             board_value += piece_value
         else:

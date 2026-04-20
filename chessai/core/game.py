@@ -29,16 +29,14 @@ class GameInfo(edq.util.json.DictConverter):
 
     def __init__(self,
             agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
-            start_board: chessai.core.board.Board | str | None = None,
-            search_targets: list[chessai.core.coordinate.Coordinate] | dict[str, typing.Any] | None = None,
+            start_fen: str | None = None,
             isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
             max_moves: int = DEFAULT_MAX_MOVES,
             agent_start_timeout: float = DEFAULT_AGENT_START_TIMEOUT,
             agent_end_timeout: float = DEFAULT_AGENT_END_TIMEOUT,
             agent_action_timeout: float = DEFAULT_AGENT_ACTION_TIMEOUT,
             seed: int | None = None,
-            extra_info: dict[str, typing.Any] | None = None,
-            ) -> None:
+            extra_info: dict[str, typing.Any] | None = None) -> None:
         if (seed is None):
             seed = random.randint(0, 2**64)
 
@@ -51,23 +49,11 @@ class GameInfo(edq.util.json.DictConverter):
         if (len(self.agent_infos) == 0):
             raise ValueError("No agents provided.")
 
-        if (start_board is None):
-            start_board = chessai.core.board.DEFAULT_FEN
+        if (start_fen is None):
+            start_fen = chessai.core.gamestate.DEFAULT_FEN
 
-        if (isinstance(start_board, chessai.core.board.Board)):
-            start_board = start_board.get_fen()
-
-        self.start_board: str = start_board
+        self.start_fen: str = start_fen
         """ The starting fen for this game. """
-
-        if (search_targets is None):
-            search_targets = []
-
-        self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets # type: ignore
-        """ The search targets of this game. """
-
-        if (isinstance(search_targets, dict)):
-            self.search_targets = chessai.core.coordinate.squares_from_dict(search_targets)
 
         self.isolation_level: chessai.core.isolation.level.Level = isolation_level
         """ The isolation level to use for this game. """
@@ -105,8 +91,7 @@ class GameInfo(edq.util.json.DictConverter):
     def to_dict(self) -> dict[str, typing.Any]:
         return {
             'seed': self.seed,
-            'start_board': self.start_board,
-            'search_targets': self.search_targets,
+            'start_fen': self.start_fen,
             'agent_infos': {id: info.to_dict() for (id, info) in self.agent_infos.items()},
             'isolation_level': self.isolation_level.value,
             'max_moves': self.max_moves,
@@ -120,8 +105,7 @@ class GameInfo(edq.util.json.DictConverter):
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
         return cls(
             seed = data.get('seed', None),
-            start_board = data.get('start_board', None),
-            search_targets = data.get('search_targets', None),
+            start_fen = data.get('start_fen', None),
             agent_infos = {
                 chessai.core.types.Color(int(id)): chessai.core.agentinfo.AgentInfo.from_dict(raw_info)
                     for (id, raw_info) in data['agent_infos'].items()
@@ -278,15 +262,15 @@ class Game(abc.ABC):
 
     def __init__(self,
             game_info: GameInfo,
-            board: chessai.core.board.Board,
+            fen: str,
             save_path: str | None = None,
             is_replay: bool = False,
             ) -> None:
         self.game_info: GameInfo = game_info
         """ The core information about this game. """
 
-        self.board = board
-        """ The board for the game. """
+        self.fen = fen
+        """ The starting FEN for the game. """
 
         self._save_path: str | None = save_path
         """ Where to save the results of this game. """
@@ -303,9 +287,7 @@ class Game(abc.ABC):
     @abc.abstractmethod
     def get_initial_state(self,
             rng: random.Random,
-            board: chessai.core.board.Board,
-            agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
-            ) -> chessai.core.gamestate.GameState:
+            fen: str | None = None) -> chessai.core.gamestate.GameState:
         """ Create the initial state for this game. """
 
     def process_turn(self,
@@ -382,7 +364,7 @@ class Game(abc.ABC):
         isolator.init_agents(self.game_info.agent_infos)
 
         # Create the initial game state (and force it's seed).
-        state = self.get_initial_state(rng, self.board, self.game_info.agent_infos)
+        state = self.get_initial_state(rng, self.fen)
         state.seed = game_id
         state.game_start()
 
@@ -482,7 +464,7 @@ class Game(abc.ABC):
         replay_info = typing.cast(GameResult, edq.util.json.load_object_path(args.replay_path, GameResult))
 
         # Overrides from the replay info.
-        args.board = replay_info.game_info.start_board
+        args.fen = replay_info.game_info.start_fen
         args.seed = replay_info.game_info.seed
 
         # Special settings for replays.
@@ -586,7 +568,7 @@ def init_from_args(
     This will create a number of games (and related resources)
     based on `--num-games` + `--num-training`.
     Each of these resources will be placed in their respective list at
-    `args._boards`, `args._agent_infos`, or `args._games`.
+    `args._fens`, `args._agent_infos`, or `args._games`.
     """
 
     if (base_agent_infos is None):
@@ -609,19 +591,17 @@ def init_from_args(
     logging.debug("Using source seed for games: %d.", seed)
     rng = random.Random(seed)
 
-    # TODO(Lucas): Since args.board stores as a string,
+    # TODO(Lucas): Since args.fen stores as a string,
     # we could write a utility to check if the arg is a valid FEN.
     # If not, we could try to load from the path.
-
-    board = chessai.core.board.parse_board(args.board, **kwargs)
 
     agents = [chessai.core.types.Color.WHITE, chessai.core.types.Color.BLACK]
     agent_infos = _parse_agent_infos(agents, args.raw_agent_args, base_agent_infos)
 
     base_save_path = args.save_path
 
-    # TODO(Lucas): Don't need to store boards unless they change.
-    all_boards: list[chessai.core.board.Board] = []
+    # TODO(Lucas): Don't need to store fens unless they change.
+    all_fens: list[str] = []
     all_agent_infos = []
     all_games = []
 
@@ -629,12 +609,11 @@ def init_from_args(
         game_seed = rng.randint(0, 2**64)
 
         all_agent_infos.append(copy.deepcopy(agent_infos))
-        all_boards.append(board)
+        all_fens.append(args.fen)
 
         game_info = GameInfo(
                 all_agent_infos[-1],
-                start_board = all_boards[-1],
-                search_targets = all_boards[-1].get_search_targets(),
+                start_fen = all_fens[-1],
                 isolation_level = chessai.core.isolation.level.Level(args.isolation_level),
                 max_moves = args.max_moves,
                 agent_start_timeout = args.agent_start_timeout,
@@ -642,10 +621,6 @@ def init_from_args(
                 agent_action_timeout = args.agent_action_timeout,
                 seed = game_seed
         )
-
-        # TODO(Lucas): Cleanup board constructor to also take a full board object instead of only a FEN.
-        # TODO(Lucas): We could avoid double passing source and search target (perhaps).
-        board = board.copy()
 
         # Suffix the save path if there is more than one game.
         save_path = base_save_path
@@ -655,7 +630,7 @@ def init_from_args(
 
         game_args = {
             'game_info': game_info,
-            'board': board,
+            'fen': args.fen,
             'save_path': save_path,
         }
 
@@ -664,7 +639,7 @@ def init_from_args(
 
         all_games.append(game)
 
-    setattr(args, '_boards', all_boards)
+    setattr(args, '_fens', all_fens)
     setattr(args, '_agent_infos', all_agent_infos)
     setattr(args, '_games', all_games)
 

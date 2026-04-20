@@ -11,12 +11,14 @@ class GameState(chessai.core.gamestate.GameState):
     """ A game state specific to a Puzzle game. """
 
     def __init__(self,
-                 board: chessai.core.board.Board | None = None,
+                 fen: str | None = None,
+                 move_stack: list[chessai.core.action.Action] | None = None,
+                 board_stack: list[chessai.core.board.Board] | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  puzzle_solved: bool = False,
                  **kwargs: typing.Any) -> None:
-        super().__init__(board, seed, game_over, **kwargs)
+        super().__init__(fen, move_stack, board_stack, seed, game_over, **kwargs)
 
         # The dummy player for the current game is the opposite of the puzzle's starting player.
         self.dummy_player: chessai.core.types.Color = self.turn.opposite()
@@ -94,7 +96,7 @@ class GameState(chessai.core.gamestate.GameState):
         chosen_move_list = rng.sample(possible_moves, 1)
         chosen_move = chosen_move_list[0]
         if (chosen_move not in self.get_legal_actions()):
-            raise ValueError(f"Puzzle has a dummy move that is invalid: '{self.turn}', '{chosen_move.uci()}', '{self.board.get_fen()}'.")
+            raise ValueError(f"Puzzle has a dummy move that is invalid: '{self.turn}', '{chosen_move.uci()}', '{self.get_fen()}'.")
 
         return chosen_move
 

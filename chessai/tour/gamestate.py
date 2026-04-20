@@ -24,31 +24,20 @@ class GameState(chessai.core.gamestate.GameState):
     """ A game state specific to a Tour game. """
 
     def __init__(self,
-                 board: chessai.core.board.Board | None = None,
                  fen: str | None = None,
-                 pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] | None = None,
-                 turn: chessai.core.types.Color | None = None,
-                 castling_rights: chessai.core.castling.CastlingRights | None = None,
-                 en_passant_square: chessai.core.coordinate.Coordinate | None | int = -1,
-                 halfmove_clock: int | None = None,
-                 fullmove_number: int | None = None,
                  move_stack: list[chessai.core.action.Action] | None = None,
+                 board_stack: list[chessai.core.board.Board] | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  search_targets: list[chessai.core.coordinate.Coordinate] | dict[str, typing.Any] | None = None,
                  **kwargs: typing.Any) -> None:
-        super().__init__(board, fen, pieces, turn, castling_rights,
-                 en_passant_square, halfmove_clock, fullmove_number,
-                 move_stack, seed, game_over, **kwargs)
+        super().__init__(fen, move_stack, board_stack, seed, game_over, **kwargs)
 
         self.score: int = 0
         """ The score for the Tour. """
 
         if (search_targets is None):
             search_targets = []
-
-        self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets  # type: ignore
-        """ The targets of the piece tour search. """
 
         # Convert the string case into the dict case.
         if (isinstance(search_targets, str)):
@@ -57,22 +46,25 @@ class GameState(chessai.core.gamestate.GameState):
             }
 
         if (isinstance(search_targets, dict)):
-            self.search_targets = chessai.core.coordinate.squares_from_dict(search_targets)
+            search_targets = chessai.core.coordinate.coordinates_from_dict(search_targets)
+
+        self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets
+        """ The targets of the piece tour search. """
 
         # A Tour problem must have at least one search target.
         if (len(self.search_targets) == 0):
             raise ValueError("Cannot create a Tour game state without at least one search target.")
 
-    def remove_search_target(self, square: chessai.core.coordinate.Coordinate) -> None:
+    def remove_search_target(self, coordinate: chessai.core.coordinate.Coordinate) -> None:
         """
         Remove a search target from the gamestate.
-        If the square is not a search target, the state is unchanged.
+        If the coordinate is not a search target, the state is unchanged.
         """
 
-        if (square not in self.search_targets):
+        if (coordinate not in self.search_targets):
             return
 
-        self.search_targets.remove(square)
+        self.search_targets.remove(coordinate)
 
     def process_turn(self,
             action: chessai.core.action.Action,
@@ -86,11 +78,10 @@ class GameState(chessai.core.gamestate.GameState):
 
         self.push(action)
 
-        destination_square = action.end_square
-        search_targets = self.board.get_search_targets()
-        if (destination_square in search_targets):
+        destination_coordinate = action.end_coordinate
+        if (destination_coordinate in self.search_targets):
             # Get points for reaching a search target.
-            self.board.remove_search_target(destination_square)
+            self.remove_search_target(destination_coordinate)
             self.score += POSITION_POINTS
 
         # The agent always loses a point each turn.
@@ -107,7 +98,7 @@ class GameState(chessai.core.gamestate.GameState):
             self.score += CRASH_POINTS
 
     def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
-        search_targets = self.board.get_search_targets()
+        search_targets = self.search_targets
 
         # The agent wins if they reach all of the search targets.
         if (len(search_targets) == 0):
