@@ -111,6 +111,42 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 True,
                 False,
             ),
+            (
+                'r1bqkbnr/pppp1ppp/2n5/4P3/2B5/5Q2/PPPP1PPP/RNB1KBNR b KQkq - 2 4',
+                [],
+                True,
+                False,
+            ),
+            (
+                '6k1/5ppp/8/8/8/8/5PPP/4R1K1 b - - 0 1',
+                [],
+                True,
+                False,
+            ),
+            (
+                'r2q1nk1/pp2rpbp/2p3p1/4N3/2Q2B2/2N5/PP3PPP/R4RK1 w - - 0 1',
+                [],
+                True,
+                False,
+            ),
+            (
+                '7k/8/8/5N2/6R1/8/8/K7 w - - 0 1',
+                [],
+                True,
+                False,
+            ),
+            (
+                'rnb1kbnr/pppp1pPp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3',
+                [],
+                True,
+                False,
+            ),
+            (
+                '6k1/p4ppp/8/8/8/5B2/PP1r1PPP/R3R1K1 w - - 0 1',
+                [],
+                True,
+                False,
+            ),
         ]
 
         for test_case in test_cases:
