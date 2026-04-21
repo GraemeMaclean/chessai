@@ -335,6 +335,14 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 True,
                 False,
             ),
+
+            # King only stalemate
+            (
+                '4k3/3Q4/8/8/8/8/8/4K3 b - - 0 1',
+                chessai.core.action.Action.from_uci('e8d7'),
+                False,
+                True,
+            ),
         ]
 
         for (i, test_case) in enumerate(test_cases):
@@ -348,6 +356,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 self.assertEqual(state.is_stalemate(), False)
 
                 state.process_turn(action)
+                print(state.get_fen())
 
                 # Check that it is a checkmate or stalemate after the move.
                 self.assertEqual(state.is_checkmate(), checkmate)

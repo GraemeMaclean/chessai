@@ -164,7 +164,10 @@ class GameState(edq.util.json.DictConverter):
         """ Determines if the current player is in stalemate. """
 
         legal_actions = self.get_legal_actions()
-        return ((len(legal_actions) == 0) and (not self.is_check(self.turn)))
+        if ((len(legal_actions) == 0) and (not self.is_check(self.turn))):
+            return True
+
+        return self._is_special_stalemate()
 
     def is_game_over(self) -> bool:
         """ Returns whether the game is over according to the board rules. """
@@ -303,6 +306,11 @@ class GameState(edq.util.json.DictConverter):
         """ A helper function that allows gamestates to do any additional processing for special moves. """
 
         return False, None
+
+    def _is_special_stalemate(self):
+        """ Processes if there is a stalemate from custom game rules. """
+
+        return False
 
     # TODO(Lucas)
     def copy(self) -> 'GameState':

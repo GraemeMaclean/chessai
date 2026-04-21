@@ -2,7 +2,7 @@
     "cli": "chessai.chess.bin",
     "arguments": [
         "--seed", "4",
-        "--max-moves", "100",
+        "--max-moves", "300",
         "--white-team", "agent-random",
         "--black-team", "agent-random"
     ]

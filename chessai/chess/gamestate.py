@@ -159,6 +159,24 @@ class GameState(chessai.core.gamestate.GameState):
 
         return False, None
 
+    def _is_special_stalemate(self) -> bool:
+        if (len(self.board.pieces.values()) != 2):
+            return False
+
+        # Check if only kings remain.
+        stalemate_pieces = [
+            chessai.chess.piece.King(chessai.core.types.Color.WHITE),
+            chessai.chess.piece.King(chessai.core.types.Color.BLACK),
+        ]
+
+        for piece in self.board.pieces.values():
+            if (piece not in stalemate_pieces):
+                return False
+
+            stalemate_pieces.remove(piece)
+
+        return True
+
     def _handle_castling(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:
         # Build the rook action for castling.
         rook_action: chessai.core.action.Action | None = None
