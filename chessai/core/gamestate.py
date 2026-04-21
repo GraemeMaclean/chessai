@@ -205,11 +205,11 @@ class GameState(edq.util.json.DictConverter):
         """ Apply action to the game state and update all metadata. """
 
         if (action not in self.get_legal_actions()):
-            raise ValueError(f"Cannot push an illegal action: '{action}'.")
+            raise ValueError(f"Cannot push an illegal action: '{action.uci()}'.")
 
         piece = self.board.get(action.start_coordinate)
         if (piece is None):
-            raise ValueError(f"Cannot push an action from an empty coordinate: '{action}'.")
+            raise ValueError(f"Cannot push an action from an empty coordinate: '{action.uci()}'.")
 
         self.board_stack.append(self.board.copy())
 

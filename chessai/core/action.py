@@ -11,7 +11,7 @@ import chessai.core.coordinate
 import chessai.core.piece
 import chessai.core.types
 
-ACTION_PATTERN: re.Pattern = re.compile(r'^([a-z]+\d+)([a-z]+\d+)([a-z]?)$')
+ACTION_PATTERN: re.Pattern = re.compile(r'^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$')
 
 UCI_NULL_ACTION: str = '0000'
 
