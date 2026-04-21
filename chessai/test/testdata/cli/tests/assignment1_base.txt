@@ -1,7 +1,8 @@
 {
     "cli": "chessai.tour.bin",
     "arguments": [
-        "--seed", "4"
+        "--seed", "4",
+        "--max-moves", "100"
     ]
 }
 ---

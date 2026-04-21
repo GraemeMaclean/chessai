@@ -2,6 +2,7 @@
     "cli": "chessai.chess.bin",
     "arguments": [
         "--seed", "4",
+        "--max-moves", "100",
         "--white", "agent-minimax",
         "--agent-arg", "white::expectimax=true",
         "--debug"

@@ -213,11 +213,11 @@ class GameState(edq.util.json.DictConverter):
 
         self.board_stack.append(self.board.copy())
 
+        # Allow games to process any special moves.
+        is_special_capture, self.en_passant_coordinate = self._process_special_move(action, piece)
+
         # Apply the action to the board and receive the updates.
         is_capture = self.board.push(action)
-
-        # Allow games to add any additional processing.
-        is_special_capture = self._process_special_move(action, piece)
 
         # Allow for subclasses to reset clocks on special actions.
         reset_clock = self._should_reset_halfmove_clock(action, piece)
@@ -297,10 +297,12 @@ class GameState(edq.util.json.DictConverter):
 
         return False
 
-    def _process_special_move(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
+    def _process_special_move(self,
+                              action: chessai.core.action.Action,
+                              piece: chessai.core.piece.Piece)-> tuple[bool, chessai.core.coordinate.Coordinate | None]:
         """ A helper function that allows gamestates to do any additional processing for special moves. """
 
-        return False
+        return False, None
 
     # TODO(Lucas)
     def copy(self) -> 'GameState':

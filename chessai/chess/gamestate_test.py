@@ -168,9 +168,186 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         # [(FEN, action, is_checkmate, is_stalemate), ...]
         test_cases: list[tuple[str, chessai.core.action.Action, bool, bool]] = [
+            # En-passant capture into checkmate.
             (
-                '8/p6k/P7/1P3Pp1/3B4/6R1/3B2PP/R5K1 w - g6 0 1',
+                '2R5/p6k/P7/1P3Pp1/3B4/6R1/3B2PP/6K1 w - g6 0 1',
                 chessai.core.action.Action.from_uci('f5g6'),
+                True,
+                False,
+            ),
+
+            # Move into checkmate.
+            (
+                '6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1',
+                chessai.core.action.Action.from_uci('e1e8'),
+                True,
+                False,
+            ),
+
+            # Castling into checkmate (queenside)
+            (
+                'r3k3/8/8/8/8/8/8/R3K2R b KQkq - 0 1',
+                chessai.core.action.Action.from_uci('e8c8'),
+                True,
+                False,
+            ),
+
+            # Castling into checkmate (kingside)
+            (
+                '4k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1',
+                chessai.core.action.Action.from_uci('e8g8'),
+                True,
+                False,
+            ),
+
+            # Double pawn push leading to checkmate
+            (
+                'rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3',
+                chessai.core.action.Action.from_uci('f3f4'),
+                False,
+                False,  # This allows Qxe1# next move, but testing the push itself
+            ),
+
+            # Double pawn push for discovered checkmate
+            (
+                '3qkb1r/1pp2ppp/p1n5/3Pp3/4P3/2N5/PPP2PPP/R1BQKB1R w KQk - 0 8',
+                chessai.core.action.Action.from_uci('d5d6'),
+                True,
+                False,
+            ),
+
+            # Knight move checkmate
+            (
+                '5rk1/5ppp/8/8/8/8/5PPP/4RNK1 w - - 0 1',
+                chessai.core.action.Action.from_uci('f1g3'),
+                True,
+                False,
+            ),
+
+            # Bishop move checkmate
+            (
+                '6k1/5ppp/4p3/8/8/8/5PPP/5BK1 w - - 0 1',
+                chessai.core.action.Action.from_uci('f1a6'),
+                True,
+                False,
+            ),
+
+            # Queen move checkmate
+            (
+                'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
+                chessai.core.action.Action.from_uci('h5f7'),
+                True,
+                False,
+            ),
+
+            # Pawn capture checkmate
+            (
+                '6k1/5pPp/7P/8/8/8/8/6K1 w - - 0 1',
+                chessai.core.action.Action.from_uci('g7f8q'),
+                True,
+                False,
+            ),
+
+            # Move into stalemate
+            (
+                '8/p6k/P7/1P6/3B4/5R2/3B2PP/6K1 w - - 0 1',
+                chessai.core.action.Action.from_uci('f3g3'),
+                False,
+                True,
+            ),
+
+            # Capture leading to stalemate
+            (
+                '7k/5K2/6Q1/8/8/8/8/8 w - - 0 1',
+                chessai.core.action.Action.from_uci('g6g8'),
+                False,
+                True,
+            ),
+
+            # Stalemate by blocking last square
+            (
+                '7k/5KP1/8/8/8/8/8/8 w - - 0 1',
+                chessai.core.action.Action.from_uci('g7g8q'),
+                False,
+                True,
+            ),
+
+            # Rook move checkmate on back rank
+            (
+                '6k1/6p1/8/8/8/8/8/R5K1 w - - 0 1',
+                chessai.core.action.Action.from_uci('a1a8'),
+                True,
+                False,
+            ),
+
+            # Discovered checkmate by moving a piece
+            (
+                '3k4/8/8/8/8/4R3/4B3/4K3 w - - 0 1',
+                chessai.core.action.Action.from_uci('e2h5'),
+                True,
+                False,
+            ),
+
+            # Underpromotion to knight for checkmate
+            (
+                '6k1/5P1p/7P/8/8/8/8/6K1 w - - 0 1',
+                chessai.core.action.Action.from_uci('f7f8n'),
+                True,
+                False,
+            ),
+
+            # Capture and promote for checkmate
+            (
+                '1r4k1/5P1p/7P/8/8/8/8/6K1 w - - 0 1',
+                chessai.core.action.Action.from_uci('f7g8q'),
+                True,
+                False,
+            ),
+
+            # Rook sacrifice stalemate
+            (
+                'k7/2R5/1K6/8/8/8/8/8 b - - 0 1',
+                chessai.core.action.Action.from_uci('a8b8'),
+                False,
+                True,
+            ),
+
+            # Smothered mate (knight)
+            (
+                '6rk/5ppp/8/8/8/8/8/5RNK w - - 0 1',
+                chessai.core.action.Action.from_uci('g1f3'),
+                True,
+                False,
+            ),
+
+            # Back rank mate with rook
+            (
+                'r4rk1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1',
+                chessai.core.action.Action.from_uci('e1e8'),
+                True,
+                False,
+            ),
+
+            # Stalemate with only kings and one piece
+            (
+                'k7/8/1K6/8/8/8/1P6/8 w - - 0 1',
+                chessai.core.action.Action.from_uci('b2b4'),
+                False,
+                True,
+            ),
+
+            # Two rooks checkmate
+            (
+                '6k1/8/6K1/8/8/8/7R/7R w - - 0 1',
+                chessai.core.action.Action.from_uci('h1h8'),
+                True,
+                False,
+            ),
+
+            # Queen and king checkmate
+            (
+                '7k/5Q2/6K1/8/8/8/8/8 w - - 0 1',
+                chessai.core.action.Action.from_uci('f7f8'),
                 True,
                 False,
             ),
@@ -186,9 +363,8 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 self.assertEqual(state.is_checkmate(), False)
                 self.assertEqual(state.is_stalemate(), False)
 
-                print(state.get_fen())
+                print(f"case {i}: {action.uci()}")
                 state.process_turn(action)
-                print(state.get_fen())
 
                 # Check that it is a checkmate or stalemate after the move.
                 self.assertEqual(state.is_checkmate(), checkmate)

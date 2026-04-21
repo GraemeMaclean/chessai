@@ -2,6 +2,7 @@
     "cli": "chessai.chess.bin",
     "arguments": [
         "--seed", "4",
+        "--max-moves", "100",
         "--white-team", "__BASE_DIR__(../../../../agents/random.py:RandomAgent)",
     ]
 }

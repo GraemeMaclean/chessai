@@ -137,7 +137,9 @@ class GameState(chessai.core.gamestate.GameState):
 
         return actions
 
-    def _process_special_move(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
+    def _process_special_move(self,
+                              action: chessai.core.action.Action,
+                              piece: chessai.core.piece.Piece)-> tuple[bool, chessai.core.coordinate.Coordinate | None]:
         # Handle promoting pieces.
         if (action.promotion is not None):
             self._handle_promotion(action, piece)
@@ -146,16 +148,16 @@ class GameState(chessai.core.gamestate.GameState):
         if ((isinstance(piece, chessai.chess.piece.King))
                 and (action.start_coordinate.file_distance(action.end_coordinate) > 1)):
             self._handle_castling(action, piece)
-            return False
+            return False, None
 
-        # Detect En-passant by checking if a pawn moves diagonally to an empty coordinate.
+        # Detect en-passant by checking if a pawn moves diagonally to an empty coordinate.
         if ((isinstance(piece, chessai.chess.piece.Pawn))
                 and (action.start_coordinate.file_distance(action.end_coordinate) == 1)
                 and (self.board.get(action.end_coordinate) is None)):
-            self._handle_en_passant(action, piece)
-            return True
+            en_passant_coordinate = self._handle_en_passant(action, piece)
+            return True, en_passant_coordinate
 
-        return False
+        return False, None
 
     def _handle_castling(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:
         # Build the rook action for castling.
@@ -179,7 +181,7 @@ class GameState(chessai.core.gamestate.GameState):
         # Update castling rights, based on the action.
         self._update_castling_rights(action, piece)
 
-    def _handle_en_passant(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:
+    def _handle_en_passant(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> chessai.core.coordinate.Coordinate | None:
         # The captured pawn is on the same rank as the moving pawn, on the destination file.
         captured_piece_coordinate = chessai.core.coordinate.Coordinate(
             action.end_coordinate.file,
@@ -189,8 +191,8 @@ class GameState(chessai.core.gamestate.GameState):
         # Remove the en-passant captured pawn from its actual coordinate.
         self.board.remove(captured_piece_coordinate)
 
-        # Update the en-passant target coordinate, based on the action.
-        self.en_passant_coordinate = self._compute_en_passant(action, piece)
+        # Return the en-passant target coordinate, based on the action.
+        return self._compute_en_passant(action, piece)
 
     def _handle_promotion(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:
         # Handle promotion by replacing the pawn with the promoted piece.

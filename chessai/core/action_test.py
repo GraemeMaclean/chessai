@@ -27,6 +27,12 @@ class ActionTest(edq.testing.unittest.BaseTest):
                 'a1b2',
             ),
             (
+                chessai.core.coordinate.Coordinate(6, 7),
+                chessai.core.coordinate.Coordinate(7, 7),
+                None,
+                'f7f8',
+            ),
+            (
                 chessai.core.coordinate.Coordinate(3, 4),
                 chessai.core.coordinate.Coordinate(5, 6),
                 None,
@@ -96,6 +102,13 @@ class ActionTest(edq.testing.unittest.BaseTest):
                 None,
                 chessai.core.coordinate.Coordinate(0, 0),
                 chessai.core.coordinate.Coordinate(1, 1),
+                None,
+            ),
+            (
+                'f7f8',
+                None,
+                chessai.core.coordinate.Coordinate(6, 7),
+                chessai.core.coordinate.Coordinate(7, 7),
                 None,
             ),
             (

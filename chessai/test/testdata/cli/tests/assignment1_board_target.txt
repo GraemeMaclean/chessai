@@ -3,7 +3,8 @@
     "arguments": [
         "--seed", "4",
         "--board", "tour-base",
-        "--target-square", "46"
+        "--target-square", "46",
+        "--max-moves", "100"
     ]
 }
 ---

@@ -2,7 +2,8 @@
     "cli": "chessai.tour.bin",
     "arguments": [
         "--seed", "2",
-        "--board", "tour-multi"
+        "--board", "tour-multi",
+        "--max-moves", "100"
     ]
 }
 ---

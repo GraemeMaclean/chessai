@@ -3,7 +3,8 @@
     "arguments": [
         "--seed", "4",
         "--white-team", "agent-search-problem",
-        "--agent-arg", "white::solver=search-solver-ucs"
+        "--agent-arg", "white::solver=search-solver-ucs",
+        "--max-moves", "100"
     ]
 }
 ---
