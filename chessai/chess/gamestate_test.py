@@ -112,25 +112,13 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
             (
-                'r1bqkbnr/pppp1ppp/2n5/4P3/2B5/5Q2/PPPP1PPP/RNB1KBNR b KQkq - 2 4',
+                'r1bqkbnr/pppp1Qpp/8/4P3/2Bn4/8/PPPP1PPP/RNB1KBNR b KQkq - 0 5',
                 [],
                 True,
                 False,
             ),
             (
-                '6k1/5ppp/8/8/8/8/5PPP/4R1K1 b - - 0 1',
-                [],
-                True,
-                False,
-            ),
-            (
-                'r2q1nk1/pp2rpbp/2p3p1/4N3/2Q2B2/2N5/PP3PPP/R4RK1 w - - 0 1',
-                [],
-                True,
-                False,
-            ),
-            (
-                '7k/8/8/5N2/6R1/8/8/K7 w - - 0 1',
+                '7k/6R1/8/5N2/7R/8/8/K7 b - - 0 1',
                 [],
                 True,
                 False,
@@ -142,31 +130,66 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
             (
-                '6k1/p4ppp/8/8/8/5B2/PP1r1PPP/R3R1K1 w - - 0 1',
+                '4R1k1/p4ppp/8/8/8/5B2/PP1r1PPP/R5K1 b - - 0 1',
                 [],
+                True,
+                False,
+            ),
+            (
+                '7k/p4p2/P4P2/1P6/6R1/3B4/6PP/R5K1 b - - 0 1',
+                [],
+                False,
+                True,
+            ),
+        ]
+
+        for (i, test_case) in enumerate(test_cases):
+            with self.subTest(msg = f"Case {i}:"):
+                (start_fen, uci_moves, checkmate, stalemate) = test_case
+
+                expected_actions: list[chessai.core.action.Action] = []
+                for uci_move in uci_moves:
+                    expected_actions.append(chessai.core.action.Action.from_uci(uci_move))
+
+                state = chessai.chess.gamestate.GameState(fen = start_fen)
+
+                self.assertEqual(state.is_checkmate(), checkmate)
+                self.assertEqual(state.is_stalemate(), stalemate)
+
+                actual_actions = state.get_legal_actions()
+                self.assertEqual(len(actual_actions), len(expected_actions))
+
+                for expected_action in expected_actions:
+                    self.assertIn(expected_action, actual_actions)
+
+
+    def test_final_action(self):
+        """ Test mate in 1 or stalemate in 1. """
+
+        # [(FEN, action, is_checkmate, is_stalemate), ...]
+        test_cases: list[tuple[str, chessai.core.action.Action, bool, bool]] = [
+            (
+                '8/p6k/P7/1P3Pp1/3B4/6R1/3B2PP/R5K1 w - g6 0 1',
+                chessai.core.action.Action.from_uci('f5g6'),
                 True,
                 False,
             ),
         ]
 
-        for test_case in test_cases:
-            (start_fen, uci_moves, checkmate, stalemate) = test_case
+        for (i, test_case) in enumerate(test_cases):
+            with self.subTest(msg = f"Case {i}:"):
+                (start_fen, action, checkmate, stalemate) = test_case
 
-            expected_actions: list[chessai.core.action.Action] = []
-            for uci_move in uci_moves:
-                expected_actions.append(chessai.core.action.Action.from_uci(uci_move))
+                state = chessai.chess.gamestate.GameState(fen = start_fen)
 
-            state = chessai.chess.gamestate.GameState(fen = start_fen)
+                # Check that it is not a checkmate or stalemate before the move.
+                self.assertEqual(state.is_checkmate(), False)
+                self.assertEqual(state.is_stalemate(), False)
 
-            print(len(state.get_legal_actions()))
-            print(state.is_check(state.turn))
-            print(state.is_check(state.turn.opposite))
+                print(state.get_fen())
+                state.process_turn(action)
+                print(state.get_fen())
 
-            self.assertEqual(state.is_checkmate(), checkmate)
-            self.assertEqual(state.is_stalemate(), stalemate)
-
-            actual_actions = state.get_legal_actions()
-            self.assertEqual(len(actual_actions), len(expected_actions))
-
-            for expected_action in expected_actions:
-                self.assertIn(expected_action, actual_actions)
+                # Check that it is a checkmate or stalemate after the move.
+                self.assertEqual(state.is_checkmate(), checkmate)
+                self.assertEqual(state.is_stalemate(), stalemate)

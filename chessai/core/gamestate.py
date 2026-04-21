@@ -119,6 +119,9 @@ class GameState(edq.util.json.DictConverter):
             successor.board.push(action)
             successor._process_special_move(action, piece)
 
+            # Advance the turn for checking for check.
+            successor.turn = self.turn.opposite()
+
             # Check if this move leaves our king in check (making it illegal).
             if (not successor.is_check(self.turn)):
                 legal_actions.append(action)
@@ -284,7 +287,8 @@ class GameState(edq.util.json.DictConverter):
                     if (is_occupied):
                         break
 
-                    num_repetitions -= 1
+                    if (num_repetitions != -1):
+                        num_repetitions -= 1
 
         return actions
 

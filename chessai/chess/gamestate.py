@@ -51,7 +51,9 @@ class GameState(chessai.core.gamestate.GameState):
 
         try:
             opponent_actions = self._get_pseudo_legal_moves()
+            # print(self.get_fen())
             for action in opponent_actions:
+                # print(action.uci())
                 if (action.end_coordinate == king_coordinate):
                     return True
 
@@ -130,7 +132,8 @@ class GameState(chessai.core.gamestate.GameState):
                     if (is_occupied):
                         break
 
-                    num_repetitions -= 1
+                    if (num_repetitions != -1):
+                        num_repetitions -= 1
 
         return actions
 
@@ -213,7 +216,7 @@ class GameState(chessai.core.gamestate.GameState):
         # Find the king.
         king_coord: chessai.core.coordinate.Coordinate | None = None
         for (coordinate, piece) in self.board.pieces.items():
-            if (piece != chessai.chess.piece.King):
+            if (not isinstance(piece, chessai.chess.piece.King)):
                 continue
 
             if (piece.color != self.turn):
