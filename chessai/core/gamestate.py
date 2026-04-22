@@ -213,9 +213,6 @@ class GameState(edq.util.json.DictConverter):
     def push(self, action: chessai.core.action.Action) -> None:
         """ Apply action to the game state and update all metadata. """
 
-        if (action not in self.get_legal_actions()):
-            raise ValueError(f"Cannot push an illegal action: '{action.uci()}'.")
-
         piece = self.board.get(action.start_coordinate)
         if (piece is None):
             raise ValueError(f"Cannot push an action from an empty coordinate: '{action.uci()}'.")
@@ -232,7 +229,12 @@ class GameState(edq.util.json.DictConverter):
         reset_clock = self._should_reset_halfmove_clock(action, piece)
 
         # Update the clocks.
-        if (reset_clock or is_capture or is_special_capture):
+        self._progress_state(action, (reset_clock or is_capture or is_special_capture))
+
+    def _progress_state(self, action: chessai.core.action.Action, reset_clock: bool) -> None:
+        """ A helper function to update the basic state of the game. """
+
+        if (reset_clock):
             self.halfmove_clock = 0
         else:
             self.halfmove_clock += 1

@@ -58,6 +58,12 @@ class GameState(chessai.core.gamestate.GameState):
         if (len(self.search_targets) == 0):
             raise ValueError("Cannot create a Tour game state without at least one search target.")
 
+    def is_game_over(self) -> bool:
+        if (self.game_over):
+            return True
+
+        return (len(self.search_targets) == 0)
+
     def remove_search_target(self, coordinate: chessai.core.coordinate.Coordinate) -> None:
         """
         Remove a search target from the gamestate.
@@ -79,6 +85,11 @@ class GameState(chessai.core.gamestate.GameState):
         To get a copy of a potential successor state, use generate_successor().
         """
 
+        # Simply progress the turn with the null action.
+        if (self.turn == chessai.core.types.Color.BLACK):
+            self._progress_state(action, False)
+            return
+
         self.push(action)
 
         destination_coordinate = action.end_coordinate
@@ -89,6 +100,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         # The agent always loses a point each turn.
         self.score -= TIME_PENALTY
+        return
 
     def process_agent_timeout(self, player: chessai.core.types.Color) -> None:
         # Treat timeouts like crashes.

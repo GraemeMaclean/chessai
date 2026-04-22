@@ -114,7 +114,7 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
             next_state.push(action)
 
             # Push a null move for black.
-            next_state.push(chessai.core.action.Action())
+            next_state._progress_state(chessai.core.action.Action(), False)
 
             next_node = PositionSearchNode(position, next_state)
             cost = self._cost_function(next_node)

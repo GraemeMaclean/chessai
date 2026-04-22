@@ -1,3 +1,4 @@
+import argparse
 import random
 import typing
 
@@ -35,6 +36,14 @@ class Game(chessai.core.game.Game):
         self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets
         """ The search targets of this game. """
 
+    def process_args(self, args: argparse.Namespace) -> None:
+        if (args.target_squares is not None):
+            search_targets = {
+                chessai.core.coordinate.COORDINATES_KEY: args.target_squares
+            }
+
+            self.search_targets = chessai.core.coordinate.coordinates_from_dict(search_targets)
+
     def get_initial_state(self,
             rng: random.Random,
             fen: str | None = None) -> chessai.core.gamestate.GameState:
@@ -54,6 +63,8 @@ class Game(chessai.core.game.Game):
         Process the given agent action and return an updated game state.
         The returned game state may be a copy or modified version of the passed in game state.
         """
+
+        state = typing.cast(chessai.tour.gamestate.GameState, state)
 
         # The agent has timed out.
         if (action_record.timeout):
@@ -101,6 +112,8 @@ class Game(chessai.core.game.Game):
         Black is not expected to be an agent in tour games.
         So, it may make null moves to pass the turn back to white.
         """
+
+        state = typing.cast(chessai.tour.gamestate.GameState, state)
 
         self._call_state_process_turn_full(state, action, rng)
 

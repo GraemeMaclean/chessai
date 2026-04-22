@@ -1,14 +1,14 @@
 {
     "cli": "chessai.tour.bin",
     "arguments": [
-        "--seed", "2",
+        "--seed", "1",
         "--board", "tour-multi",
-        "--max-moves", "100"
+        "--max-moves", "300"
     ]
 }
 ---
-<LOG_PREFIX> -- Average Score: 507.00
-<LOG_PREFIX> -- Scores:        507
+<LOG_PREFIX> -- Average Score: 408.00
+<LOG_PREFIX> -- Scores:        408
 <LOG_PREFIX> -- Record:        Win
-<LOG_PREFIX> -- Average Moves: 13.0
-<LOG_PREFIX> -- Move Counts:   13
+<LOG_PREFIX> -- Average Moves: 223.0
+<LOG_PREFIX> -- Move Counts:   223

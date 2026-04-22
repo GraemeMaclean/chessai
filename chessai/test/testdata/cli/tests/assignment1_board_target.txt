@@ -3,13 +3,13 @@
     "arguments": [
         "--seed", "4",
         "--board", "tour-base",
-        "--target-square", "46",
-        "--max-moves", "100"
+        "--target-square", "g7",
+        "--max-moves", "450"
     ]
 }
 ---
-<LOG_PREFIX> -- Average Score: 429.00
-<LOG_PREFIX> -- Scores:        429
+<LOG_PREFIX> -- Average Score: 290.00
+<LOG_PREFIX> -- Scores:        290
 <LOG_PREFIX> -- Record:        Win
-<LOG_PREFIX> -- Average Moves: 81.0
-<LOG_PREFIX> -- Move Counts:   81
+<LOG_PREFIX> -- Average Moves: 439.0
+<LOG_PREFIX> -- Move Counts:   439

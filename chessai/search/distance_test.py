@@ -10,8 +10,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     def test_manhattan_base(self):
         """ Test Manhattan distance and heuristic. """
 
-        test_board = chessai.core.board.load_path('tour-base')
-        test_state = chessai.core.gamestate.GameState(seed = 4, board = test_board)
+        test_state = chessai.core.gamestate.GameState(fen = 'tour-base', seed = 4)
 
         # [(a, b, expected), ...]
         test_cases = [
@@ -37,7 +36,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
                 for expected_distance in expected_distances:
                     self.assertAlmostEqual(expected_distance, distance)
 
-                node = chessai.search.position.PositionSearchNode(a, test_board)
+                node = chessai.search.position.PositionSearchNode(a, test_state)
                 problem = chessai.search.position.PositionSearchProblem(
                         test_state,
                         start_position = a,
@@ -50,8 +49,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     def test_euclidean_base(self):
         """ Test Euclidean distance and heuristic. """
 
-        test_board = chessai.core.board.load_path('tour-base')
-        test_state = chessai.core.gamestate.GameState(seed = 4, board = test_board)
+        test_state = chessai.core.gamestate.GameState(fen = 'tour-base', seed = 4)
 
         # [(a, b, expected), ...]
         test_cases = [
@@ -77,7 +75,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
                 for expected_distance in expected_distances:
                     self.assertAlmostEqual(expected_distance, distance)
 
-                node = chessai.search.position.PositionSearchNode(a, test_board)
+                node = chessai.search.position.PositionSearchNode(a, test_state)
                 problem = chessai.search.position.PositionSearchProblem(
                         test_state,
                         start_position = a,
@@ -90,8 +88,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     # def test_maze_base(self):
     #     """ Test maze distance. """
 
-    #     test_board = chessai.core.board.load_path('tour-base')
-    #     test_state = chessai.core.gamestate.GameState(seed = 4, board = test_board)
+    #     test_state = chessai.core.gamestate.GameState(fen = 'tour-base', seed = 4)
 
     #     # Note that the distances will be random because we are using random search.
 

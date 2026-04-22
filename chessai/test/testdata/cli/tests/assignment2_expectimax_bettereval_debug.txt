@@ -12,189 +12,59 @@
 ---
 <LOG_PREFIX> -- Using source seed for games: 4.
 <LOG_PREFIX> -- Starting a game with seed: 5594871498841892311.
-<LOG_PREFIX> -- Turn: 0, Minimax Score: 0, Chosen Action: {"uci": "d2d3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 2, Minimax Score: 0, Chosen Action: {"uci": "c1e3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 4, Minimax Score: 0, Chosen Action: {"uci": "c2c4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 6, Minimax Score: 0, Chosen Action: {"uci": "b2b4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 8, Minimax Score: 1, Chosen Action: {"uci": "c4d5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 10, Minimax Score: 10, Chosen Action: {"uci": "b4a5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 12, Minimax Score: 10, Chosen Action: {"uci": "e1d2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 14, Minimax Score: 10, Chosen Action: {"uci": "d1a4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 16, Minimax Score: 11, Chosen Action: {"uci": "a4g4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 18, Minimax Score: 11, Chosen Action: {"uci": "g4g5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 20, Minimax Score: 11, Chosen Action: {"uci": "d2e1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 22, Minimax Score: 11, Chosen Action: {"uci": "g5h5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 24, Minimax Score: 11, Chosen Action: {"uci": "e3f4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 26, Minimax Score: 11, Chosen Action: {"uci": "g1h3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 28, Minimax Score: 14, Chosen Action: {"uci": "h5h6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 30, Minimax Score: 2, Chosen Action: {"uci": "f4e5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 32, Minimax Score: -2, Chosen Action: {"uci": "e5d4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 34, Minimax Score: 2, Chosen Action: {"uci": "d4c3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 36, Minimax Score: 3, Chosen Action: {"uci": "c3b4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 38, Minimax Score: 3, Chosen Action: {"uci": "a2a3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 40, Minimax Score: 5, Chosen Action: {"uci": "e1d1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 42, Minimax Score: 5, Chosen Action: {"uci": "d5c6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 44, Minimax Score: 7, Chosen Action: {"uci": "d1d2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 46, Minimax Score: 9, Chosen Action: {"uci": "c6b7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 48, Minimax Score: 9, Chosen Action: {"uci": "g2g3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 50, Minimax Score: 8, Chosen Action: {"uci": "h1g1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 52, Minimax Score: 12, Chosen Action: {"uci": "b7b8r"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 54, Minimax Score: 13, Chosen Action: {"uci": "d2c3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 56, Minimax Score: 10, Chosen Action: {"uci": "a5a6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 58, Minimax Score: 13, Chosen Action: {"uci": "b8c8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 60, Minimax Score: 15, Chosen Action: {"uci": "c3c4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 62, Minimax Score: 9, Chosen Action: {"uci": "c4c3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 64, Minimax Score: 13, Chosen Action: {"uci": "b1d2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 66, Minimax Score: 9, Chosen Action: {"uci": "a1c1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 68, Minimax Score: 11, Chosen Action: {"uci": "h3g5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 70, Minimax Score: 9, Chosen Action: {"uci": "b4c5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 72, Minimax Score: 12, Chosen Action: {"uci": "g5h3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 74, Minimax Score: 9, Chosen Action: {"uci": "g1g2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 76, Minimax Score: 11, Chosen Action: {"uci": "e2e4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 78, Minimax Score: 11, Chosen Action: {"uci": "h3g1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 80, Minimax Score: 14, Chosen Action: {"uci": "g3f4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 82, Minimax Score: 14, Chosen Action: {"uci": "f4f5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 84, Minimax Score: 9, Chosen Action: {"uci": "g1f3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 86, Minimax Score: 15, Chosen Action: {"uci": "g2f2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 88, Minimax Score: 15, Chosen Action: {"uci": "c1c2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 90, Minimax Score: 7, Chosen Action: {"uci": "c2c1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 92, Minimax Score: 15, Chosen Action: {"uci": "f3h4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 94, Minimax Score: 15, Chosen Action: {"uci": "f1g2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 96, Minimax Score: 15, Chosen Action: {"uci": "c5b6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 98, Minimax Score: 16, Chosen Action: {"uci": "c1d1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 100, Minimax Score: 15, Chosen Action: {"uci": "e4e5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 102, Minimax Score: 15, Chosen Action: {"uci": "c3b2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 104, Minimax Score: 15, Chosen Action: {"uci": "d3d4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 106, Minimax Score: 16, Chosen Action: {"uci": "g2c6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 108, Minimax Score: 15, Chosen Action: {"uci": "c6e4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 110, Minimax Score: 25, Chosen Action: {"uci": "b2c3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 112, Minimax Score: 18, Chosen Action: {"uci": "b6d8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 114, Minimax Score: 18, Chosen Action: {"uci": "d2b1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 116, Minimax Score: 19, Chosen Action: {"uci": "e4g2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 118, Minimax Score: 19, Chosen Action: {"uci": "f2e2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 120, Minimax Score: 19, Chosen Action: {"uci": "e2c2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 122, Minimax Score: 19, Chosen Action: {"uci": "d8e7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 124, Minimax Score: 19, Chosen Action: {"uci": "d1c1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 126, Minimax Score: 19, Chosen Action: {"uci": "e7c5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 128, Minimax Score: 19, Chosen Action: {"uci": "c3d3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 130, Minimax Score: 19, Chosen Action: {"uci": "c2c4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 132, Minimax Score: 14, Chosen Action: {"uci": "c4c2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 134, Minimax Score: 19, Chosen Action: {"uci": "b1d2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 136, Minimax Score: 19, Chosen Action: {"uci": "g2h1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 138, Minimax Score: 11, Chosen Action: {"uci": "c2b2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 140, Minimax Score: 14, Chosen Action: {"uci": "h1a8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 142, Minimax Score: 15, Chosen Action: {"uci": "c5a7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 144, Minimax Score: 12, Chosen Action: {"uci": "d4d5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 146, Minimax Score: 12, Chosen Action: {"uci": "d3e3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 148, Minimax Score: 15, Chosen Action: {"uci": "h4g6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 150, Minimax Score: 15, Chosen Action: {"uci": "b2b7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 152, Minimax Score: 15, Chosen Action: {"uci": "e3f2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 154, Minimax Score: 15, Chosen Action: {"uci": "b7b1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 156, Minimax Score: 14, Chosen Action: {"uci": "a8b7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 158, Minimax Score: 14, Chosen Action: {"uci": "d2c4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 160, Minimax Score: 10, Chosen Action: {"uci": "d5d6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 162, Minimax Score: 11, Chosen Action: {"uci": "b7a6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 164, Minimax Score: 14, Chosen Action: {"uci": "b1b4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 166, Minimax Score: 9, Chosen Action: {"uci": "c4b2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 168, Minimax Score: 14, Chosen Action: {"uci": "a6c8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 170, Minimax Score: 9, Chosen Action: {"uci": "f2e3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 172, Minimax Score: 8, Chosen Action: {"uci": "h2h3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 174, Minimax Score: 8, Chosen Action: {"uci": "a7c5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 176, Minimax Score: 5, Chosen Action: {"uci": "c5a7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 178, Minimax Score: 5, Chosen Action: {"uci": "a7c5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 180, Minimax Score: 5, Chosen Action: {"uci": "c5b4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 182, Minimax Score: 5, Chosen Action: {"uci": "e3d3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 184, Minimax Score: 5, Chosen Action: {"uci": "b4c3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 186, Minimax Score: 5, Chosen Action: {"uci": "g6e7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 188, Minimax Score: 5, Chosen Action: {"uci": "c8e6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 190, Minimax Score: 1, Chosen Action: {"uci": "c3b4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 192, Minimax Score: 5, Chosen Action: {"uci": "b4d6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 194, Minimax Score: 6, Chosen Action: {"uci": "d3c2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 196, Minimax Score: 6, Chosen Action: {"uci": "d6c5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 198, Minimax Score: 6, Chosen Action: {"uci": "c5f2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 200, Minimax Score: 6, Chosen Action: {"uci": "f2e1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 202, Minimax Score: 6, Chosen Action: {"uci": "e7g6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 204, Minimax Score: 6, Chosen Action: {"uci": "c2b2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 206, Minimax Score: 6, Chosen Action: {"uci": "e1h4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 208, Minimax Score: 3, Chosen Action: {"uci": "g6e7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 210, Minimax Score: 6, Chosen Action: {"uci": "e7c6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 212, Minimax Score: 6, Chosen Action: {"uci": "b2c2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 214, Minimax Score: 6, Chosen Action: {"uci": "h4f2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 216, Minimax Score: 6, Chosen Action: {"uci": "f2e1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 218, Minimax Score: 6, Chosen Action: {"uci": "c6d8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 220, Minimax Score: 6, Chosen Action: {"uci": "d8f7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 222, Minimax Score: 6, Chosen Action: {"uci": "f7h8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 224, Minimax Score: 6, Chosen Action: {"uci": "e1c3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 226, Minimax Score: 6, Chosen Action: {"uci": "c3d2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 228, Minimax Score: 6, Chosen Action: {"uci": "h8g6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 230, Minimax Score: 6, Chosen Action: {"uci": "g6f8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 232, Minimax Score: 6, Chosen Action: {"uci": "c2d1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 234, Minimax Score: 6, Chosen Action: {"uci": "d2h6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 236, Minimax Score: 6, Chosen Action: {"uci": "h6e3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 238, Minimax Score: 6, Chosen Action: {"uci": "f8e6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 240, Minimax Score: 0, Chosen Action: {"uci": "e3f2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 242, Minimax Score: 6, Chosen Action: {"uci": "e6c7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 244, Minimax Score: 3, Chosen Action: {"uci": "d1c1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 246, Minimax Score: 3, Chosen Action: {"uci": "c1c2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 248, Minimax Score: 3, Chosen Action: {"uci": "c7e8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 250, Minimax Score: 3, Chosen Action: {"uci": "c2c1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 252, Minimax Score: 3, Chosen Action: {"uci": "e8g7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 254, Minimax Score: 3, Chosen Action: {"uci": "g7h5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 256, Minimax Score: 3, Chosen Action: {"uci": "h5g3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 258, Minimax Score: 0, Chosen Action: {"uci": "c1d2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 260, Minimax Score: 3, Chosen Action: {"uci": "g3h1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 262, Minimax Score: 3, Chosen Action: {"uci": "d2d1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 264, Minimax Score: 3, Chosen Action: {"uci": "a3a4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 266, Minimax Score: 3, Chosen Action: {"uci": "a4a5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 268, Minimax Score: 2, Chosen Action: {"uci": "d1d2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 270, Minimax Score: 2, Chosen Action: {"uci": "h1g3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 272, Minimax Score: 2, Chosen Action: {"uci": "d2d1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 274, Minimax Score: 0, Chosen Action: {"uci": "g3h5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 276, Minimax Score: 0, Chosen Action: {"uci": "h5g3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 278, Minimax Score: 3, Chosen Action: {"uci": "g3h1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 280, Minimax Score: 3, Chosen Action: {"uci": "h1g3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 282, Minimax Score: 3, Chosen Action: {"uci": "g3h5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 284, Minimax Score: 3, Chosen Action: {"uci": "d1e1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 286, Minimax Score: 3, Chosen Action: {"uci": "a5a6"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 288, Minimax Score: 3, Chosen Action: {"uci": "e1f2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 290, Minimax Score: 3, Chosen Action: {"uci": "f2g3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 292, Minimax Score: 3, Chosen Action: {"uci": "g3f2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 294, Minimax Score: 1, Chosen Action: {"uci": "h5f4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 296, Minimax Score: 4, Chosen Action: {"uci": "f2f1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 298, Minimax Score: 4, Chosen Action: {"uci": "f4h3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 300, Minimax Score: 4, Chosen Action: {"uci": "a6a7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 302, Minimax Score: 12, Chosen Action: {"uci": "a7a8q"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 304, Minimax Score: 12, Chosen Action: {"uci": "f1g2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 306, Minimax Score: 12, Chosen Action: {"uci": "a8a4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 308, Minimax Score: 3, Chosen Action: {"uci": "a4d4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 310, Minimax Score: 12, Chosen Action: {"uci": "g2f3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 312, Minimax Score: 12, Chosen Action: {"uci": "d4g7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 314, Minimax Score: 12, Chosen Action: {"uci": "f3f2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 316, Minimax Score: 12, Chosen Action: {"uci": "g7f7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 318, Minimax Score: 12, Chosen Action: {"uci": "h3g1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 320, Minimax Score: 12, Chosen Action: {"uci": "f7a7"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 322, Minimax Score: 12, Chosen Action: {"uci": "a7b8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 324, Minimax Score: 12, Chosen Action: {"uci": "b8f8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 326, Minimax Score: 12, Chosen Action: {"uci": "f8a8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 328, Minimax Score: 12, Chosen Action: {"uci": "a8f8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 330, Minimax Score: 12, Chosen Action: {"uci": "g1e2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 332, Minimax Score: 12, Chosen Action: {"uci": "f8a8"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 334, Minimax Score: 12, Chosen Action: {"uci": "a8f3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 336, Minimax Score: 12, Chosen Action: {"uci": "e2f4"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 338, Minimax Score: 12, Chosen Action: {"uci": "f2e2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 340, Minimax Score: 12, Chosen Action: {"uci": "f3e3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 342, Minimax Score: 12, Chosen Action: {"uci": "e2e1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 344, Minimax Score: 12, Chosen Action: {"uci": "e1d1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 346, Minimax Score: 12, Chosen Action: {"uci": "e3e5"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 348, Minimax Score: 12, Chosen Action: {"uci": "e5a1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 350, Minimax Score: 12, Chosen Action: {"uci": "a1a2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 352, Minimax Score: 12, Chosen Action: {"uci": "d1d2"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 354, Minimax Score: 12, Chosen Action: {"uci": "d2d1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 356, Minimax Score: 12, Chosen Action: {"uci": "a2a1"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 358, Minimax Score: 3, Chosen Action: {"uci": "a1a3"}, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Minimax-like agent complete. Player: white, Ply Count: 2, Use Alpha-Beta Pruning: False, Use Expectimax: True, States Evaluated: 180, Nodes Visited: 900.
+<LOG_PREFIX> -- Turn: 0, Minimax Score: 0, Chosen Action: b1c3, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 2, Minimax Score: 0, Chosen Action: a1b1, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 4, Minimax Score: 0, Chosen Action: g2g4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 6, Minimax Score: 0, Chosen Action: f1g2, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 8, Minimax Score: -3, Chosen Action: f2f3, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 10, Minimax Score: 9, Chosen Action: e1f1, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 12, Minimax Score: 1, Chosen Action: h2h3, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 14, Minimax Score: 0, Chosen Action: c3d5, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 16, Minimax Score: 0, Chosen Action: c2c3, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 18, Minimax Score: -1, Chosen Action: f3f4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 20, Minimax Score: -2, Chosen Action: d1e1, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 22, Minimax Score: 8, Chosen Action: e2f3, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 24, Minimax Score: 8, Chosen Action: c3c4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 26, Minimax Score: 7, Chosen Action: d2d3, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 28, Minimax Score: 7, Chosen Action: h1h4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 30, Minimax Score: 8, Chosen Action: f1e2, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 32, Minimax Score: 8, Chosen Action: a2a4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 34, Minimax Score: 3, Chosen Action: e1c3, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 36, Minimax Score: 2, Chosen Action: e2f1, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 38, Minimax Score: 3, Chosen Action: b2b4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 40, Minimax Score: 3, Chosen Action: c1b2, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 42, Minimax Score: 5, Chosen Action: d5e7, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 44, Minimax Score: 8, Chosen Action: a4b5, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 46, Minimax Score: 5, Chosen Action: f3g4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 48, Minimax Score: 6, Chosen Action: g2c6, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 50, Minimax Score: 9, Chosen Action: c6g2, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 52, Minimax Score: 9, Chosen Action: c3e1, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 54, Minimax Score: 10, Chosen Action: e1e6, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 56, Minimax Score: 10, Chosen Action: b1d1, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 58, Minimax Score: 11, Chosen Action: e7g8, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 60, Minimax Score: 16, Chosen Action: g8h6, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 62, Minimax Score: 10, Chosen Action: f1f2, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 64, Minimax Score: 1, Chosen Action: g1h3, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 66, Minimax Score: 13, Chosen Action: e6f5, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 68, Minimax Score: 16, Chosen Action: f5d5, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 70, Minimax Score: -1, Chosen Action: f2e2, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 72, Minimax Score: 2, Chosen Action: b5b6, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 74, Minimax Score: 1, Chosen Action: h3g1, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 76, Minimax Score: 6, Chosen Action: c4d5, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 78, Minimax Score: 5, Chosen Action: f4f5, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 80, Minimax Score: 3, Chosen Action: d1d2, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 82, Minimax Score: -2, Chosen Action: e2f1, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 84, Minimax Score: 6, Chosen Action: g1f3, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 86, Minimax Score: 0, Chosen Action: g4g5, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 88, Minimax Score: 0, Chosen Action: b6b7, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 90, Minimax Score: 0, Chosen Action: f3e5, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 92, Minimax Score: 0, Chosen Action: e5c6, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 94, Minimax Score: 0, Chosen Action: c6d8, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 96, Minimax Score: 0, Chosen Action: d8e6, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 98, Minimax Score: -3, Chosen Action: g5g6, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Minimax-like agent complete. Player: white, Ply Count: 2, Use Alpha-Beta Pruning: False, Use Expectimax: True, States Evaluated: 50, Nodes Visited: 250.
 <LOG_PREFIX> -- Average Score: 0.50
 <LOG_PREFIX> -- Scores:        0.5
 <LOG_PREFIX> -- Record:        Tie
-<LOG_PREFIX> -- Average Moves: 360.0
-<LOG_PREFIX> -- Move Counts:   360
+<LOG_PREFIX> -- Average Moves: 100.0
+<LOG_PREFIX> -- Move Counts:   100

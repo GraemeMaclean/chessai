@@ -77,7 +77,7 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
         action = self.rng.choice(actions)
 
         logging.debug("Turn: %d, Minimax Score: %d, Chosen Action: %s, States Evaluated: %d, Nodes Visited: %d.",
-                state.get_move_count(), score, action,
+                state.get_move_count(), score, action.uci(),
                 self._stats_states_evaluated[-1], self._stats_nodes_visited[-1])
 
         if (action is None):

@@ -81,10 +81,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         state = chessai.chess.gamestate.GameState()
 
-        fake_move = chessai.core.action.Action(
-            start_coordinate = chessai.core.coordinate.Coordinate(0, 0),
-            end_coordinate = chessai.core.coordinate.Coordinate(0, 5),
-        )
+        fake_move = chessai.core.action.Action()
 
         with self.assertRaises(ValueError):
             state.push(fake_move)

@@ -27,8 +27,8 @@ class ActionTest(edq.testing.unittest.BaseTest):
                 'a1b2',
             ),
             (
-                chessai.core.coordinate.Coordinate(6, 7),
-                chessai.core.coordinate.Coordinate(7, 7),
+                chessai.core.coordinate.Coordinate(5, 6),
+                chessai.core.coordinate.Coordinate(5, 7),
                 None,
                 'f7f8',
             ),
@@ -107,8 +107,8 @@ class ActionTest(edq.testing.unittest.BaseTest):
             (
                 'f7f8',
                 None,
-                chessai.core.coordinate.Coordinate(6, 7),
-                chessai.core.coordinate.Coordinate(7, 7),
+                chessai.core.coordinate.Coordinate(5, 6),
+                chessai.core.coordinate.Coordinate(5, 7),
                 None,
             ),
             (
@@ -184,21 +184,21 @@ class ActionTest(edq.testing.unittest.BaseTest):
             # Errors
             (
                 '',
-                r"An action must be a pair of coordinates with an optional promotion piece: '^([a-z]+\d+)([a-z]+\d+)([a-z]?)$', got: ''.",
+                r"An action must be a pair of coordinates with an optional promotion piece: '^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$', got: ''.",
                 None,
                 None,
                 None,
             ),
             (
                 'a1',
-                r"An action must be a pair of coordinates with an optional promotion piece: '^([a-z]+\d+)([a-z]+\d+)([a-z]?)$', got: 'a1'.",
+                r"An action must be a pair of coordinates with an optional promotion piece: '^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$', got: 'a1'.",
                 None,
                 None,
                 None,
             ),
             (
                 'a1b2c3',
-                r"An action must be a pair of coordinates with an optional promotion piece: '^([a-z]+\d+)([a-z]+\d+)([a-z]?)$', got: 'a1b2c3'.",
+                r"An action must be a pair of coordinates with an optional promotion piece: '^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$', got: 'a1b2c3'.",
                 None,
                 None,
                 None,
@@ -207,7 +207,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
             # Multiple trailing characters.
             (
                 'e7e8qq',
-                r"An action must be a pair of coordinates with an optional promotion piece: '^([a-z]+\d+)([a-z]+\d+)([a-z]?)$', got: 'e7e8qq'.",
+                r"An action must be a pair of coordinates with an optional promotion piece: '^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$', got: 'e7e8qq'.",
                 None,
                 None,
                 None,
