@@ -3,7 +3,9 @@ The core actions that agents are allowed to take.
 Default actions are provided, but custom actions can be easily created.
 """
 
+import json
 import re
+import typing
 
 import edq.util.json
 
@@ -12,6 +14,7 @@ import chessai.core.piece
 import chessai.core.types
 
 ACTION_PATTERN: re.Pattern = re.compile(r'^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$')
+ACTION_KEY: str = 'actions'
 
 UCI_NULL_ACTION: str = '0000'
 
@@ -81,5 +84,31 @@ class Action(edq.util.json.DictConverter):
             promotion = chessai.core.piece.get_registered_piece(tail)
 
         return cls(start_coordinate, end_coordinate, promotion)
+
+def actions_list_from_dict(data: dict[str, typing.Any]) -> list[list[Action]]:
+    """
+    Get a list of a list of actions from a dictionary.
+    The 'actions' key will be checked.
+    """
+
+    raw_actions = data.get(ACTION_KEY, None)
+    if (raw_actions is None):
+        return []
+
+    try:
+        str_actions_lists: list[list[str]] = json.loads(raw_actions)
+    except Exception:
+        print(f"EXCEPTION on input: {raw_actions} of type {type(raw_actions)}")
+        return []
+
+    clean_actions: list[list[Action]] = []
+    for str_action_list in str_actions_lists:
+        clean_action_list = []
+        for str_action in str_action_list:
+            clean_action_list.append(Action.from_uci(str_action))
+
+        clean_actions.append(clean_action_list)
+
+    return clean_actions
 
 NULL_ACTION = Action()

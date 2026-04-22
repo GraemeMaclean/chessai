@@ -67,7 +67,7 @@ class ParsedFEN:
             num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
             num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS,
             search_targets: list[chessai.core.coordinate.Coordinate] | None = None,
-            options: typing.Any = None,
+            options: dict[str, typing.Any] | None = None,
             ) -> None:
         self.pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = pieces
         self.turn: chessai.core.types.Color = turn
@@ -82,7 +82,7 @@ class ParsedFEN:
             search_targets = []
 
         self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets
-        self.options: typing.Any = options
+        self.options: dict[str, typing.Any] | None = options
 
     def __eq__(self, other):
         if not isinstance(other, ParsedFEN):
@@ -100,7 +100,9 @@ class ParsedFEN:
             self.search_targets == other.search_targets
         )
 
-def parse(fen: str, search_targets: list[chessai.core.coordinate.Coordinate] | None = None, options: typing.Any = None) -> ParsedFEN:
+def parse(fen: str,
+          search_targets: list[chessai.core.coordinate.Coordinate] | None = None,
+          options: dict[str, typing.Any] | None = None) -> ParsedFEN:
     """
     Parse a FEN string into a ParsedFEN.
 

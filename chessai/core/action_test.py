@@ -276,3 +276,45 @@ class ActionTest(edq.testing.unittest.BaseTest):
         self.assertIsNone(action.promotion)
 
         self.assertEqual(chessai.core.action.Action(), chessai.core.action.NULL_ACTION)
+
+    def test_actions_list_from_dict(self):
+        """ Test getting a list of list of actions from a dict. """
+
+        # [(input, expected_output), ...]
+        test_cases: list[tuple[str, list[list[str]]]] = [
+            (
+                "[]",
+                [],
+            ),
+            (
+                "[[]]",
+                [[]],
+            ),
+            (
+                "[[\"a2a3\"]]",
+                [['a2a3']],
+            ),
+            (
+                "[[\"a2a3\",\"a3a4\"]]",
+                [['a2a3', 'a3a4']],
+            ),
+        ]
+
+        for (i, test_case) in enumerate(test_cases):
+            with self.subTest(msg=f"Case {i}:"):
+                (raw_input, raw_expected_actions) = test_case
+
+                expected: list[list[chessai.core.action.Action]] = []
+                for raw_expected_action_list in raw_expected_actions:
+                    clean_action_list = []
+                    for raw_expected_action in raw_expected_action_list:
+                        clean_action_list.append(chessai.core.action.Action.from_uci(raw_expected_action))
+
+                    expected.append(clean_action_list)
+
+                actions_input = {
+                    chessai.core.action.ACTION_KEY: raw_input,
+                }
+
+                actual = chessai.core.action.actions_list_from_dict(actions_input)
+                self.assertEqual(actual, expected)

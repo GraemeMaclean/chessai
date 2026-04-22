@@ -47,6 +47,7 @@ class Game(chessai.core.game.Game):
     def get_initial_state(self,
             rng: random.Random,
             fen: str | None = None) -> chessai.core.gamestate.GameState:
+        # Let the gamestate parse the FEN so we can look for search targets from a file.
         initial_state = chessai.tour.gamestate.GameState(fen = fen, search_targets = self.search_targets)
         if (len(self.search_targets) == 0):
             self.search_targets = initial_state.parsed_fen.search_targets

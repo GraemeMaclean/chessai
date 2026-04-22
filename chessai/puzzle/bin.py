@@ -10,7 +10,6 @@ import typing
 import chessai.core.agentinfo
 import chessai.core.board
 import chessai.core.types
-import chessai.puzzle.board
 import chessai.puzzle.game
 import chessai.puzzle.gamestate
 import chessai.util.bin
@@ -58,14 +57,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
         solver_color.opposite(): chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
     }
 
-    extra_kwargs: dict[str, typing.Any] = {}
-
-    # If move lines were given on the CLI, pass them through so board loading can pick them up.
-    # They are parsed here so CLI errors are caught early with a clear message.
-    if (args.move_lines is not None):
-        extra_kwargs[chessai.puzzle.board.MOVE_LINES_KEY] = chessai.puzzle.board.move_lines_from_string(args.move_lines)
-
-    return base_agent_infos, [], extra_kwargs
+    return base_agent_infos, [], {}
 
 # TODO(Lucas): Not a huge fan of this code, can we do better?
 def _detect_solver_color(args: argparse.Namespace) -> chessai.core.types.Color:
