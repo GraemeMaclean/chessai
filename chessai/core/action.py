@@ -98,7 +98,6 @@ def actions_list_from_dict(data: dict[str, typing.Any]) -> list[list[Action]]:
     try:
         str_actions_lists: list[list[str]] = json.loads(raw_actions)
     except Exception:
-        print(f"EXCEPTION on input: {raw_actions} of type {type(raw_actions)}")
         return []
 
     clean_actions: list[list[Action]] = []

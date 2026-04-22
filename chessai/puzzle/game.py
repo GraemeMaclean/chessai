@@ -64,14 +64,14 @@ class Game(chessai.core.game.Game):
             fen: str | None = None) -> chessai.core.gamestate.GameState:
         # Let the gamestate parse the FEN so we can look for move lines from a file.
         initial_state = chessai.puzzle.gamestate.GameState(fen = fen)
+
         if ((len(self.move_lines) == 0) and (initial_state.parsed_fen.options is not None)):
             raw_move_lines = {
                 chessai.core.action.ACTION_KEY: initial_state.parsed_fen.options.get('move_lines', None)
             }
+
             self.move_lines = chessai.core.action.actions_list_from_dict(raw_move_lines)
             self.start_move_lines = self.move_lines.copy()
-
-        print(self.move_lines)
 
         return initial_state
 
@@ -121,6 +121,7 @@ class Game(chessai.core.game.Game):
 
             # The agent failed to solve the puzzle, so the game is over.
             state.game_over = True
+            return state
 
         self._call_state_process_turn_full(state, action, rng)
 
