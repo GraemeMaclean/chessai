@@ -1,6 +1,6 @@
 {
     "class": "chessai.core.board.Board",
-    "search_targets": "63"
+    "search_targets": "h8"
 }
 ---
 8/8/8/8/8/8/8/N7 w KQkq - 0 1

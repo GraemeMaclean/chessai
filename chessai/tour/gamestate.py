@@ -39,6 +39,9 @@ class GameState(chessai.core.gamestate.GameState):
         if (search_targets is None):
             search_targets = []
 
+        if ((len(search_targets) == 0) and (len(self.parsed_fen.search_targets) > 0)):
+            search_targets = self.parsed_fen.search_targets
+
         # Convert the string case into the dict case.
         if (isinstance(search_targets, str)):
             search_targets = {

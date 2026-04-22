@@ -35,24 +35,25 @@ class GameState(edq.util.json.DictConverter):
             fen = DEFAULT_FEN
 
         # TODO(Lucas): Parse the board size from the FEN so we can give it to the board.
-        parsed_fen = chessai.core.fen.parse(fen)
+        self.parsed_fen: chessai.core.fen.ParsedFEN = chessai.core.fen.parse(fen)
+        """ The full information received from the augmented FEN. """
 
-        self.board: chessai.core.board.Board = chessai.core.board.Board(parsed_fen.pieces, parsed_fen.num_files, parsed_fen.num_ranks)
+        self.board: chessai.core.board.Board = chessai.core.board.Board(self.parsed_fen.pieces, self.parsed_fen.num_files, self.parsed_fen.num_ranks)
         """ The board responsible for holding the position of pieces. """
 
-        self.turn: chessai.core.types.Color = parsed_fen.turn
+        self.turn: chessai.core.types.Color = self.parsed_fen.turn
         """ The color of the current player. """
 
-        self.castling_rights: chessai.core.castling.CastlingRights = parsed_fen.castling_rights
+        self.castling_rights: chessai.core.castling.CastlingRights = self.parsed_fen.castling_rights
         """ The available castling moves. """
 
-        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = parsed_fen.en_passant_coordinate
+        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = self.parsed_fen.en_passant_coordinate
         """ The en-passant target coordinate, or None. """
 
-        self.halfmove_clock: int = parsed_fen.halfmove_clock
+        self.halfmove_clock: int = self.parsed_fen.halfmove_clock
         """ The number of plies since the last pawn move or capture (50-move rule). """
 
-        self.fullmove_number: int = parsed_fen.fullmove_number
+        self.fullmove_number: int = self.parsed_fen.fullmove_number
         """ Increments after every black move, starting at 1. """
 
         if (move_stack is None):

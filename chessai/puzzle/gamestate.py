@@ -1,6 +1,7 @@
 import random
 import typing
 
+import chessai.chess.piece
 import chessai.core.action
 import chessai.core.board
 import chessai.core.gamestate

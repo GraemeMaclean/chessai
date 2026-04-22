@@ -51,9 +51,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         try:
             opponent_actions = self._get_pseudo_legal_moves()
-            # print(self.get_fen())
             for action in opponent_actions:
-                # print(action.uci())
                 if (action.end_coordinate == king_coordinate):
                     return True
 

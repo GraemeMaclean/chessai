@@ -9,7 +9,7 @@ import chessai.tour.gamestate
 
 class Game(chessai.core.game.Game):
     """
-    A game following the standard rules of Pac-Man.
+    A tour game where the objective is to navigate a piece to the designated coordinates.
     """
 
     def __init__(self,
@@ -37,9 +37,12 @@ class Game(chessai.core.game.Game):
 
     def get_initial_state(self,
             rng: random.Random,
-            fen: str | None = None,
-            extra_info: dict[str, typing.Any] | None = None) -> chessai.core.gamestate.GameState:
-        return chessai.tour.gamestate.GameState(fen = fen, search_targets = self.search_targets)
+            fen: str | None = None) -> chessai.core.gamestate.GameState:
+        initial_state = chessai.tour.gamestate.GameState(fen = fen, search_targets = self.search_targets)
+        if (len(self.search_targets) == 0):
+            self.search_targets = initial_state.parsed_fen.search_targets
+
+        return initial_state
 
     def process_turn(self,
             state: chessai.core.gamestate.GameState,
