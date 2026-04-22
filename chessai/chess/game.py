@@ -1,4 +1,5 @@
 import random
+import typing
 
 import chessai.chess.gamestate
 import chessai.core.agentinfo
@@ -15,5 +16,6 @@ class Game(chessai.core.game.Game):
 
     def get_initial_state(self,
             rng: random.Random,
-            fen: str | None = None) -> chessai.core.gamestate.GameState:
+            fen: str | None = None,
+            extra_info: dict[str, typing.Any] | None = None) -> chessai.core.gamestate.GameState:
         return chessai.chess.gamestate.GameState(fen = fen)

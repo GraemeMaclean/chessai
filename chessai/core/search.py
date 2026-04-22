@@ -123,8 +123,9 @@ class SearchSolution(typing.Generic[NodeType]):
         May be None in cases where the solver does not use search nodes.
         """
 
-    # TODO(Lucas): May want to consider passing around gamestates instead of boards.
-    def get_path(self, state: chessai.core.gamestate.GameState, start_position: chessai.core.coordinate.Coordinate) -> list[chessai.core.coordinate.Coordinate]:
+    def get_path(self,
+                 state: chessai.core.gamestate.GameState,
+                 start_position: chessai.core.coordinate.Coordinate) -> list[chessai.core.coordinate.Coordinate]:
         """
         Given the starting location, get the path this search solution represents.
         The resulting path will start at the starting position.

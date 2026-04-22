@@ -287,7 +287,8 @@ class Game(abc.ABC):
     @abc.abstractmethod
     def get_initial_state(self,
             rng: random.Random,
-            fen: str | None = None) -> chessai.core.gamestate.GameState:
+            fen: str | None = None,
+            extra_info: dict[str, typing.Any] | None = None) -> chessai.core.gamestate.GameState:
         """ Create the initial state for this game. """
 
     def process_turn(self,

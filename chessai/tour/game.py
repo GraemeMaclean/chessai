@@ -17,7 +17,7 @@ class Game(chessai.core.game.Game):
             fen: str,
             save_path: str | None = None,
             is_replay: bool = False,
-                 search_targets: list[chessai.core.coordinate.Coordinate] | dict[str, typing.Any] | None = None) -> None:
+            search_targets: list[chessai.core.coordinate.Coordinate] | dict[str, typing.Any] | None = None) -> None:
         super().__init__(game_info, fen, save_path, is_replay)
 
         if (search_targets is None):
@@ -37,7 +37,8 @@ class Game(chessai.core.game.Game):
 
     def get_initial_state(self,
             rng: random.Random,
-            fen: str | None = None) -> chessai.core.gamestate.GameState:
+            fen: str | None = None,
+            extra_info: dict[str, typing.Any] | None = None) -> chessai.core.gamestate.GameState:
         return chessai.tour.gamestate.GameState(fen = fen, search_targets = self.search_targets)
 
     def process_turn(self,

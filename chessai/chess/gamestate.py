@@ -159,22 +159,83 @@ class GameState(chessai.core.gamestate.GameState):
 
         return False, None
 
-    def _is_special_stalemate(self) -> bool:
-        if (len(self.board.pieces.values()) != 2):
-            return False
+    def is_insufficient_material(self) -> bool:
+        return all(self._is_insufficient_material(color) for color in chessai.core.types.Color)
 
-        # Check if only kings remain.
-        stalemate_pieces = [
-            chessai.chess.piece.King(chessai.core.types.Color.WHITE),
-            chessai.chess.piece.King(chessai.core.types.Color.BLACK),
-        ]
+    def _is_insufficient_material(self, color: chessai.core.types.Color) -> bool:
+        """
+        Checks if the given color has insufficient winning material.
 
-        for piece in self.board.pieces.values():
-            if (piece not in stalemate_pieces):
+        This is guaranteed to return False if the color can still win the game.
+
+        The converse does not necessarily hold: only material is considered (including bishop square colors), not piece positions.
+        Fortress positions or forced lines may still return False even with no winning continuation.
+        """
+
+        own_pieces = {}
+        opponent_pieces = {}
+        for (coordinate, piece) in self.board.pieces.items():
+            if (piece.color == color):
+                own_pieces[coordinate] = piece
+            else:
+                opponent_pieces[coordinate] = piece
+
+        # Pawns, rooks, or queens are always sufficient material.
+        for piece in own_pieces.values():
+            if (isinstance(piece, (chessai.chess.piece.Pawn, chessai.chess.piece.Rook, chessai.chess.piece.Queen))):
                 return False
 
-            stalemate_pieces.remove(piece)
+        # Knights are only insufficient material if:
+        # (1) We do not have any other pieces, including more than one knight.
+        # (2) The opponent does not have pawns, knights, bishops or rooks.
+        #     These would allow selfmate.
+        own_knights = [piece for piece in own_pieces.values() if isinstance(piece, chessai.chess.piece.Knight)]
+        if (own_knights):
+            has_multiple_own_pieces = False
+            if (len(own_pieces) > 2):
+                has_multiple_own_pieces = True
 
+            opponent_has_mating_material = False
+            for piece in opponent_pieces.values():
+                if isinstance(piece, (chessai.chess.piece.Knight, chessai.chess.piece.Bishop, chessai.chess.piece.Rook, chessai.chess.piece.Pawn)):
+                    opponent_has_mating_material = True
+                    break
+
+            return ((not has_multiple_own_pieces) and (not opponent_has_mating_material))
+
+        # Bishops are only insufficient material if:
+        # (1) We do not have any other pieces, including bishops of the
+        #     opposite color.
+        # (2) The opponent does not have bishops of the opposite color,
+        #     pawns or knights. These would allow selfmate.
+        own_bishops = [(coordinate, piece) for (coordinate, piece) in own_pieces.items() if isinstance(piece, chessai.chess.piece.Bishop)]
+        if (own_bishops):
+            square_parities = set()
+            for (coordinate, _) in own_bishops:
+                square_parity = (coordinate.file + coordinate.rank) % 2
+                square_parities.add(square_parity)
+
+            same_color = False
+            if (len(square_parities) == 1):
+                same_color = True
+
+            opponent_has_mating_material = False
+            for piece in opponent_pieces.values():
+                if (isinstance(piece, (chessai.chess.piece.Pawn, chessai.chess.piece.Knight))):
+                    opponent_has_mating_material = True
+                    break
+
+            opponent_bishop_parities = set()
+            for (coordinate, piece) in opponent_pieces.items():
+                if (isinstance(piece, chessai.chess.piece.Bishop)):
+                    opponent_parity = (coordinate.file + coordinate.rank) % 2
+                    opponent_bishop_parities.add(opponent_parity)
+
+            opponent_has_opposite_bishops = bool(opponent_bishop_parities - square_parities)
+
+            return (same_color and (not opponent_has_mating_material) and (not opponent_has_opposite_bishops))
+
+        # King alone.
         return True
 
     def _handle_castling(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:

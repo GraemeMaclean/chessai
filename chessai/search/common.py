@@ -27,7 +27,7 @@ def longitudinal_cost_function(node: chessai.core.search.SearchNode, base: float
     """
 
     if (hasattr(node, 'position') and isinstance(getattr(node, 'position'), chessai.core.coordinate.Coordinate)):
-        return float(base ** getattr(node, 'position').col)
+        return float(base ** getattr(node, 'position').file)
 
     return unit_cost_function(node, **kwargs)
 

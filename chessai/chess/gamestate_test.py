@@ -166,13 +166,14 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_final_action(self):
         """ Test mate in 1 or stalemate in 1. """
 
-        # [(FEN, action, is_checkmate, is_stalemate), ...]
-        test_cases: list[tuple[str, chessai.core.action.Action, bool, bool]] = [
+        # [(FEN, action, is_checkmate, is_stalemate, is_insufficient_material), ...]
+        test_cases: list[tuple[str, chessai.core.action.Action, bool, bool, bool]] = [
             # En-passant capture into checkmate.
             (
                 '2R5/p6k/P7/1P3Pp1/3B4/6R1/3B2PP/6K1 w - g6 0 1',
                 chessai.core.action.Action.from_uci('f5g6'),
                 True,
+                False,
                 False,
             ),
 
@@ -182,6 +183,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('e1e8'),
                 True,
                 False,
+                False,
             ),
 
             # Castling into checkmate (kingside)
@@ -189,6 +191,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 '1nbqrkr1/p1ppp1pp/8/8/1b6/8/PPPPP1PP/RNBQK2R w KQ - 0 1',
                 chessai.core.action.Action.from_uci('e1g1'),
                 True,
+                False,
                 False,
             ),
 
@@ -198,6 +201,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('e1c1'),
                 True,
                 False,
+                False,
             ),
 
             # Double pawn push leading to checkmate
@@ -205,6 +209,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 'rnb2Nnr/ppppQppp/8/4pk2/8/5PP1/PPPPP2P/RNB1KB1R w KQ - 1 3',
                 chessai.core.action.Action.from_uci('e2e4'),
                 True,
+                False,
                 False,
             ),
 
@@ -214,6 +219,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('e2e4'),
                 True,
                 False,
+                False,
             ),
 
             # Knight move checkmate
@@ -221,6 +227,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 '5rkr/5ppp/8/3N4/8/8/5PRP/7K w - - 0 1',
                 chessai.core.action.Action.from_uci('d5f6'),
                 True,
+                False,
                 False,
             ),
 
@@ -230,6 +237,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('f1c4'),
                 True,
                 False,
+                False,
             ),
 
             # Queen move checkmate (Scholar's Mate)
@@ -237,6 +245,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
                 chessai.core.action.Action.from_uci('h5f7'),
                 True,
+                False,
                 False,
             ),
 
@@ -246,6 +255,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('c7c8Q'),
                 True,
                 False,
+                False,
             ),
 
             # Move into stalemate
@@ -254,6 +264,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('f3g3'),
                 False,
                 True,
+                False,
             ),
 
             # Capture leading to stalemate
@@ -262,6 +273,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('e6g6'),
                 False,
                 True,
+                False,
             ),
 
             # Promotion to queen causing stalemate
@@ -270,6 +282,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('g7g8Q'),
                 False,
                 True,
+                False,
             ),
 
             # Checkmate by moving bishop
@@ -277,6 +290,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 '2r2k2/8/8/b2b4/5n2/8/8/3K4 b - - 0 1',
                 chessai.core.action.Action.from_uci('d5b3'),
                 True,
+                False,
                 False,
             ),
 
@@ -286,6 +300,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('e7e8N'),
                 True,
                 False,
+                False,
             ),
 
             # Capture and promote to queen for checkmate
@@ -293,6 +308,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 '6k1/5ppp/8/8/8/8/2p2PPP/1N4K1 b - - 0 1',
                 chessai.core.action.Action.from_uci('c2b1q'),
                 True,
+                False,
                 False,
             ),
 
@@ -302,6 +318,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('e8f8'),
                 False,
                 True,
+                False,
             ),
 
             # Smothered mate with knight
@@ -309,6 +326,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 '6rk/4N1pn/8/8/8/8/8/5K1R w - - 0 1',
                 chessai.core.action.Action.from_uci('e7g6'),
                 True,
+                False,
                 False,
             ),
 
@@ -318,6 +336,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('c6c7'),
                 False,
                 True,
+                False,
             ),
 
             # Two rooks checkmate (ladder mate)
@@ -325,6 +344,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 '6k1/8/6K1/8/8/8/7R/7R w - - 0 1',
                 chessai.core.action.Action.from_uci('h2h8'),
                 True,
+                False,
                 False,
             ),
 
@@ -334,12 +354,32 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 chessai.core.action.Action.from_uci('f7f8'),
                 True,
                 False,
+                False,
             ),
 
-            # King only stalemate
+            # King only insufficient material
             (
                 '4k3/3Q4/8/8/8/8/8/4K3 b - - 0 1',
                 chessai.core.action.Action.from_uci('e8d7'),
+                False,
+                False,
+                True,
+            ),
+
+            # Insufficient material, king and bishop
+            (
+                '8/8/6p1/8/4B3/8/k7/2K5 w - - 0 1',
+                chessai.core.action.Action.from_uci('e4g6'),
+                False,
+                False,
+                True,
+            ),
+
+            # Insufficient material, king and knight
+            (
+                '8/8/5p2/8/4N3/8/k7/2K5 w - - 0 1',
+                chessai.core.action.Action.from_uci('e4f6'),
+                False,
                 False,
                 True,
             ),
@@ -347,17 +387,18 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         for (i, test_case) in enumerate(test_cases):
             with self.subTest(msg = f"Case {i}:"):
-                (start_fen, action, checkmate, stalemate) = test_case
+                (start_fen, action, checkmate, stalemate, material) = test_case
 
                 state = chessai.chess.gamestate.GameState(fen = start_fen)
 
                 # Check that it is not a checkmate or stalemate before the move.
-                self.assertEqual(state.is_checkmate(), False)
-                self.assertEqual(state.is_stalemate(), False)
+                self.assertFalse(state.is_checkmate())
+                self.assertFalse(state.is_stalemate())
+                self.assertFalse(state.is_insufficient_material())
 
                 state.process_turn(action)
-                print(state.get_fen())
 
                 # Check that it is a checkmate or stalemate after the move.
                 self.assertEqual(state.is_checkmate(), checkmate)
                 self.assertEqual(state.is_stalemate(), stalemate)
+                self.assertEqual(state.is_insufficient_material(), material)

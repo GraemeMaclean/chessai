@@ -6,9 +6,9 @@ import chessai.core.search
 import chessai.core.coordinate
 import chessai.core.types
 import chessai.search.common
+import chessai.tour.gamestate
 import chessai.util.alias
 
-# TODO(Lucas): We will likely need to swap everything over to gamestates.
 class PositionSearchNode(chessai.core.search.SearchNode):
     """
     A search node for the position search problem.
@@ -16,12 +16,12 @@ class PositionSearchNode(chessai.core.search.SearchNode):
     it is just the current position being searched.
     """
 
-    def __init__(self, position: chessai.core.coordinate.Coordinate, board: chessai.core.board.Board) -> None:
+    def __init__(self, position: chessai.core.coordinate.Coordinate, state: chessai.core.gamestate.GameState) -> None:
         self.position: chessai.core.coordinate.Coordinate = position
         """ The current position being searched. """
 
-        self.board: chessai.core.board.Board = board
-        """ The snapshot of the board at this search node. """
+        self.state: chessai.core.gamestate.GameState = state
+        """ The gamestate of the search node. """
 
     def __lt__(self, other: object) -> bool:
         if (not isinstance(other, PositionSearchNode)):
@@ -62,23 +62,22 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
 
         super().__init__()
 
-        self.board: chessai.core.board.Board = game_state.board
-        """ Keep track of the board so we can navigate. """
+        self.state: chessai.tour.gamestate.GameState = typing.cast(chessai.tour.gamestate.GameState, game_state)
+        """ Keep track of the gamestate so we can navigate. """
 
         if (goal_positions is None):
-            if (len(self.board.search_targets) == 0):
+            if (len(self.state.search_targets) == 0):
                 raise ValueError("Cannot create a position search problem without at least one goal position.")
 
-            goal_positions = self.board.search_targets
+            goal_positions = self.state.search_targets
 
         self.goal_positions: list[chessai.core.coordinate.Coordinate] = goal_positions
         """ The positions to search for. """
 
         if (start_position is None):
-            for piece_type in chessai.core.types.PieceType:
-                positions = game_state.get_pieces(piece_type, chessai.core.types.Color.WHITE)
-                if (len(positions) > 0):
-                    start_position = positions[0]
+            if (len(self.state.board.pieces) > 0):
+                for coordinate in self.state.board.pieces.keys():
+                    start_position = coordinate
                     break
 
         if (start_position is None):
@@ -87,7 +86,7 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
         self.start_position: chessai.core.coordinate.Coordinate = start_position
         """ The position to start from. """
 
-        self.start_board: chessai.core.board.Board = self.board.copy()
+        self.start_state: chessai.core.gamestate.GameState = self.state.copy()
         """ The board the problem started from. """
 
         if (isinstance(cost_function, str)):
@@ -97,11 +96,10 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
         """ The function used to score search nodes. """
 
     def get_starting_node(self) -> PositionSearchNode:
-        return PositionSearchNode(self.start_position, self.start_board)
+        return PositionSearchNode(self.start_position, self.start_state)
 
     def is_goal_node(self, node: PositionSearchNode) -> bool:
         return (node.position in self.goal_positions)
-        # return (self.goal_position == node.position)
 
     def complete(self, goal_node: PositionSearchNode) -> None:
         # Mark the final node in the history.
@@ -111,14 +109,14 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
         successors = []
 
         # Check all the neighbors.
-        for (action, position) in node.board.get_neighbors(node.position):
-            next_board = node.board.copy()
-            next_board._push(action)
+        for (action, position) in node.state.get_neighbors(node.position):
+            next_state = node.state.copy()
+            next_state.push(action)
 
             # Push a null move for black.
-            next_board._push(chessai.core.action.Action())
+            next_state.push(chessai.core.action.Action())
 
-            next_node = PositionSearchNode(position, next_board)
+            next_node = PositionSearchNode(position, next_state)
             cost = self._cost_function(next_node)
 
             successors.append(chessai.core.search.SuccessorInfo(next_node, action, cost))

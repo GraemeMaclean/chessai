@@ -3,7 +3,7 @@
     "arguments": [
         "--seed", "4",
         "--max-moves", "100",
-        "--white", "agent-minimax",
+        "--white-team", "agent-minimax",
         "--agent-arg", "white::expectimax=true",
         "--agent-arg", "white::state_eval_func=state-eval-minimax-better",
         "--debug"

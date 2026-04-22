@@ -23,7 +23,8 @@ class Game(chessai.core.game.Game):
 
     def get_initial_state(self,
             rng: random.Random,
-            fen: str | None = None) -> chessai.core.gamestate.GameState:
+            fen: str | None = None,
+            extra_info: dict[str, typing.Any] | None = None) -> chessai.core.gamestate.GameState:
         return chessai.puzzle.gamestate.GameState(fen = fen)
 
     def process_turn(self,
