@@ -424,19 +424,6 @@ class GameState(edq.util.json.DictConverter):
         self.process_turn(action, rng, **kwargs)
         return
 
-    # TODO(Lucas)
-    def to_pgn(self) -> str:
-        """Serialize the gamestate to a PGN string."""
-
-        pass
-
-    # TODO(Lucas)
-    @classmethod
-    def from_pgn(cls, pgn_string: str) -> 'GameState':
-        """ Reconstruct a Board from a PGN string, restoring the full move history. """
-
-        pass
-
     def to_dict(self) -> dict[str, typing.Any]:
         return {
             'fen':         self.get_fen(),
