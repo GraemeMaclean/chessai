@@ -92,9 +92,9 @@ class Action(edq.util.json.DictConverter):
         self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
         other_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
 
-        return (self_tuple < other_tuple)
+        return (self.uci() < other.uci())
 
-    def __lt__(self, other: object) -> bool:
+    def __eq__(self, other: object) -> bool:
         if (not isinstance(other, Action)):
             return False
 

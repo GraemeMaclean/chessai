@@ -108,10 +108,10 @@ class GameState(edq.util.json.DictConverter):
         """ Return the list of legal actions for the current player. """
 
         # Check if we have previously calculated the legal actions for this gamestate.
+        # partial_fen = self.get_fen(partial = True)
         partial_fen = self.get_fen(partial = True)
         precomputed_legal_actions = _KNOWN_LEGAL_ACTIONS.get(partial_fen, None)
         if (precomputed_legal_actions is not None):
-            # print(f"Getting the legal actions for the gamestate with key '{partial_fen}'.")
             return precomputed_legal_actions
 
         legal_actions: list[chessai.core.action.Action] = []
@@ -138,13 +138,9 @@ class GameState(edq.util.json.DictConverter):
                 legal_actions.append(action)
 
         # Sort the legal actions for consistency.
-        print(f"Before: '{legal_actions}'.")
         legal_actions.sort()
-        print(f"After: '{legal_actions}'.")
 
         # Cache the legal actions.
-        # print("---")
-        # print(f"Writing the legal actions '{partial_fen}' and full fen '{self.get_fen()}'.")
         _KNOWN_LEGAL_ACTIONS[partial_fen] = legal_actions
 
         return legal_actions

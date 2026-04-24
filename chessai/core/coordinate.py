@@ -9,7 +9,7 @@ COORDINATE_PATTERN: re.Pattern = re.compile(r'([a-z]+)(\d+)')
 
 class Coordinate(edq.util.json.DictConverter):
     """
-    An immutable chess coordinate on an 8x8 board.
+    An immutable chess coordinate on a board.
 
     File increases left-to-right (a=0, h=7).
     Rank increases bottom-to-top (1=0, 8=7).
