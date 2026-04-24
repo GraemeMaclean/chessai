@@ -90,16 +90,16 @@ class Action(edq.util.json.DictConverter):
             raise ValueError(f"Cannot compare an action with an object of type '{type(other)}'.")
 
         self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
-        other_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
+        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion)
 
-        return (self.uci() < other.uci())
+        return (self_tuple < other_tuple)
 
     def __eq__(self, other: object) -> bool:
         if (not isinstance(other, Action)):
             return False
 
         self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
-        other_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
+        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion)
 
         return (self_tuple == other_tuple)
 

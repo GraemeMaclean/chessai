@@ -108,7 +108,6 @@ class GameState(edq.util.json.DictConverter):
         """ Return the list of legal actions for the current player. """
 
         # Check if we have previously calculated the legal actions for this gamestate.
-        # partial_fen = self.get_fen(partial = True)
         partial_fen = self.get_fen(partial = True)
         precomputed_legal_actions = _KNOWN_LEGAL_ACTIONS.get(partial_fen, None)
         if (precomputed_legal_actions is not None):

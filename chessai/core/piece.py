@@ -67,7 +67,7 @@ class Piece(edq.util.json.DictConverter):
         return ''
 
     def __lt__(self, other: object) -> bool:
-        if (not isinstance(other, 'Piece')):
+        if (not isinstance(other, Piece)):
             raise ValueError(f"Cannot compare a piece with an object of type '{type(other)}'.")
 
         return (self.symbol() < other.symbol())
