@@ -15,6 +15,8 @@ import chessai.core.types
 
 DEFAULT_FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
+_KNOWN_LEGAL_ACTIONS: dict[str, list[chessai.core.action.Action]] = {}
+
 class GameState(edq.util.json.DictConverter):
     """
     The base for all game states in chessai.
@@ -74,7 +76,7 @@ class GameState(edq.util.json.DictConverter):
         self.game_over: bool = game_over
         """ Indicates that this state represents a complete game. """
 
-    def get_fen(self) -> str:
+    def get_fen(self, partial: bool = False) -> str:
         """
         Serialize the current gamestate to a FEN string.
 
@@ -90,6 +92,7 @@ class GameState(edq.util.json.DictConverter):
             fullmove_number   = self.fullmove_number,
             num_files         = self.board.num_files,
             num_ranks         = self.board.num_ranks,
+            partial           = partial,
         )
 
     # -----------------------------------------------
@@ -104,6 +107,13 @@ class GameState(edq.util.json.DictConverter):
     def get_legal_actions(self) -> list[chessai.core.action.Action]:
         """ Return the list of legal actions for the current player. """
 
+        # Check if we have previously calculated the legal actions for this gamestate.
+        partial_fen = self.get_fen(partial = True)
+        precomputed_legal_actions = _KNOWN_LEGAL_ACTIONS.get(partial_fen, None)
+        if (precomputed_legal_actions is not None):
+            # print(f"Getting the legal actions for the gamestate with key '{partial_fen}'.")
+            return precomputed_legal_actions
+
         legal_actions: list[chessai.core.action.Action] = []
         pseudo_legal_moves = self._get_pseudo_legal_moves()
 
@@ -117,8 +127,8 @@ class GameState(edq.util.json.DictConverter):
             successor: 'GameState' = self.copy()
 
             # Apply the move to the test state.
+            _, successor.en_passant_coordinate = successor._process_special_move(action, piece)
             successor.board.push(action)
-            successor._process_special_move(action, piece)
 
             # Advance the turn for checking for check.
             successor.turn = self.turn.opposite()
@@ -126,6 +136,16 @@ class GameState(edq.util.json.DictConverter):
             # Check if this move leaves our king in check (making it illegal).
             if (not successor.is_check(self.turn)):
                 legal_actions.append(action)
+
+        # Sort the legal actions for consistency.
+        print(f"Before: '{legal_actions}'.")
+        legal_actions.sort()
+        print(f"After: '{legal_actions}'.")
+
+        # Cache the legal actions.
+        # print("---")
+        # print(f"Writing the legal actions '{partial_fen}' and full fen '{self.get_fen()}'.")
+        _KNOWN_LEGAL_ACTIONS[partial_fen] = legal_actions
 
         return legal_actions
 
@@ -147,6 +167,9 @@ class GameState(edq.util.json.DictConverter):
                 continue
 
             neighbors.append((action, action.end_coordinate))
+
+        # Sort the neighbors for consistenct.
+        neighbors.sort()
 
         return neighbors
 
@@ -300,6 +323,9 @@ class GameState(edq.util.json.DictConverter):
 
                     if (num_repetitions != -1):
                         num_repetitions -= 1
+
+        # Sort the movement vectors for consistency.
+        actions.sort()
 
         return actions
 

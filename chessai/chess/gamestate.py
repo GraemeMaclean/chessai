@@ -75,6 +75,9 @@ class GameState(chessai.core.gamestate.GameState):
         # Add any en-passant captures.
         actions.extend(self._get_en_passant_captures())
 
+        # Sort the actions for consistency.
+        actions.sort()
+
         return actions
 
     # # TODO(Lucas): Debatably move this to piece functionality.
@@ -132,6 +135,9 @@ class GameState(chessai.core.gamestate.GameState):
 
                     if (num_repetitions != -1):
                         num_repetitions -= 1
+
+        # Sort the actions for consistency.
+        actions.sort()
 
         return actions
 

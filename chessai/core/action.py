@@ -85,6 +85,24 @@ class Action(edq.util.json.DictConverter):
 
         return cls(start_coordinate, end_coordinate, promotion)
 
+    def __lt__(self, other: object) -> bool:
+        if (not isinstance(other, Action)):
+            raise ValueError(f"Cannot compare an action with an object of type '{type(other)}'.")
+
+        self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
+        other_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
+
+        return (self_tuple < other_tuple)
+
+    def __lt__(self, other: object) -> bool:
+        if (not isinstance(other, Action)):
+            return False
+
+        self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
+        other_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
+
+        return (self_tuple == other_tuple)
+
 def actions_list_from_dict(data: dict[str, typing.Any]) -> list[list[Action]]:
     """
     Get a list of a list of actions from a dictionary.

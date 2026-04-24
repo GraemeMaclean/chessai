@@ -158,21 +158,39 @@ def serialize(
         fullmove_number: int,
         num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
         num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS,
+        partial: bool = False,
         ) -> str:
     """
     Serialize game state fields back into a FEN string.
 
-    For standard 8x8 boards the dimensions field is omitted, producing a
-    spec-compliant FEN string. For non-standard board sizes the chessai
-    dimensions extension is appended.
+    For standard 8x8 boards the dimensions field is omitted,
+    producing a spec-compliant FEN string.
+    For non-standard board sizes the chessai dimensions extension is prepended.
+
+    Partial serializations exclude the clock and move number.
     """
 
     piece_field    = _serialize_pieces(pieces, num_files, num_ranks)
-    turn_field     = 'w' if (turn == chessai.core.types.Color.WHITE) else 'b'
-    castling_field = castling_rights.to_fen_string()
-    ep_field       = en_passant_coordinate.uci() if (en_passant_coordinate is not None) else '-'
+    if (piece_field is None):
+        raise ValueError("Found a None piece field.")
 
-    fen = f"{piece_field} {turn_field} {castling_field} {ep_field} {halfmove_clock} {fullmove_number}"
+    if (turn == chessai.core.types.Color.WHITE):
+        turn_field = 'w'
+    else:
+        turn_field = 'b'
+    if (turn_field is None):
+        raise ValueError("Found a None turn field.")
+
+    castling_field = castling_rights.to_fen_string()
+    if (castling_field is None):
+        raise ValueError("Found a None castling field.")
+
+    if (en_passant_coordinate is not None):
+        ep_field = en_passant_coordinate.uci()
+    else:
+        ep_field = '-'
+    if (ep_field is None):
+        raise ValueError("Found a None ep field.")
 
     is_standard_size = (
         (num_files == chessai.core.board.DEFAULT_BOARD_FILES)
@@ -180,7 +198,24 @@ def serialize(
     )
 
     if (not is_standard_size):
-        fen = f"#{num_files}x{num_ranks} {fen}"
+        board_field = f"#{num_files}x{num_ranks} "
+    else:
+        board_field = ''
+    if (board_field is None):
+        raise ValueError("Found a None board field.")
+
+    if (halfmove_clock is None):
+        raise ValueError("Found a None halfmove clock.")
+
+    if (fullmove_number is None):
+        raise ValueError("Found a None fullmove number.")
+
+    if (not partial):
+        # Produce a standard FEN.
+        fen = f"{board_field}{piece_field} {turn_field} {castling_field} {ep_field} {halfmove_clock} {fullmove_number}"
+    else:
+        # Produce an augmented FEN useful for comparing pseudo-unique gamestates.
+        fen = f"{piece_field} {turn_field} {castling_field} {ep_field}"
 
     return fen
 
