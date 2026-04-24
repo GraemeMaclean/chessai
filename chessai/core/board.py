@@ -123,7 +123,7 @@ class Board(edq.util.json.DictConverter):
 
         self.pieces[coordinate] = piece
 
-    def _is_within_bounds(self, coordinate) -> bool:
+    def _is_within_bounds(self, coordinate: chessai.core.coordinate.Coordinate) -> bool:
         """ Checks whether a coordinate is within the bounds of the board. """
 
         if ((coordinate.file < 0) or (coordinate.file >= self.num_files)):

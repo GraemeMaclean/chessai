@@ -148,7 +148,7 @@ class Pawn(chessai.core.piece.Piece):
         ]
 
 # Register pieces whenever imported.
-def _register_pieces():
+def _register_pieces() -> None:
     """Register all chess piece types with the core registry."""
     chessai.core.piece.register_piece('K', King)
     chessai.core.piece.register_piece('k', King)

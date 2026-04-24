@@ -15,6 +15,8 @@ class Coordinate(edq.util.json.DictConverter):
     Rank increases bottom-to-top (1=0, 8=7).
     """
 
+    MAX_SIZE: int = 1000000
+
     def __init__(self,
                  file: int,
                  rank: int) -> None:
@@ -25,6 +27,11 @@ class Coordinate(edq.util.json.DictConverter):
 
         self.rank: int = rank
         """ The rank of the coordinate. """
+
+        self._hash: int = (file * Coordinate.MAX_SIZE) + rank
+        """ 
+        This hash value is accurate as long as the board dimensions are under one million.
+        """
 
     @classmethod
     def from_uci(cls, uci: str) -> 'Coordinate':
@@ -104,6 +111,24 @@ class Coordinate(edq.util.json.DictConverter):
 
         return self.file_distance(other) + self.rank_distance(other)
 
+    def __lt__(self, other: 'Coordinate') -> bool:  # type: ignore[override]
+        return (self._hash < other._hash)
+
+    def __eq__(self, other: object) -> bool:
+        if (not isinstance(other, Coordinate)):
+            return False
+
+        return (self._hash == other._hash)
+
+    def __hash__(self) -> int:
+        return self._hash
+
+    def __str__(self) -> str:
+        return f"({self.file}, {self.rank})"
+
+    def __repr__(self) -> str:
+        return str(self)
+
     def to_dict(self) -> dict[str, typing.Any]:
         return {
             'file': self.file,
@@ -112,7 +137,7 @@ class Coordinate(edq.util.json.DictConverter):
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> 'Coordinate':
-        return cls(data['file'], data['rank'])
+        return Coordinate(file = data['file'], rank = data['rank'])
 
 def coordinates_from_dict(data: dict[str, typing.Any]) -> list[Coordinate]:
     """

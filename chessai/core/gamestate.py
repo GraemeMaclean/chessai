@@ -167,7 +167,7 @@ class GameState(edq.util.json.DictConverter):
         legal_actions = self.get_legal_actions()
         return ((len(legal_actions) == 0) and (not self.is_check(self.turn)))
 
-    def is_insufficient_material(self):
+    def is_insufficient_material(self) -> bool:
         """ Processes if there is insufficient material to get a checkmate for all colors. """
 
         return False
@@ -327,6 +327,7 @@ class GameState(edq.util.json.DictConverter):
 
         new_state.castling_rights = self.castling_rights.copy()
         new_state.move_stack      = list(self.move_stack)
+        new_state.board_stack     = list(self.board_stack)
         new_state.board           = self.board.copy()
 
         return new_state

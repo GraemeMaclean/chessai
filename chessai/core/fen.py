@@ -84,7 +84,7 @@ class ParsedFEN:
         self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets
         self.options: dict[str, typing.Any] | None = options
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, ParsedFEN):
             raise ValueError(f"Cannot compare equality of a ParsedFEN with an object of another type: '{type(other)}'.")
 
@@ -331,6 +331,7 @@ def _serialize_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chessai.c
         # FEN rank 8 comes first, so we descend from rank 7 to rank 0.
         rank = (num_ranks - 1) - rank_index
         empty_count = 0
+        # TODO(Lucas): Look into making the rank_str into a list and join at the end.
         rank_str = ''
 
         for file in range(num_files):
