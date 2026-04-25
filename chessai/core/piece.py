@@ -9,13 +9,13 @@ import chessai.core.types
 class MoveKind(enum.Enum):
     """ An enum to encode the types of movement. """
 
-    NORMAL  = enum.auto()
+    NORMAL  = 'Normal'
     """ Standard move, capable of capture and movement. """
 
-    CAPTURE = enum.auto()
+    CAPTURE = 'Capture'
     """ Movement that can only be done if it captures a piece. """
 
-    PUSH    = enum.auto()
+    PUSH    = 'Push'
     """ Movement that can only be used to move, not capture. """
 
 @dataclasses.dataclass(frozen = True)

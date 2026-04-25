@@ -8,8 +8,8 @@
     ]
 }
 ---
-<LOG_PREFIX> -- Average Score: 290.00
-<LOG_PREFIX> -- Scores:        290
+<LOG_PREFIX> -- Average Score: 332.00
+<LOG_PREFIX> -- Scores:        332
 <LOG_PREFIX> -- Record:        Win
-<LOG_PREFIX> -- Average Moves: 439.0
-<LOG_PREFIX> -- Move Counts:   439
+<LOG_PREFIX> -- Average Moves: 355.0
+<LOG_PREFIX> -- Move Counts:   355

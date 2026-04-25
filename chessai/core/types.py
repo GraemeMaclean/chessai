@@ -1,6 +1,6 @@
 import enum
 
-class Color(int, enum.Enum):
+class Color(enum.IntEnum):
     """ An enum representing the side to move or the color of a piece. """
     BLACK = 0
     WHITE = 1

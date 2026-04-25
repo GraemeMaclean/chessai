@@ -5,7 +5,7 @@
     ]
 }
 ---
-<LOG_PREFIX> -- Incorrect action for agent 'white': 'c2c3' of type '<class 'chessai.core.action.Action'>'.
+<LOG_PREFIX> -- Incorrect action for agent 'white': 'f7f2' of type '<class 'chessai.core.action.Action'>'.
 <LOG_PREFIX> -- Average Score: 0.00
 <LOG_PREFIX> -- Scores:        0.0
 <LOG_PREFIX> -- Record:        Loss

@@ -9,8 +9,8 @@
     ]
 }
 ---
-<LOG_PREFIX> -- Average Score: 0.50
-<LOG_PREFIX> -- Scores:        0.5, 0.5
-<LOG_PREFIX> -- Record:        Tie, Tie
-<LOG_PREFIX> -- Average Moves: 191.0
-<LOG_PREFIX> -- Move Counts:   182, 200
+<LOG_PREFIX> -- Average Score: 0.25
+<LOG_PREFIX> -- Scores:        0.5, 0.0
+<LOG_PREFIX> -- Record:        Tie, Loss
+<LOG_PREFIX> -- Average Moves: 189.0
+<LOG_PREFIX> -- Move Counts:   200, 178
