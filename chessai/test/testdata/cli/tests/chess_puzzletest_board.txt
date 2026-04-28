@@ -1,7 +1,8 @@
 {
     "cli": "chessai.puzzle.bin",
     "arguments": [
-        "--seed", "0",
+        "--agent", "agent-multi-scripted",
+        "--agent-arg", "white::move_lines=[[\"g4f3\"]]",
         "--board", "puzzle-skewer"
     ]
 }
