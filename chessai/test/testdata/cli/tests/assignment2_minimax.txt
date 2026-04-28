@@ -4,6 +4,7 @@
         "--seed", "4",
         "--max-moves", "100",
         "--white-team", "agent-minimax",
+        "--black-team", "agent-minimax",
     ]
 }
 ---

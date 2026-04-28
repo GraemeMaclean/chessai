@@ -1,10 +1,10 @@
 {
     "cli": "chessai.chess.bin",
     "arguments": [
-        "--seed", "8",
+        "--seed", "1",
         "--max-moves", "100",
-        "--white-team", "agent-aggressive",
-        "--black-team", "agent-random"
+        "--white-team", "agent-value",
+        "--black-team", "agent-value"
     ]
 }
 ---
