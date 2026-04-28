@@ -104,6 +104,14 @@ class GameState(edq.util.json.DictConverter):
 
         return len(self.move_stack)
 
+    def get_previous_action(self) -> chessai.core.action.Action | None:
+        """ Returns the most recent move taken. """
+
+        if (len(self.move_stack) == 0):
+            return None
+
+        return self.move_stack[-1]
+
     def get_legal_actions(self) -> list[chessai.core.action.Action]:
         """ Return the list of legal actions for the current player. """
 

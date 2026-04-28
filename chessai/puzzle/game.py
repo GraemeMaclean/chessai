@@ -1,11 +1,9 @@
 import argparse
-# import json
 import logging
 import random
 import typing
 
-# import edq.util.json
-
+import chessai.agents.multiscripted
 import chessai.core.agentinfo
 import chessai.core.board
 import chessai.core.game
@@ -17,7 +15,7 @@ class Game(chessai.core.game.Game):
     A game following the rules of a chess puzzle.
 
     The agent wins by completing any one of the board's valid move lines.
-    The opposing side is played by a dummy agent that follows a scripted continuation.
+    The opposing side is played by a multi scripted agent that follows a scripted continuation.
 
     The game ends as soon as:
       - The agent plays a move that satisfies the final step of a move line (puzzle solved).
@@ -51,6 +49,19 @@ class Game(chessai.core.game.Game):
         """ The starting move lines of the puzzle, which will remain static throughout the game. """
 
     def process_args(self, args: argparse.Namespace) -> None:
+        # Let the gamestate parse the FEN and determine the puzzle agent.
+        initial_state = chessai.puzzle.gamestate.GameState(fen = args.board)
+
+        # If the game does not have move lines, use the move lines found in the file.
+        if (initial_state.parsed_fen.options is not None):
+            raw_move_lines = {
+                chessai.core.action.ACTION_KEY: initial_state.parsed_fen.options.get('move_lines', None)
+            }
+
+            self.move_lines = chessai.core.action.actions_list_from_dict(raw_move_lines)
+            self.start_move_lines = self.move_lines.copy()
+
+        # Override the move lines from the file if there are move lines from the CLI.
         if (args.move_lines is not None):
             move_lines = {
                 chessai.core.action.ACTION_KEY: args.move_lines
@@ -59,21 +70,13 @@ class Game(chessai.core.game.Game):
             self.move_lines = chessai.core.action.actions_list_from_dict(move_lines)
             self.start_move_lines = self.move_lines.copy()
 
+        # Override the dummy player with a scripted agent that follows the move lines.
+        self.game_info.agent_infos[initial_state.dummy_player].extra_arguments['move_lines'] = self.start_move_lines.copy()
+
     def get_initial_state(self,
             rng: random.Random,
             fen: str | None = None) -> chessai.core.gamestate.GameState:
-        # Let the gamestate parse the FEN so we can look for move lines from a file.
-        initial_state = chessai.puzzle.gamestate.GameState(fen = fen)
-
-        if ((len(self.move_lines) == 0) and (initial_state.parsed_fen.options is not None)):
-            raw_move_lines = {
-                chessai.core.action.ACTION_KEY: initial_state.parsed_fen.options.get('move_lines', None)
-            }
-
-            self.move_lines = chessai.core.action.actions_list_from_dict(raw_move_lines)
-            self.start_move_lines = self.move_lines.copy()
-
-        return initial_state
+        return chessai.puzzle.gamestate.GameState(fen = fen)
 
     def process_turn(self,
             state: chessai.core.gamestate.GameState,
@@ -101,9 +104,6 @@ class Game(chessai.core.game.Game):
             return state
 
         action = action_record.get_action()
-
-        if (state.turn == state.dummy_player):
-            action = self._override_dummy_move(state, rng)
 
         if (action not in state.get_legal_actions()):
             raise ValueError(
@@ -138,34 +138,16 @@ class Game(chessai.core.game.Game):
 
         return (len(self.move_lines) == 0)
 
-    def _override_dummy_move(self, state: chessai.puzzle.gamestate.GameState, rng: random.Random) -> chessai.core.action.Action:
-        """ Override the dummy player's move by selecting a continuation from one of the move lines. """
-
-        if (state.turn != state.dummy_player):
-            raise ValueError(f"Non dummy player's cannot override a dummy move: '{state.turn}'.")
-
-        possible_moves = self._next_puzzle_moves()
-        if (len(possible_moves) == 0):
-            raise ValueError('Unable to find a valid continuation of the puzzle for the dummy agent.')
-
-        chosen_move_list = rng.sample(possible_moves, 1)
-        chosen_move = chosen_move_list[0]
-        if (chosen_move not in state.get_legal_actions()):
-            raise ValueError(f"Puzzle has a dummy move that is invalid: '{state.turn}', '{chosen_move.uci()}', '{state.get_fen()}'.")
-
-        return chosen_move
-
     def _next_puzzle_moves(self) -> list[chessai.core.action.Action]:
-        """ Get the list of possible next moves in the puzzle. """
+        """ Get the list of possible next moves from the puzzle's move lines. """
 
-        puzzle_moves = []
+        move_options = []
 
-        move_lines = self.move_lines
-        for move_line in move_lines:
+        for move_line in self.move_lines:
             if (len(move_line) > 0):
-                puzzle_moves.append(move_line[0])
+                move_options.append(move_line[0])
 
-        return puzzle_moves
+        return move_options
 
     def _update_move_lines(self, state: chessai.puzzle.gamestate.GameState, action: chessai.core.action.Action) -> bool:
         """

@@ -4,13 +4,11 @@ import chessai.core.action
 import chessai.core.agent
 import chessai.core.gamestate
 
-ACTION_DELIM: str = ','
-
 class ScriptedAgent(chessai.core.agent.Agent):
     """
     An agent that has a specific set of actions that they will do in order.
     Once the actions are exhausted, they will just stop.
-    This agent will take a scripted action even if it is illegal.
+    This agent will try to take a scripted action even if it is illegal.
 
     This agent is particularly useful for things like replays.
     """

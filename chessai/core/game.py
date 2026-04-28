@@ -646,7 +646,6 @@ def init_from_args(
 
     return args
 
-# TODO(Lucas): Should be able to simplify the following for two agents.
 def _parse_agent_infos(
         agent_teams: list[chessai.core.types.Color],
         raw_args: list[str],

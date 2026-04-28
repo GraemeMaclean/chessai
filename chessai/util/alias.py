@@ -66,6 +66,7 @@ AGENT_AGGRESSIVE: Alias = Alias('agent-aggressive', 'chessai.agents.aggressive.A
 AGENT_DUMMY: Alias = Alias('agent-dummy', 'chessai.agents.dummy.DummyAgent')
 AGENT_GREEDY: Alias = Alias('agent-greedy', 'chessai.agents.greedy.GreedyAgent')
 AGENT_MINIMAX: Alias = Alias('agent-minimax', 'chessai.student.multiagents.MyMinimaxLikeAgent')
+AGENT_MULTI_SCRIPTED: Alias = Alias('agent-multi-scripted', 'chessai.agents.multiscripted.MultiScriptedAgent')
 AGENT_RANDOM: Alias = Alias('agent-random', 'chessai.agents.random.RandomAgent')
 AGENT_REFLEX: Alias = Alias('agent-reflex', 'chessai.student.multiagents.ReflexAgent')
 AGENT_SCRIPTED: Alias = Alias('agent-scripted', 'chessai.agents.scripted.ScriptedAgent')
@@ -78,6 +79,7 @@ AGENT_SHORT_NAMES: list[str] = [
     AGENT_DUMMY.short,
     # AGENT_CHEATING.short,
     AGENT_MINIMAX.short,
+    AGENT_MULTI_SCRIPTED.short,
     AGENT_GREEDY.short,
     AGENT_RANDOM.short,
     AGENT_SCRIPTED.short,

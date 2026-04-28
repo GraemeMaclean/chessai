@@ -54,7 +54,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
 
     base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] = {
         solver_color:            chessai.core.agentinfo.AgentInfo(name = args.agent),
-        solver_color.opposite(): chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
+        solver_color.opposite(): chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_MULTI_SCRIPTED.short),
     }
 
     return base_agent_infos, [], {}
