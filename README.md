@@ -9,7 +9,7 @@ API documentation for all releases is available at [lucas-ellenberger.github.io/
 
 ## Installation / Requirements
 
-This project requires [Python](https://www.python.org/) >= 3.8.
+This project requires [Python](https://www.python.org/) >= 3.11.
 
 Standard Python requirements are listed in `pyproject.toml`.
 The project and Python dependencies can be installed from source with:
@@ -47,26 +47,82 @@ python3 -m chessai.chess --board chessai/resources/boards/standard.board
 
 ### Puzzles
 
+Puzzles test a single agent's ability to find one of the best moves available, given the current board position.
+
+You can play a puzzle game with:
+```sh
+python3 -m chessai.puzzle
+```
+
+The default agent chooses a random legal move, so they will rarely solve puzzles.
+
+By default, the puzzle is a mate-in-1, but there are more puzzles available in the [chessai/resources/boards directory](chessai/resources/boards).
+All puzzle boards are prefixed with `puzzle-`, to differentiate from standard chess boards.
+
+For example, you can specify a mate-in-3 puzzle with:
+```sh
+python3 -m chessai.puzzle --board chessai/resources/boards/puzzle-mate-3.board
+```
+
+You can also specify the possible "move lines" (the potential solutions to the puzzle) directly with the `--move-lines` option.
+Move lines must be specified as list of move lines, where each move line consists of the steps to solve the puzzle, using UCI notation:
+```sh
+python3 -m chessai.puzzle --move-lines "[[\"c6d5\"]]"
+```
+
+This provides the move that finds the mate in 1!
+
+#### Adding Known Puzzles
+
+Chessai accepts any puzzle, as long as you provide the starting position, in the form of a FEN, and the move lines that solve the puzzle.
+Note that puzzles do not have to end in a mate, they will end once the agent finishes one of the solution move lines.
+
+A great place to find puzzles is through [Lichess' Puzzles](https://lichess.org/training/themes),
+which are sorted by theme.
+You can also download a large number of puzzles from [Lichess' download link](https://database.lichess.org/#puzzles).
+
+#### Creating a Custom Puzzle
+
+One of the easiest ways to create a new puzzle is to use the [Lichess board editor](https://lichess.org/editor).
+
+There, you can adjust the board manually to create a unique puzzle!
+After you finish adjusting the board, copy the FEN that is provided at the bottom of the screen.
+
+Lichess's board editor allows you to analyze the board position with their built-in chess engine.
+Once you find the recommended moves, which should be clearly better than the alternative moves,
+write the moves down in the puzzle's move line.
+
+Once you are done, run the following command with your starting FEN and the moves to solve the puzzle:
+```sh
+python3 -m chessai.puzzle --board <puzzle FEN> --move-lines <possible solution moves>
+```
+
+#### Evaluating an Agent Using Puzzles
+
+A great baseline way to test your agent is to have it try to solve chess puzzles.
+Each puzzle tries to teach a specific skill that your agent should be able to solve.
+
+To test your agent against many puzzles, run the following script:
 TODO: Add puzzle documentation and explain how to have an agent play a suite of puzzles.
 
 ### Choosing an Agent
 
-In Chess, you can choose which agent you use with the `--white` and `--black` options.
+In Chess, you can choose which agent you use with the `--white-team` and `--black-team` options.
 The `--help` flag will list all the agent's available by default.
 Agents may be specialized and not work on every board.
 
 For example, you can use a random agent with:
 ```sh
-python3 -m chessai.chess --white agent-random --black agent-random
+python3 -m chessai.chess --white-team agent-random --black-team agent-random
 ```
 
-You can also use `--white` and `--black` to point to any importable module or file/class.
+You can also use `--white-team` and `--black-team` to point to any importable module or file/class.
 ```sh
 # Use an importable module name.
-python3 -m chessai.chess --white chessai.agents.random.RandomAgent
+python3 -m chessai.chess --white-team chessai.agents.random.RandomAgent
 
 # Point to an agent class inside of a file.
-python3 -m chessai.chess --black chessai/agents/random.py:RandomAgent
+python3 -m chessai.chess --black-team chessai/agents/random.py:RandomAgent
 ```
 
 #### Agent Arguments
