@@ -35,7 +35,7 @@ class CoordinateTest(edq.testing.unittest.BaseTest):
 
         for (i, test_case) in enumerate(test_cases):
             (uci, error_substring, expected_file, expected_rank) = test_case
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 try:
                     coord = chessai.core.coordinate.Coordinate.from_uci(uci)
                 except Exception as ex:

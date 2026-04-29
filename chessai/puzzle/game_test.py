@@ -21,24 +21,26 @@ class GameTest(edq.testing.unittest.BaseTest):
             if (not path.is_file()):
                 continue
 
-            print(path)
             if (os.path.basename(path).startswith('puzzle-')):
-                board_paths.append(path)
+                board_paths.append(str(path))
 
-        print(board_paths)
-        for board_path in board_paths:
-            gamestate = chessai.puzzle.gamestate.GameState(fen = str(board_path))
+        board_paths.sort()
 
-            # Puzzle boards must include the move lines, which will be parsed by the gamestate.
-            move_lines = gamestate.parsed_fen.options.get('move_lines', None)
-            agent_arg = f"{gamestate.turn.symbol()}::move_lines={move_lines}"
+        for (i, board_path) in enumerate(board_paths):
+            with self.subTest(msg = f"Case {i}, path: {board_path}"):
+                gamestate = chessai.puzzle.gamestate.GameState(fen = board_path)
 
-            argv = [
-                '--board', str(board_path),
-                '--agent', 'agent-multi-scripted',
-                '--agent-arg', agent_arg,
-                '--max-moves', '80',
-            ]
-            results = chessai.puzzle.bin.main(argv = argv)
+                # Puzzle boards must include the move lines, which will be parsed by the gamestate.
+                move_lines = gamestate.parsed_fen.options.get('move_lines', None)
+                agent_arg = f"{gamestate.turn.symbol()}::move_lines={move_lines}"
 
-            self.assertEqual(expected_score, results[0].score)
+                argv = [
+                    '--log-level', 'CRITICAL',
+                    '--board', str(board_path),
+                    '--agent', 'agent-multi-scripted',
+                    '--agent-arg', agent_arg,
+                    '--max-moves', '80',
+                ]
+                results = chessai.puzzle.bin.main(argv = argv)
+
+                self.assertEqual(expected_score, results[0].score)

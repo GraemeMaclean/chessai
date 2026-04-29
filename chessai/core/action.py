@@ -113,10 +113,7 @@ def actions_list_from_dict(data: dict[str, typing.Any]) -> list[list[Action]]:
     if (raw_actions is None):
         return []
 
-    try:
-        str_actions_lists: list[list[str]] = json.loads(raw_actions)
-    except Exception:
-        return []
+    str_actions_lists: list[list[str]] = json.loads(raw_actions)
 
     clean_actions: list[list[Action]] = []
     for str_action_list in str_actions_lists:
