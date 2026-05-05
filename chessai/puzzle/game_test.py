@@ -4,7 +4,7 @@ import pathlib
 import edq.testing.unittest
 import edq.util.dirent
 
-import chessai.core.fen
+import chessai.core.parser
 import chessai.puzzle.bin
 
 class GameTest(edq.testing.unittest.BaseTest):
@@ -16,7 +16,7 @@ class GameTest(edq.testing.unittest.BaseTest):
         expected_score = 1.0
 
         board_paths = []
-        boards_dir = pathlib.Path(chessai.core.fen.BOARDS_DIR)
+        boards_dir = pathlib.Path(chessai.core.parser.BOARDS_DIR)
         for path in boards_dir.iterdir():
             if (not path.is_file()):
                 continue

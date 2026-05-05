@@ -6,7 +6,7 @@ import edq.testing.unittest
 import chessai.chess.piece
 import chessai.core.castling
 import chessai.core.coordinate
-import chessai.core.fen
+import chessai.core.parser
 import chessai.core.piece
 import chessai.core.types
 
@@ -14,9 +14,9 @@ import chessai.core.types
 STARTING_FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 class ParseDimensionsTest(edq.testing.unittest.BaseTest):
-    """ Test chessai.core.fen._parse_dimensions(). """
+    """ Test chessai.core.parser._parse_fen_dimensions(). """
 
-    def test_parse_dimensions(self):
+    def test_parse_fen_dimensions(self):
         """ Test valid dimension strings. """
 
         # [(dimensions_field, expected_num_files, expected_num_ranks), ...]
@@ -30,11 +30,11 @@ class ParseDimensionsTest(edq.testing.unittest.BaseTest):
 
         for (i, (dimensions_field, expected_files, expected_ranks)) in enumerate(test_cases):
             with self.subTest(msg=f"Case {i}:"):
-                (num_files, num_ranks) = chessai.core.fen._parse_dimensions(dimensions_field)
+                (num_files, num_ranks) = chessai.core.parser._parse_fen_dimensions(dimensions_field)
                 self.assertEqual(expected_files, num_files)
                 self.assertEqual(expected_ranks, num_ranks)
 
-    def test_parse_dimensions_errors(self):
+    def test_parse_fen_dimensions_errors(self):
         """ Test that malformed dimension strings raise ValueError. """
 
         # [(dimensions_field, error_substring), ...]
@@ -72,7 +72,7 @@ class ParseDimensionsTest(edq.testing.unittest.BaseTest):
         for (i, (dimensions_field, error_substring)) in enumerate(test_cases):
             with self.subTest(msg=f"Case {i}:"):
                 try:
-                    chessai.core.fen._parse_dimensions(dimensions_field)
+                    chessai.core.parser._parse_fen_dimensions(dimensions_field)
                 except ValueError as ex:
                     self.assertIn(error_substring, str(ex))
                     continue
@@ -81,12 +81,12 @@ class ParseDimensionsTest(edq.testing.unittest.BaseTest):
 
 
 class ParseFENTest(edq.testing.unittest.BaseTest):
-    """ Test chessai.core.fen.parse(). """
+    """ Test chessai.core.parser.parse_fen(). """
 
     def test_parse_standard_starting_position(self):
         """ Test parsing the standard chess starting position. """
 
-        result = chessai.core.fen.parse(STARTING_FEN)
+        result = chessai.core.parser.parse_fen(STARTING_FEN)
 
         self.assertEqual(chessai.core.types.Color.WHITE, result.turn)
         self.assertEqual(0, result.halfmove_clock)
@@ -135,8 +135,8 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (fen, expected_turn)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
-                result = chessai.core.fen.parse(fen)
+            with self.subTest(msg = f"Case {i}:"):
+                result = chessai.core.parser.parse_fen(fen)
                 self.assertEqual(expected_turn, result.turn)
 
     def test_parse_castling_rights(self):
@@ -160,7 +160,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
 
         for (i, (fen, expected_rights)) in enumerate(test_cases):
             with self.subTest(msg=f"Case {i}:"):
-                result = chessai.core.fen.parse(fen)
+                result = chessai.core.parser.parse_fen(fen)
                 self.assertEqual(expected_rights, result.castling_rights)
 
     def test_parse_en_passant(self):
@@ -180,7 +180,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
 
         for (i, (fen, expected_ep)) in enumerate(test_cases):
             with self.subTest(msg=f"Case {i}:"):
-                result = chessai.core.fen.parse(fen)
+                result = chessai.core.parser.parse_fen(fen)
                 self.assertEqual(expected_ep, result.en_passant_coordinate)
 
     def test_parse_clocks(self):
@@ -194,7 +194,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
 
         for (i, (fen, expected_half, expected_full)) in enumerate(test_cases):
             with self.subTest(msg=f"Case {i}:"):
-                result = chessai.core.fen.parse(fen)
+                result = chessai.core.parser.parse_fen(fen)
                 self.assertEqual(expected_half, result.halfmove_clock)
                 self.assertEqual(expected_full, result.fullmove_number)
 
@@ -215,7 +215,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
 
         for (i, (fen, expected_files, expected_ranks)) in enumerate(test_cases):
             with self.subTest(msg=f"Case {i}:"):
-                result = chessai.core.fen.parse(fen)
+                result = chessai.core.parser.parse_fen(fen)
                 self.assertEqual(expected_files, result.num_files)
                 self.assertEqual(expected_ranks, result.num_ranks)
 
@@ -227,11 +227,11 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
             # Wrong field count.
             (
                 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -',
-                "FEN must have 6 or 7 fields, found 4:",
+                "FEN must have 6 or 7 fields, found '4':",
             ),
             (
                 '#8x8 rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 extra',
-                "FEN must have 6 or 7 fields, found 8:",
+                "FEN must have 6 or 7 fields, found '8':",
             ),
 
             # Bad turn field.
@@ -243,19 +243,19 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
             # Bad halfmove clock.
             (
                 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - -1 1',
-                "FEN halfmove clock must be >= 0, found: -1.",
+                "FEN halfmove clock must be >= 0, found: '-1'.",
             ),
 
             # Bad fullmove number.
             (
                 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0',
-                "FEN fullmove number must be >= 1, found: 0.",
+                "FEN fullmove number must be >= 1, found: '0'.",
             ),
 
             # Wrong rank count.
             (
                 'rnbqkbnr/pppppppp/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-                "FEN piece field must have 8 ranks separated by '/', found 7:",
+                "FEN piece field must have 8 ranks separated by '/', found '7':",
             ),
 
             # Too many files on a rank.
@@ -280,7 +280,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
         for (i, (fen, error_substring)) in enumerate(test_cases):
             with self.subTest(msg=f"Case {i}:"):
                 try:
-                    chessai.core.fen.parse(fen)
+                    chessai.core.parser.parse_fen(fen)
                 except ValueError as ex:
                     self.assertIn(error_substring, str(ex))
                     continue
@@ -289,7 +289,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
 
 
 class SerializeFENTest(edq.testing.unittest.BaseTest):
-    """ Test chessai.core.fen.serialize(). """
+    """ Test chessai.core.parser.serialize_fen(). """
 
     def test_serialize_standard_size_omits_dimensions(self):
         """
@@ -297,8 +297,8 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
         6-field FEN with no dimensions extension.
         """
 
-        result = chessai.core.fen.parse(STARTING_FEN)
-        serialized = chessai.core.fen.serialize(
+        result = chessai.core.parser.parse_fen(STARTING_FEN)
+        serialized = chessai.core.parser.serialize_fen(
             pieces                = result.pieces,
             turn                  = result.turn,
             castling_rights       = result.castling_rights,
@@ -318,8 +318,8 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
         """
 
         fen_with_dimensions = '#9x9 ppppkpppp/9/9/9/9/9/9/9/PPPPKPPPP w - - 0 1'
-        result = chessai.core.fen.parse(fen_with_dimensions)
-        serialized = chessai.core.fen.serialize(
+        result = chessai.core.parser.parse_fen(fen_with_dimensions)
+        serialized = chessai.core.parser.serialize_fen(
             pieces                = result.pieces,
             turn                  = result.turn,
             castling_rights       = result.castling_rights,
@@ -335,12 +335,12 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
 
     def test_serialize_default_dimensions_omits_field(self):
         """
-        Calling serialize() without explicit dimensions should default to 8x8
+        Calling serialize_fen() without explicit dimensions should default to 8x8
         and omit the dimensions field.
         """
 
-        result = chessai.core.fen.parse(STARTING_FEN)
-        serialized = chessai.core.fen.serialize(
+        result = chessai.core.parser.parse_fen(STARTING_FEN)
+        serialized = chessai.core.parser.serialize_fen(
             pieces                = result.pieces,
             turn                  = result.turn,
             castling_rights       = result.castling_rights,
@@ -363,14 +363,14 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
 
         try:
             # Load directly from the path.
-            loaded_fen = chessai.core.fen.load_path(temp_path)
+            loaded_fen = chessai.core.parser.load_path(temp_path)
 
             # Check to make sure we get the same results as loading from a standard FEN.
-            standard_parse = chessai.core.fen.parse(fen_content)
+            standard_parse = chessai.core.parser.parse_fen(fen_content)
             self.assertEqual(standard_parse, loaded_fen)
 
             # Parse using the path (should auto-detect and load).
-            parsed = chessai.core.fen.parse(temp_path)
+            parsed = chessai.core.parser.parse_fen(temp_path)
             self.assertEqual(32, len(parsed.pieces))
         finally:
             os.unlink(temp_path)
@@ -397,8 +397,8 @@ class RoundTripFENTest(edq.testing.unittest.BaseTest):
 
         for (i, fen) in enumerate(test_cases):
             with self.subTest(msg=f"Case {i}:"):
-                result = chessai.core.fen.parse(fen)
-                serialized = chessai.core.fen.serialize(
+                result = chessai.core.parser.parse_fen(fen)
+                serialized = chessai.core.parser.serialize_fen(
                     pieces                = result.pieces,
                     turn                  = result.turn,
                     castling_rights       = result.castling_rights,

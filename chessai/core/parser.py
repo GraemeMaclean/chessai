@@ -1,23 +1,3 @@
-"""
-FEN (Forsyth-Edwards Notation) parsing and serialization.
-
-FEN format:
-  [#<files>x<ranks>] <pieces> <turn> <castling> <en-passant> <halfmove-clock> <fullmove-number>
-
-  dimensions   -- optional '#<files>x<ranks>' (e.g. '#8x8'); defaults to 8x8 if omitted
-  pieces       -- ranks 8..1, files a..h; '/' separates ranks; digits = empty coordinates
-  turn         -- 'w' or 'b'
-  castling     -- 'KQkq' subset or '-'
-  en-passant   -- target coordinate in algebraic notation or '-'
-  halfmove     -- integer
-  fullmove     -- integer (starts at 1, increments after Black's move)
-
-The dimensions field is a chessai extension and is not part of the standard FEN spec.
-Standard FEN strings (6 fields) are accepted without modification.
-
-See: https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation .
-"""
-
 import os
 import re
 import typing
@@ -38,6 +18,26 @@ SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
 FILE_EXTENSION = '.board'
 
 DIMENSIONS_PATTERN: re.Pattern = re.compile(r'^#(\d+)x(\d+)$')
+
+"""
+FEN (Forsyth-Edwards Notation) parsing and serialization.
+
+FEN format:
+  [#<files>x<ranks>] <pieces> <turn> <castling> <en-passant> <halfmove-clock> <fullmove-number>
+
+  dimensions   -- optional '#<files>x<ranks>' (e.g. '#8x8'); defaults to 8x8 if omitted
+  pieces       -- ranks 8..1, files a..h; '/' separates ranks; digits = empty coordinates
+  turn         -- 'w' or 'b'
+  castling     -- 'KQkq' subset or '-'
+  en-passant   -- target coordinate in algebraic notation or '-'
+  halfmove     -- integer
+  fullmove     -- integer (starts at 1, increments after Black's move)
+
+The dimensions field is a chessai extension and is not part of the standard FEN spec.
+Standard FEN strings (6 fields) are accepted without modification.
+
+See: https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation .
+"""
 
 class ParsedFEN:
     """
@@ -100,7 +100,7 @@ class ParsedFEN:
             self.search_targets == other.search_targets
         )
 
-def parse(fen: str,
+def parse_fen(fen: str,
           search_targets: list[chessai.core.coordinate.Coordinate] | None = None,
           options: dict[str, typing.Any] | None = None) -> ParsedFEN:
     """
@@ -115,24 +115,24 @@ def parse(fen: str,
     """
 
     # Check if this might be a file path.
-    if ' ' not in fen.strip():
-        # Try to load from file
+    if (' ' not in fen.strip()):
+        # Try to load from file.
         return load_path(fen)
 
     fields = fen.strip().split()
     if (len(fields) not in (6, 7)):
-        raise ValueError(f"FEN must have 6 or 7 fields, found {len(fields)}: '{fen}'.")
+        raise ValueError(f"FEN must have 6 or 7 fields, found '{len(fields)}': '{fen}'.")
 
     num_files = chessai.core.board.DEFAULT_BOARD_FILES
     num_ranks = chessai.core.board.DEFAULT_BOARD_RANKS
 
     if (len(fields) == 7):
-        (num_files, num_ranks) = _parse_dimensions(fields.pop(0))
+        (num_files, num_ranks) = _parse_fen_dimensions(fields.pop(0))
 
-    pieces          = _parse_pieces(fields[0], num_files, num_ranks)
-    turn            = _parse_turn(fields[1])
+    pieces          = _parse_fen_pieces(fields[0], num_files, num_ranks)
+    turn            = _parse_fen_turn(fields[1])
     castling_rights = chessai.core.castling.CastlingRights.from_fen_string(fields[2])
-    en_passant      = _parse_en_passant(fields[3])
+    en_passant      = _parse_fen_en_passant(fields[3])
     halfmove_clock  = _parse_int_field(fields[4], 'halfmove clock', min_value = 0)
     fullmove_number = _parse_int_field(fields[5], 'fullmove number', min_value = 1)
 
@@ -149,7 +149,7 @@ def parse(fen: str,
         options               = options,
     )
 
-def serialize(
+def serialize_fen(
         pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece],
         turn: chessai.core.types.Color,
         castling_rights: chessai.core.castling.CastlingRights,
@@ -164,13 +164,13 @@ def serialize(
     Serialize game state fields back into a FEN string.
 
     For standard 8x8 boards the dimensions field is omitted,
-    producing a spec-compliant FEN string.
+    producing a standard FEN string.
     For non-standard board sizes the chessai dimensions extension is prepended.
 
     Partial serializations exclude the clock and move number.
     """
 
-    piece_field    = _serialize_pieces(pieces, num_files, num_ranks)
+    piece_field    = _serialize_fen_pieces(pieces, num_files, num_ranks)
     if (piece_field is None):
         raise ValueError("Found a None piece field.")
 
@@ -278,9 +278,9 @@ def load_string(text: str, **kwargs: typing.Any) -> ParsedFEN:
 
     search_targets = options.pop('search_targets', None)
 
-    return parse(board_text, search_targets, options)
+    return parse_fen(board_text, search_targets, options)
 
-def _parse_dimensions(dimensions_field: str) -> tuple[int, int]:
+def _parse_fen_dimensions(dimensions_field: str) -> tuple[int, int]:
     """
     Parse the optional chessai dimensions field '#<files>x<ranks>'.
 
@@ -306,7 +306,7 @@ def _parse_dimensions(dimensions_field: str) -> tuple[int, int]:
 
     return (num_files, num_ranks)
 
-def _parse_pieces(
+def _parse_fen_pieces(
             piece_field: str,
             num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
             num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS,
@@ -321,7 +321,7 @@ def _parse_pieces(
     if (len(ranks) != num_ranks):
         raise ValueError(
             f"FEN piece field must have {num_ranks} ranks"
-            + f" separated by '/', found {len(ranks)}: '{piece_field}'."
+            + f" separated by '/', found '{len(ranks)}': '{piece_field}'."
         )
 
     known_piece_symbols = chessai.core.piece.get_registered_piece_symbols()
@@ -353,7 +353,7 @@ def _parse_pieces(
 
     return pieces
 
-def _serialize_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece],
+def _serialize_fen_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece],
         num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
         num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS) -> str:
     """
@@ -392,7 +392,7 @@ def _serialize_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chessai.c
 
     return '/'.join(ranks)
 
-def _parse_turn(turn_field: str) -> chessai.core.types.Color:
+def _parse_fen_turn(turn_field: str) -> chessai.core.types.Color:
     if (turn_field == 'w'):
         return chessai.core.types.Color.WHITE
 
@@ -401,7 +401,7 @@ def _parse_turn(turn_field: str) -> chessai.core.types.Color:
 
     raise ValueError(f"FEN turn field must be 'w' or 'b', found: '{turn_field}'.")
 
-def _parse_en_passant(ep_field: str) -> chessai.core.coordinate.Coordinate | None:
+def _parse_fen_en_passant(ep_field: str) -> chessai.core.coordinate.Coordinate | None:
     if (ep_field == '-'):
         return None
 
@@ -417,6 +417,6 @@ def _parse_int_field(raw: str, label: str, min_value: int = 0) -> int:
         raise ValueError(f"FEN {label} must be an integer, found: '{raw}'.") from exc
 
     if (value < min_value):
-        raise ValueError(f"FEN {label} must be >= {min_value}, found: {value}.")
+        raise ValueError(f"FEN {label} must be >= {min_value}, found: '{value}'.")
 
     return value

@@ -8,7 +8,7 @@ import chessai.core.action
 import chessai.core.agentaction
 import chessai.core.board
 import chessai.core.castling
-import chessai.core.fen
+import chessai.core.parser
 import chessai.core.piece
 import chessai.core.coordinate
 import chessai.core.types
@@ -39,7 +39,7 @@ class GameState(edq.util.json.DictConverter):
         # TODO(Lucas): Maybe we move the initial parsing from gamestate into game.
         # This way, we can only pass the necessary information to the initial gamestate and avoid some awkwardness.
         # It will be the same pattern for PGNs and FENs.
-        self.parsed_fen: chessai.core.fen.ParsedFEN = chessai.core.fen.parse(fen)
+        self.parsed_fen: chessai.core.parser.ParsedFEN = chessai.core.parser.parse_fen(fen)
         """ The full information received from the augmented FEN. """
 
         self.board: chessai.core.board.Board = chessai.core.board.Board(self.parsed_fen.pieces, self.parsed_fen.num_files, self.parsed_fen.num_ranks)
@@ -85,7 +85,7 @@ class GameState(edq.util.json.DictConverter):
         Note that this operation looses the move history.
         """
 
-        return chessai.core.fen.serialize(
+        return chessai.core.parser.serialize_fen(
             pieces            = self.board.pieces,
             turn              = self.turn,
             castling_rights   = self.castling_rights,
