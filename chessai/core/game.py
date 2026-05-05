@@ -120,7 +120,6 @@ class GameInfo(edq.util.json.DictConverter):
 class GameResult(edq.util.json.DictConverter):
     """ The result of running a game. """
 
-    # TODO(Lucas): May be able to replace many of the bools with chessai.core.types.Color.
     def __init__(self,
             game_id: int,
             game_info: GameInfo,
@@ -329,13 +328,13 @@ class Game(abc.ABC):
 
         state.process_turn_full(action, rng)
 
-    # TODO(Lucas): Fix docstring.
     def check_end(self, state: chessai.core.gamestate.GameState) -> bool:
         """
         Check to see if the game is over.
         Return True if the game is now over, False otherwise.
 
-        By default, this will just check chessai.core.gamestate.GameState.game_over,
+        By default, this will check chessai.core.gamestate.GameState.game_over
+        and chessai.core.gamestate.GameState.is_game_over(),
         but child games can override for more complex functionality.
         """
 
@@ -441,7 +440,6 @@ class Game(abc.ABC):
 
         return result
 
-    # TODO(Lucas): Do we need? Feels like we don't.
     # def _receive_user_inputs(self,
     #         agent_user_inputs: dict[bool, list[chess.Move]],
     #         # ui: chessai.core.ui.UI,
@@ -556,7 +554,6 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
 
     return parser
 
-# TODO(Lucas): Enable board arg parsing once custom baords can be passed.
 def init_from_args(
         args: argparse.Namespace,
         game_class: typing.Type[Game],
@@ -592,16 +589,11 @@ def init_from_args(
     logging.debug("Using source seed for games: %d.", seed)
     rng = random.Random(seed)
 
-    # TODO(Lucas): Since args.board stores as a string,
-    # we could write a utility to check if the arg is a valid FEN.
-    # If not, we could try to load from the path.
-
     agents = [chessai.core.types.Color.WHITE, chessai.core.types.Color.BLACK]
     agent_infos = _parse_agent_infos(agents, args.raw_agent_args, base_agent_infos)
 
     base_save_path = args.save_path
 
-    # TODO(Lucas): Don't need to store fens unless they change.
     all_fens: list[str] = []
     all_agent_infos = []
     all_games = []

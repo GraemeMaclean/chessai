@@ -26,7 +26,6 @@ DEFAULT_BOARD_RANKS: int = 8
 
 DEFAULT_BOARD_SIZE: int = DEFAULT_BOARD_RANKS * DEFAULT_BOARD_FILES
 
-# TODO(Lucas): Continue adding the necessary methods for students to interact with the board.
 class Board(edq.util.json.DictConverter):
     """ The board holds the current coordinates of pieces on the board. """
 

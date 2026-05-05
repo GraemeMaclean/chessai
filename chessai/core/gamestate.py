@@ -36,7 +36,9 @@ class GameState(edq.util.json.DictConverter):
         if (fen is None):
             fen = DEFAULT_FEN
 
-        # TODO(Lucas): Parse the board size from the FEN so we can give it to the board.
+        # TODO(Lucas): Maybe we move the initial parsing from gamestate into game.
+        # This way, we can only pass the necessary information to the initial gamestate and avoid some awkwardness.
+        # It will be the same pattern for PGNs and FENs.
         self.parsed_fen: chessai.core.fen.ParsedFEN = chessai.core.fen.parse(fen)
         """ The full information received from the augmented FEN. """
 
@@ -344,7 +346,7 @@ class GameState(edq.util.json.DictConverter):
 
         return False, None
 
-    # TODO(Lucas)
+    # TODO(Lucas): Making so many deep copies is hurting performance, can we do better?
     def copy(self) -> 'GameState':
         """
         Get a deep copy of this state.

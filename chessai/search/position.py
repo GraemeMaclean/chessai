@@ -38,8 +38,6 @@ class PositionSearchNode(chessai.core.search.SearchNode):
     def __hash__(self) -> int:
         return hash(self.position)
 
-# TODO(Lucas): Do we need to add a piece type for the search problem?
-# The start position finds the first available piece, but do the search problems need explicit piece info?
 class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode]):
     """
     A search problem for finding a specific position on the board.

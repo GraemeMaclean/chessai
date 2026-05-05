@@ -32,7 +32,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
     """
     Setup agents based on Chess rules.
 
-    Agent infos are supplied via the --white-team and --black-team arguments.
+    Agent infos are supplied via the `--white-team` and `--black-team` arguments.
     Missing agents will be filled in with random agents.
     """
 
@@ -40,10 +40,6 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
         chessai.core.types.Color.WHITE: chessai.core.agentinfo.AgentInfo(name = args.white_team),
         chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = args.black_team),
     }
-
-    # TODO(Lucas): Expand the board offerings.
-    # Check for random boards.
-    # args.board = chessai.chess.game.Game.check_for_random_board(args.board)
 
     return base_agent_infos, [], {}
 

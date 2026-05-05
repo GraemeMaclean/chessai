@@ -25,7 +25,6 @@ class Color(enum.IntEnum):
         return bool(self.value)
 
 # TODO(Lucas): Implement the functions detailed in the attribute docstrings.
-# Update string enums.
 class TerminationReason(enum.StrEnum):
     """ An enum representing the reason for a game to be over. """
 

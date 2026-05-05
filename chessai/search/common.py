@@ -23,7 +23,7 @@ def longitudinal_cost_function(node: chessai.core.search.SearchNode, base: float
     use that to assign a score based on its longitudinal position (its column).
     If there is no "position" attribute, just use unit cost.
 
-    The cost will be `base ^ node.position.col`.
+    The cost will be `base ^ node.position.file`.
     """
 
     if (hasattr(node, 'position') and isinstance(getattr(node, 'position'), chessai.core.coordinate.Coordinate)):

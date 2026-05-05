@@ -363,11 +363,10 @@ def _serialize_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chessai.c
     ranks: list[str] = []
 
     for rank_index in range(num_ranks):
-        # FEN rank 8 comes first, so we descend from rank 7 to rank 0.
+        # FEN ranks come from highest first, so we descend from (num_ranks - 1) to rank 0.
         rank = (num_ranks - 1) - rank_index
         empty_count = 0
-        # TODO(Lucas): Look into making the rank_str into a list and join at the end.
-        rank_str = ''
+        rank_str: list[str] = []
 
         for file in range(num_files):
             coordinate = chessai.core.coordinate.Coordinate(file, rank)
@@ -377,19 +376,19 @@ def _serialize_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chessai.c
                 empty_count += 1
             else:
                 if (empty_count > 0):
-                    rank_str += str(empty_count)
+                    rank_str.append(str(empty_count))
                     empty_count = 0
 
                 symbol = piece.symbol()
                 if (symbol is None):
-                    raise ValueError(f"Cannot serialize piece {piece} at {coordinate}")
+                    raise ValueError(f"Cannot serialize piece '{piece}' at '{coordinate}'.")
 
-                rank_str += symbol
+                rank_str.append(symbol)
 
         if (empty_count > 0):
             rank_str += str(empty_count)
 
-        ranks.append(rank_str)
+        ranks.append(''.join(rank_str))
 
     return '/'.join(ranks)
 

@@ -80,7 +80,6 @@ class GameState(chessai.core.gamestate.GameState):
 
         return actions
 
-    # # TODO(Lucas): Debatably move this to piece functionality.
     def _expand_movement_vectors(self) -> list[chessai.core.action.Action]:
         """ Expand the movement vectors into the pseudo-legal moves. """
 
@@ -529,7 +528,6 @@ def base_eval(
     The most basic evaluation function, which just uses the difference in piece value on the board.
     """
 
-    # TODO(Lucas): Fix typing info and move alias.
     piece_values: dict[type[chessai.core.piece.Piece], int] = {
         chessai.chess.piece.Pawn: 1,
         chessai.chess.piece.Knight: 3,
