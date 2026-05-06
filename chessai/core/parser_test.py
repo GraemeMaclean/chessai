@@ -29,7 +29,7 @@ class ParseDimensionsTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (dimensions_field, expected_files, expected_ranks)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 (num_files, num_ranks) = chessai.core.parser._parse_fen_dimensions(dimensions_field)
                 self.assertEqual(expected_files, num_files)
                 self.assertEqual(expected_ranks, num_ranks)
@@ -70,7 +70,7 @@ class ParseDimensionsTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (dimensions_field, error_substring)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 try:
                     chessai.core.parser._parse_fen_dimensions(dimensions_field)
                 except ValueError as ex:
@@ -159,7 +159,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (fen, expected_rights)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 result = chessai.core.parser.parse_fen(fen)
                 self.assertEqual(expected_rights, result.castling_rights)
 
@@ -179,7 +179,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (fen, expected_ep)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 result = chessai.core.parser.parse_fen(fen)
                 self.assertEqual(expected_ep, result.en_passant_coordinate)
 
@@ -193,7 +193,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (fen, expected_half, expected_full)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 result = chessai.core.parser.parse_fen(fen)
                 self.assertEqual(expected_half, result.halfmove_clock)
                 self.assertEqual(expected_full, result.fullmove_number)
@@ -214,7 +214,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (fen, expected_files, expected_ranks)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 result = chessai.core.parser.parse_fen(fen)
                 self.assertEqual(expected_files, result.num_files)
                 self.assertEqual(expected_ranks, result.num_ranks)
@@ -278,7 +278,7 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (fen, error_substring)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 try:
                     chessai.core.parser.parse_fen(fen)
                 except ValueError as ex:
@@ -381,6 +381,7 @@ class RoundTripFENTest(edq.testing.unittest.BaseTest):
     def test_round_trip(self):
         """ Test FEN round-trip conversion (string -> ParsedFEN -> string). """
 
+        # [FEN, ...]
         test_cases: list[str] = [
             # Standard starting position.
             'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
@@ -396,7 +397,7 @@ class RoundTripFENTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, fen) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 result = chessai.core.parser.parse_fen(fen)
                 serialized = chessai.core.parser.serialize_fen(
                     pieces                = result.pieces,
@@ -410,3 +411,142 @@ class RoundTripFENTest(edq.testing.unittest.BaseTest):
                 )
 
                 self.assertEqual(fen, serialized)
+
+class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
+    """ Test the parsing of a single raw PGN into a ParsedPGN. """
+
+    def test_parse_single_pgn(self):
+        """ Test the parsing of a single raw PGN into a ParsedPGN. """
+
+        # [(raw PGN, error substring, expected ParsedPGN), ...]
+        test_cases: list[tuple[str, str | None, chessai.core.parser.ParsedPGN]] = [
+            # Default headers and move SANs.
+            (
+                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
+                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n'
+                '1. e4 e5 2. Nf3 Nc6 1-0',
+                None,
+                chessai.core.parser.ParsedPGN(
+                    headers = chessai.core.parser.StandardHeadersDict({
+                        chessai.core.parser.StandardPGNHeaders.EVENT: "Test",
+                        chessai.core.parser.StandardPGNHeaders.SITE: "Here",
+                        chessai.core.parser.StandardPGNHeaders.DATE: "2024.01.01",
+                        chessai.core.parser.StandardPGNHeaders.ROUND: "1",
+                        chessai.core.parser.StandardPGNHeaders.WHITE: "A",
+                        chessai.core.parser.StandardPGNHeaders.BLACK: "B",
+                        chessai.core.parser.StandardPGNHeaders.RESULT: "1-0",
+                    }),
+                    san_moves = ["e4", "e5", "Nf3", "Nc6"],
+                )
+            ),
+
+            # Ignore RAVs.
+            (
+                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
+                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n'
+                '1. e4 (1. d4 d5) e5 2. Nf3 Nc6 1-0',
+                None,
+                chessai.core.parser.ParsedPGN(
+                    headers = chessai.core.parser.StandardHeadersDict({
+                        chessai.core.parser.StandardPGNHeaders.EVENT: "Test",
+                        chessai.core.parser.StandardPGNHeaders.SITE: "Here",
+                        chessai.core.parser.StandardPGNHeaders.DATE: "2024.01.01",
+                        chessai.core.parser.StandardPGNHeaders.ROUND: "1",
+                        chessai.core.parser.StandardPGNHeaders.WHITE: "A",
+                        chessai.core.parser.StandardPGNHeaders.BLACK: "B",
+                        chessai.core.parser.StandardPGNHeaders.RESULT: "1-0",
+                    }),
+                    san_moves = ["e4", "e5", "Nf3", "Nc6"],
+                )
+            ),
+
+            # Ignore nested RAVs.
+            (
+                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
+                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n'
+                '1. e4 (1. d4 (1... d5) d5) e5 2. Nf3 Nc6 1-0',
+                None,
+                chessai.core.parser.ParsedPGN(
+                    headers = chessai.core.parser.StandardHeadersDict({
+                        chessai.core.parser.StandardPGNHeaders.EVENT: "Test",
+                        chessai.core.parser.StandardPGNHeaders.SITE: "Here",
+                        chessai.core.parser.StandardPGNHeaders.DATE: "2024.01.01",
+                        chessai.core.parser.StandardPGNHeaders.ROUND: "1",
+                        chessai.core.parser.StandardPGNHeaders.WHITE: "A",
+                        chessai.core.parser.StandardPGNHeaders.BLACK: "B",
+                        chessai.core.parser.StandardPGNHeaders.RESULT: "1-0",
+                    }),
+                    san_moves = ["e4", "e5", "Nf3", "Nc6"],
+                )
+            ),
+
+            # Capture in-line comments.
+            (
+                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
+                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n'
+                '1. e4 {Very interesting move!} e5 2. Nf3 Nc6 1-0',
+                None,
+                chessai.core.parser.ParsedPGN(
+                    headers = chessai.core.parser.StandardHeadersDict({
+                        chessai.core.parser.StandardPGNHeaders.EVENT: "Test",
+                        chessai.core.parser.StandardPGNHeaders.SITE: "Here",
+                        chessai.core.parser.StandardPGNHeaders.DATE: "2024.01.01",
+                        chessai.core.parser.StandardPGNHeaders.ROUND: "1",
+                        chessai.core.parser.StandardPGNHeaders.WHITE: "A",
+                        chessai.core.parser.StandardPGNHeaders.BLACK: "B",
+                        chessai.core.parser.StandardPGNHeaders.RESULT: "1-0",
+                    }),
+                    san_moves = ["e4", "e5", "Nf3", "Nc6"],
+                    comments = ["Very interesting move!"],
+                )
+            ),
+
+            # Capture multi-line comments.
+            (
+                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
+                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n'
+                '1. e4 {This is a\nmulti-line\ncomment!} e5 2. Nf3 Nc6 1-0',
+                None,
+                chessai.core.parser.ParsedPGN(
+                    headers = chessai.core.parser.StandardHeadersDict({
+                        chessai.core.parser.StandardPGNHeaders.EVENT: "Test",
+                        chessai.core.parser.StandardPGNHeaders.SITE: "Here",
+                        chessai.core.parser.StandardPGNHeaders.DATE: "2024.01.01",
+                        chessai.core.parser.StandardPGNHeaders.ROUND: "1",
+                        chessai.core.parser.StandardPGNHeaders.WHITE: "A",
+                        chessai.core.parser.StandardPGNHeaders.BLACK: "B",
+                        chessai.core.parser.StandardPGNHeaders.RESULT: "1-0",
+                    }),
+                    san_moves = ["e4", "e5", "Nf3", "Nc6"],
+                    comments = ["This is a\nmulti-line\ncomment!"],
+                )
+            ),
+
+            # Error: missing required headers.
+            (
+                '[Event "Test"]\n\n1. e4 e5',
+                "Did not find all required headers",
+                None,
+            ),
+        ]
+
+        for i, test_case in enumerate(test_cases):
+            (raw_pgn, error_substring, expected_pgn) = test_case
+
+            with self.subTest(msg = f"Case {i}:"):
+                try:
+                    actual_pgn = chessai.core.parser.parse_pgn_game(raw_pgn)
+
+                except Exception as ex:
+                    if (error_substring is None):
+                        self.fail(f"Unexpected error: '{str(ex)}'.")
+
+                    self.assertIn(error_substring, str(ex))
+                    continue
+
+                if (error_substring is not None):
+                    self.fail(f"Did not get expected error: '{error_substring}'.")
+
+                self.assertTrue(actual_pgn.headers.is_complete())
+
+                self.assertEqual(expected_pgn, actual_pgn)

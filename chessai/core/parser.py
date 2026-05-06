@@ -29,6 +29,27 @@ DIMENSIONS_PATTERN: re.Pattern = re.compile(r'^#(\d+)x(\d+)$')
 # PGN parsing patterns.
 TAG_PATTERN: re.Pattern= re.compile(r"^\[([A-Za-z0-9][A-Za-z0-9_+#=:-]*)\s+\"([^\r]*)\"\]\s*$")
 TAG_NAME_PATTERN: re.Pattern = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_+#=:-]*\Z")
+MOVETEXT_PATTERN: re.Pattern = re.compile(r"""
+    (
+        [NBKRQ]?[a-h]?[1-8]?[\-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?
+        |[PNBRQK]?@[a-h][1-8]
+        |--
+        |Z0
+        |0000
+        |@@@@
+        |O-O(?:-O)?
+        |0-0(?:-0)?
+    )
+    |(\{.*)
+    |(;.*)
+    |(\$[0-9]+)
+    |(\()
+    |(\))
+    |(\*|1-0|0-1|1/2-1/2)
+    |([\?!]{1,2})
+    """, re.DOTALL | re.VERBOSE)
+
+SKIP_MOVETEXT_REGEX = re.compile(r""";|\{|\}""")
 
 class ParsedFEN:
     """
@@ -159,11 +180,7 @@ class StandardHeadersDict(dict):
     def is_complete(self) -> bool:
         """ Returns if all standard headers are present in the dictionary. """
 
-        for header in StandardPGNHeaders:
-            if (header not in self):
-                return False
-
-        return True
+        return (set(self.keys()) == set(StandardPGNHeaders))
 
 class ParsedPGN(edq.util.json.DictConverter):
     """
@@ -174,12 +191,19 @@ class ParsedPGN(edq.util.json.DictConverter):
                  headers: StandardHeadersDict[StandardPGNHeaders, str] | None = None,
                  optional_headers: dict[str, typing.Any] | None = None,
                  starting_fen: str | None = None,
-                 san_moves: list[str] | None = None) -> None:
+                 san_moves: list[str] | None = None,
+                 comments: list[str] | None = None) -> None:
 
-        self.headers: StandardHeadersDict[StandardPGNHeaders, str] | None = headers
+        if (headers is None):
+            headers = StandardHeadersDict()
+
+        self.headers: StandardHeadersDict[StandardPGNHeaders, str] = headers
         """ The standard headers from a single PGN game. """
 
-        self.optional_headers: dict[str, typing.Any] | None = optional_headers
+        if (optional_headers is None):
+            optional_headers = {}
+
+        self.optional_headers: dict[str, typing.Any] = optional_headers
         """ Any additional headers parsed from the PGN. """
 
         self.starting_fen: str | None = starting_fen
@@ -194,6 +218,12 @@ class ParsedPGN(edq.util.json.DictConverter):
 
         See https://en.wikipedia.org/wiki/Algebraic_notation_(chess) .
         """
+
+        if (comments is None):
+            comments = []
+
+        self.comments: list[str] = comments
+        """ The comments found in the game. """
 
 def parse_fen(fen: str,
           search_targets: list[chessai.core.coordinate.Coordinate] | None = None,
@@ -378,7 +408,7 @@ def load_fen_from_string(text: str, **kwargs: typing.Any) -> ParsedFEN:
 
     return parse_fen(board_text, search_targets, options)
 
-def parse_pgn_game(pgn: str) -> ParsedPGN:
+def parse_pgn_game(pgn: str) -> ParsedPGN | None:
     """
     Parse a single PGN string into a ParsedPGN.
 
@@ -388,7 +418,7 @@ def parse_pgn_game(pgn: str) -> ParsedPGN:
 
     lines = pgn.splitlines()
 
-    # index = 0
+    index = 0
 
     headers: StandardHeadersDict = StandardHeadersDict()
     optional_headers: dict[str, typing.Any] = {}
@@ -396,11 +426,15 @@ def parse_pgn_game(pgn: str) -> ParsedPGN:
     # Parse the header fields.
     for i, line in enumerate(lines):
         # Track where we are in the lines.
-        # index = i
+        index = i
 
         line.strip()
 
-        # Skip leading comments.
+        # Skip empty lines.
+        if (len(line) == 0):
+            continue
+
+        # Skip comments.
         if (_is_pgn_comment_line(line)):
             continue
 
@@ -425,28 +459,130 @@ def parse_pgn_game(pgn: str) -> ParsedPGN:
         else:
             optional_headers[tag_header_key] = tag_header_value
 
+    # No game found.
+    if (len(headers) == 0):
+        return None
+
     # Ensure all required headers are present.
     if (not headers.is_complete()):
         expected_headers = [header.value for header in StandardPGNHeaders]
         raise ValueError(f"Did not find all required headers. Expected: '{expected_headers}', Found: '{headers.keys()}'")
 
+    # Start scanning for moves from the end of the headers.
+    lines = lines[index:]
+
+    san_moves: list[str] = []
+    comments: list[str] = []
+
+    in_comment = False
+    comment_buffer: list[str] = []
+
+    skip_variation_depth = 0
+
+    for line in lines:
+        line = line.strip()
+
+        if (not line):
+            break
+
+        # Skip whole-line comments.
+        if _is_pgn_comment_line(line):
+            continue
+
+        i = 0
+        while (i < len(line)):
+            if in_comment:
+                end_idx = line.find("}", i)
+
+                # The rest of the line is part of the comment.
+                if (end_idx == -1):
+                    comment_buffer.append(line[i:])
+                    break
+
+                # Add the remainder of the comment and continue processing the current line.
+                comment_buffer.append(line[i:end_idx])
+                comments.append("\n".join(comment_buffer).strip())
+
+                comment_buffer = []
+                in_comment = False
+
+                i = end_idx + 1
+                continue
+
+            match = MOVETEXT_PATTERN.match(line, i)
+
+            if (not match):
+                i += 1
+                continue
+
+            token = match.group(0)
+            i = match.end()
+
+            # Handle block comments {...}.
+            if token.startswith("{"):
+                content = token[1:]
+
+                end_index = content.find("}")
+
+                if (end_index == -1):
+                    # Track part of a multi-line comment.
+                    in_comment = True
+                    comment_buffer.append(content)
+                else:
+                    # Add the in-line comment and continue processing this line.
+                    comments.append(token[1:end_index + 1].strip())
+                    i = end_index
+
+                continue
+
+            # Skip variations (...) entirely.
+            if (token == "("):
+                skip_variation_depth += 1
+                continue
+
+            if (token == ")"):
+                if (skip_variation_depth > 0):
+                    skip_variation_depth -= 1
+
+                continue
+
+            if (skip_variation_depth > 0):
+                continue
+
+            # Skip line comments.
+            if token.startswith(";"):
+                break
+
+            # Skip move numbers like "1." or "23.".
+            if token.endswith("."):
+                continue
+
+            # Skip results.
+            if token in ["1-0", "0-1", "1/2-1/2", "*"]:
+                break
+
+            # Skip NAGs / annotations.
+            if (token.startswith("$") or (token in ["!", "?", "!!", "??", "!?", "?!"])):
+                continue
+
+            # Otherwise, this must be a SAN move.
+            san_moves.append(token)
+
     return ParsedPGN(
         headers          = headers,
         optional_headers = optional_headers,
+        san_moves        = san_moves,
+        comments         = comments,
     )
 
 def _is_pgn_comment_line(line: str) -> bool:
     """
     Returns if the line is a comment.
 
-    A line is a comment in a PGN if it is only whitespace,
-    starts with a '%', or starts with a ';'.
+    A line is a comment in a PGN if it  starts with a '%' or ';'.
     """
 
     line.strip()
-    if (len(line) == 0):
-        return True
-
     if (line[0] == '%'):
         return True
 
