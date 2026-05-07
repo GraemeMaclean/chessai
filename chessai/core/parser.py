@@ -182,6 +182,24 @@ class StandardHeadersDict(dict):
 
         return (set(self.keys()) == set(StandardPGNHeaders))
 
+class PGNResult(enum.StrEnum):
+    """ The possible game endings denoted in a PGN. """
+
+    WHITE_WIN = '1-0'
+    """ White won the game. """
+
+    BLACK_WIN = '0-1'
+    """ Black won the game. """
+
+    TIE = '1/2-1/2'
+    """ The game was a tie. """
+
+    IN_PROGRESS = '*'
+    """ The game is still in progress. """
+
+    UNKNOWN = 'Unknown'
+    """ The ending of the game is unknown. """
+
 class ParsedPGN(edq.util.json.DictConverter):
     """
     The parsed result of a single PGN game.
@@ -192,7 +210,8 @@ class ParsedPGN(edq.util.json.DictConverter):
                  optional_headers: dict[str, typing.Any] | None = None,
                  starting_fen: str | None = None,
                  san_moves: list[str] | None = None,
-                 comments: list[str] | None = None) -> None:
+                 comments: list[str] | None = None,
+                 result: PGNResult = PGNResult.UNKNOWN) -> None:
 
         if (headers is None):
             headers = StandardHeadersDict()
@@ -224,6 +243,9 @@ class ParsedPGN(edq.util.json.DictConverter):
 
         self.comments: list[str] = comments
         """ The comments found in the game. """
+
+        self.result: PGNResult = result
+        """ The result of the PGN or if the game is still in progress. """
 
 def parse_fen(fen: str,
           search_targets: list[chessai.core.coordinate.Coordinate] | None = None,
@@ -473,6 +495,7 @@ def parse_pgn_game(pgn: str) -> ParsedPGN | None:
 
     san_moves: list[str] = []
     comments: list[str] = []
+    result: PGNResult = PGNResult.UNKNOWN
 
     in_comment = False
     comment_buffer: list[str] = []
@@ -558,7 +581,8 @@ def parse_pgn_game(pgn: str) -> ParsedPGN | None:
                 continue
 
             # Skip results.
-            if token in ["1-0", "0-1", "1/2-1/2", "*"]:
+            if (token in ["1-0", "0-1", "1/2-1/2", "*"]):
+                result = PGNResult(token)
                 break
 
             # Skip NAGs / annotations.
@@ -573,6 +597,7 @@ def parse_pgn_game(pgn: str) -> ParsedPGN | None:
         optional_headers = optional_headers,
         san_moves        = san_moves,
         comments         = comments,
+        result           = result,
     )
 
 def _is_pgn_comment_line(line: str) -> bool:

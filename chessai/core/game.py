@@ -28,15 +28,21 @@ class GameInfo(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-            agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
-            start_fen: str | None = None,
-            isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
-            max_moves: int = DEFAULT_MAX_MOVES,
-            agent_start_timeout: float = DEFAULT_AGENT_START_TIMEOUT,
-            agent_end_timeout: float = DEFAULT_AGENT_END_TIMEOUT,
-            agent_action_timeout: float = DEFAULT_AGENT_ACTION_TIMEOUT,
-            seed: int | None = None,
-            extra_info: dict[str, typing.Any] | None = None) -> None:
+                 agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo],
+                 start_fen: str | None = None,
+                 isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
+                 max_moves: int = DEFAULT_MAX_MOVES,
+                 agent_start_timeout: float = DEFAULT_AGENT_START_TIMEOUT,
+                 agent_end_timeout: float = DEFAULT_AGENT_END_TIMEOUT,
+                 agent_action_timeout: float = DEFAULT_AGENT_ACTION_TIMEOUT,
+                 seed: int | None = None,
+                 event: str | None = None,
+                 site: str | None = None,
+                 date: str | None = None,
+                 game_round: str | None = None,
+                 white_player: str | None = None,
+                 black_player: str | None = None,
+                 extra_info: dict[str, typing.Any] | None = None) -> None:
         if (seed is None):
             seed = random.randint(0, 2**64)
 
@@ -82,6 +88,42 @@ class GameInfo(edq.util.json.DictConverter):
         If <= 0, unlimited time is allowed.
         """
 
+        if (event is None):
+            event = '?'
+
+        self.event: str = event
+        """ The tournament or match event name. """
+
+        if (site is None):
+            site = '?'
+
+        self.site: str = site
+        """ The location of the event. """
+
+        if (date is None):
+            date = '????.??.??'
+
+        self.date: str = date
+        """ The starting date of the game. """
+
+        if (game_round is None):
+            game_round = '?'
+
+        self.game_round: str = game_round
+        """ The playing round ordinal. """
+
+        if (white_player is None):
+            white_player = '?'
+
+        self.white_player: str = white_player
+        """ The name of the white player. """
+
+        if (black_player is None):
+            black_player = '?'
+
+        self.black_player: str = black_player
+        """ The name of the black player. """
+
         if (extra_info is None):
             extra_info = {}
 
@@ -90,51 +132,63 @@ class GameInfo(edq.util.json.DictConverter):
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
-            'seed': self.seed,
-            'start_fen': self.start_fen,
             'agent_infos': {id: info.to_dict() for (id, info) in self.agent_infos.items()},
+            'start_fen': self.start_fen,
             'isolation_level': self.isolation_level.value,
             'max_moves': self.max_moves,
             'agent_start_timeout': self.agent_start_timeout,
             'agent_end_timeout': self.agent_end_timeout,
             'agent_action_timeout': self.agent_action_timeout,
+            'seed': self.seed,
+            'event': self.event,
+            'site': self.site,
+            'date': self.date,
+            'game_round': self.game_round,
+            'white_player': self.white_player,
+            'black_player': self.black_player,
             'extra_info': self.extra_info,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
         return cls(
-            seed = data.get('seed', None),
-            start_fen = data.get('start_fen', None),
             agent_infos = {
                 chessai.core.types.Color(int(id)): chessai.core.agentinfo.AgentInfo.from_dict(raw_info)
                     for (id, raw_info) in data['agent_infos'].items()
             },
+            start_fen = data.get('start_fen', None),
             isolation_level = chessai.core.isolation.level.Level(data.get('isolation_level', chessai.core.isolation.level.Level.NONE.value)),
             max_moves = data.get('max_moves', DEFAULT_MAX_MOVES),
             agent_start_timeout = data.get('agent_start_timeout', DEFAULT_AGENT_START_TIMEOUT),
             agent_end_timeout = data.get('agent_end_timeout', DEFAULT_AGENT_END_TIMEOUT),
             agent_action_timeout = data.get('agent_action_timeout', DEFAULT_AGENT_ACTION_TIMEOUT),
+            seed = data.get('seed', None),
+            event = data.get('event', None),
+            site = data.get('site', None),
+            date = data.get('date', None),
+            game_round = data.get('game_round', None),
+            white_player = data.get('white_player', None),
+            black_player = data.get('black_player', None),
             extra_info = data.get('extra_info', None))
 
 class GameResult(edq.util.json.DictConverter):
     """ The result of running a game. """
 
     def __init__(self,
-            game_id: int,
-            game_info: GameInfo,
-            termination_reason: chessai.core.types.TerminationReason | None = None,
-            score: float = 0,
-            end_fen: str | None = None,
-            game_timeout: bool = False,
-            timeout_agent_teams: list[chessai.core.types.Color] | None = None,
-            crash_agent_teams: list[chessai.core.types.Color] | None = None,
-            winning_agent_teams: list[chessai.core.types.Color] | None = None,
-            start_time: edq.util.time.Timestamp | None = None,
-            end_time: edq.util.time.Timestamp | None = None,
-            history: list[chessai.core.agentaction.AgentActionRecord] | None = None,
-            agent_complete_records: dict[chessai.core.types.Color, chessai.core.agentaction.AgentActionRecord] | None = None,
-            **kwargs: typing.Any) -> None:
+                 game_id: int,
+                 game_info: GameInfo,
+                 termination_reason: chessai.core.types.TerminationReason | None = None,
+                 score: float = 0,
+                 end_fen: str | None = None,
+                 game_timeout: bool = False,
+                 timeout_agent_teams: list[chessai.core.types.Color] | None = None,
+                 crash_agent_teams: list[chessai.core.types.Color] | None = None,
+                 winning_agent_teams: list[chessai.core.types.Color] | None = None,
+                 start_time: edq.util.time.Timestamp | None = None,
+                 end_time: edq.util.time.Timestamp | None = None,
+                 history: list[chessai.core.agentaction.AgentActionRecord] | None = None,
+                 agent_complete_records: dict[chessai.core.types.Color, chessai.core.agentaction.AgentActionRecord] | None = None,
+                 **kwargs: typing.Any) -> None:
         self.game_id: int = game_id
         """ The ID of the game result. """
 
@@ -209,14 +263,14 @@ class GameResult(edq.util.json.DictConverter):
             'termination_reason': self.termination_reason,
             'score': self.score,
             'end_fen': self.end_fen,
-            'start_time': self.start_time,
-            'end_time': self.end_time,
-            'history': [item.to_dict() for item in self.history],
-            'agent_complete_records': {player: record.to_dict() for (player, record) in self.agent_complete_records.items()},
             'game_timeout': self.game_timeout,
             'timeout_agent_teams': self.timeout_agent_teams,
             'crash_agent_teams': self.crash_agent_teams,
             'winning_agent_teams': self.winning_agent_teams,
+            'start_time': self.start_time,
+            'end_time': self.end_time,
+            'history': [item.to_dict() for item in self.history],
+            'agent_complete_records': {player: record.to_dict() for (player, record) in self.agent_complete_records.items()},
         }
 
     @classmethod
@@ -260,15 +314,17 @@ class Game(abc.ABC):
     """
 
     def __init__(self,
-            game_info: GameInfo,
-            fen: str,
-            save_path: str | None = None,
-            is_replay: bool = False,
-            ) -> None:
+                 game_info: GameInfo,
+                 fen: str,
+                 save_path: str | None = None,
+                 is_replay: bool = False,
+                 san_moves: list[str] | None = None,
+                 expected_result: chessai.core.parser.PGNResult = chessai.core.parser.PGNResult.UNKNOWN,
+                 ) -> None:
         self.game_info: GameInfo = game_info
         """ The core information about this game. """
 
-        self.fen = fen
+        self.fen: str = fen
         """ The starting FEN for the game. """
 
         self._save_path: str | None = save_path
@@ -280,6 +336,73 @@ class Game(abc.ABC):
         Some behavior, like saving the result, will be modified.
         """
 
+        if (san_moves is None):
+            san_moves = []
+
+        self.san_moves: list[str] = san_moves
+        """ The original SAN moves from the PGN, if loaded from PGN. """
+
+        self.expected_result: chessai.core.parser.PGNResult = expected_result
+        """ The expected result from the PGN: '1-0', '0-1', '1/2-1/2', or '*'. """
+
+    @classmethod
+    def from_pgn(cls,
+                 parsed_pgn: chessai.core.parser.ParsedPGN,
+                 agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] | None = None,
+                 isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
+                 save_path: str | None = None,
+                 seed: int | None = None,
+                 **kwargs: typing.Any) -> 'Game':
+        """
+        Create a Game from a ParsedPGN.
+
+        The game will be initialized with metadata from the PGN headers
+        and will store the SAN moves for replay.
+        """
+
+        # Extract starting FEN from optional headers or use default.
+        start_fen = parsed_pgn.optional_headers.get('Fen', None)
+        if (start_fen is None):
+            start_fen = chessai.core.gamestate.DEFAULT_FEN
+
+        # Use provided agent_infos or create default random agents.
+        if (agent_infos is None):
+            agent_infos = {
+                chessai.core.types.Color.WHITE: chessai.core.agentinfo.AgentInfo(name = DEFAULT_AGENT),
+                chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = DEFAULT_AGENT),
+            }
+
+        # Extract player names from headers if available.
+        white_player = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.WHITE, None)
+        black_player = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.BLACK, None)
+
+        # Create GameInfo with PGN metadata.
+        game_info = GameInfo(
+            agent_infos = agent_infos,
+            start_fen = start_fen,
+            isolation_level = isolation_level,
+            seed = seed,
+            event = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.EVENT, None),
+            site = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.SITE, None),
+            date = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.DATE, None),
+            game_round = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.ROUND, None),
+            white_player = white_player,
+            black_player = black_player,
+        )
+
+        # Extract expected result from Result header.
+        expected_result = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.RESULT, '')
+        expected_result = chessai.core.parser.PGNResult(expected_result)
+
+        return cls(
+            game_info = game_info,
+            fen = start_fen,
+            save_path = save_path,
+            san_moves = parsed_pgn.san_moves,
+            expected_result = expected_result,
+            **kwargs
+        )
+
     def process_args(self, args: argparse.Namespace) -> None:
         """ Process any special arguments from the command-line. """
 
@@ -290,11 +413,10 @@ class Game(abc.ABC):
         """ Create the initial state for this game. """
 
     def process_turn(self,
-            state: chessai.core.gamestate.GameState,
-            action_record: chessai.core.agentaction.AgentActionRecord,
-            result: GameResult,
-            rng: random.Random,
-            ) -> chessai.core.gamestate.GameState:
+                     state: chessai.core.gamestate.GameState,
+                     action_record: chessai.core.agentaction.AgentActionRecord,
+                     result: GameResult,
+                     rng: random.Random) -> chessai.core.gamestate.GameState:
         """
         Process the given agent action and return an updated game state.
         The returned game state may be a copy or modified version of the passed in game state.
@@ -605,14 +727,14 @@ def init_from_args(
         all_fens.append(args.board)
 
         game_info = GameInfo(
-                all_agent_infos[-1],
-                start_fen = all_fens[-1],
-                isolation_level = chessai.core.isolation.level.Level(args.isolation_level),
-                max_moves = args.max_moves,
-                agent_start_timeout = args.agent_start_timeout,
-                agent_end_timeout = args.agent_end_timeout,
-                agent_action_timeout = args.agent_action_timeout,
-                seed = game_seed,
+            all_agent_infos[-1],
+            start_fen = all_fens[-1],
+            isolation_level = chessai.core.isolation.level.Level(args.isolation_level),
+            max_moves = args.max_moves,
+            agent_start_timeout = args.agent_start_timeout,
+            agent_end_timeout = args.agent_end_timeout,
+            agent_action_timeout = args.agent_action_timeout,
+            seed = game_seed,
         )
 
         # Suffix the save path if there is more than one game.
