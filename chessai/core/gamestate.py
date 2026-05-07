@@ -233,6 +233,23 @@ class GameState(edq.util.json.DictConverter):
 
         return chessai.core.types.TerminationReason.UNKNOWN
 
+    def get_action_from_san(self, san: str) -> chessai.core.action.Action:
+        """
+        Get the action from the given SAN.
+
+        See https://en.wikipedia.org/wiki/Algebraic_notation_(chess) .
+
+        SANs should only be used when interacting with PGNs.
+        So, this is not a useful method for students.
+        """
+
+        legal_actions = self.get_legal_actions()
+        for legal_action in legal_actions:
+            # Convert the legal action to a SAN based on the gamestate for comparison.
+            continue
+
+        return chessai.core.action.NULL_ACTION
+
     # -----------------------------------------------
     # State mutation
     # -----------------------------------------------

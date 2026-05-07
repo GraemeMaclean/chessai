@@ -12,6 +12,7 @@ import edq.util.json
 import chessai.core.action
 import chessai.core.agentinfo
 import chessai.core.board
+import chessai.core.gameparser
 import chessai.core.isolation.level
 import chessai.util.alias
 
@@ -318,8 +319,8 @@ class Game(abc.ABC):
                  fen: str,
                  save_path: str | None = None,
                  is_replay: bool = False,
-                 san_moves: list[str] | None = None,
-                 expected_result: chessai.core.parser.PGNResult = chessai.core.parser.PGNResult.UNKNOWN,
+                 initial_actions: list[chessai.core.action.Action] | None = None,
+                 expected_result: chessai.core.gameparser.PGNResult = chessai.core.gameparser.PGNResult.UNKNOWN,
                  ) -> None:
         self.game_info: GameInfo = game_info
         """ The core information about this game. """
@@ -336,18 +337,18 @@ class Game(abc.ABC):
         Some behavior, like saving the result, will be modified.
         """
 
-        if (san_moves is None):
-            san_moves = []
+        if (initial_actions is None):
+            initial_actions = []
 
-        self.san_moves: list[str] = san_moves
+        self.initial_actions: list[chessai.core.action.Action] = initial_actions
         """ The original SAN moves from the PGN, if loaded from PGN. """
 
-        self.expected_result: chessai.core.parser.PGNResult = expected_result
+        self.expected_result: chessai.core.gameparser.PGNResult = expected_result
         """ The expected result from the PGN: '1-0', '0-1', '1/2-1/2', or '*'. """
 
     @classmethod
     def from_pgn(cls,
-                 parsed_pgn: chessai.core.parser.ParsedPGN,
+                 parsed_pgn: chessai.core.gameparser.ParsedPGN,
                  agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] | None = None,
                  isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
                  save_path: str | None = None,
@@ -361,7 +362,7 @@ class Game(abc.ABC):
         """
 
         # Extract starting FEN from optional headers or use default.
-        start_fen = parsed_pgn.optional_headers.get('Fen', None)
+        start_fen = parsed_pgn.get_starting_fen()
         if (start_fen is None):
             start_fen = chessai.core.gamestate.DEFAULT_FEN
 
@@ -373,8 +374,8 @@ class Game(abc.ABC):
             }
 
         # Extract player names from headers if available.
-        white_player = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.WHITE, None)
-        black_player = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.BLACK, None)
+        white_player = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.WHITE, None)
+        black_player = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.BLACK, None)
 
         # Create GameInfo with PGN metadata.
         game_info = GameInfo(
@@ -382,23 +383,23 @@ class Game(abc.ABC):
             start_fen = start_fen,
             isolation_level = isolation_level,
             seed = seed,
-            event = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.EVENT, None),
-            site = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.SITE, None),
-            date = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.DATE, None),
-            game_round = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.ROUND, None),
+            event = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.EVENT, None),
+            site = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.SITE, None),
+            date = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.DATE, None),
+            game_round = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.ROUND, None),
             white_player = white_player,
             black_player = black_player,
         )
 
         # Extract expected result from Result header.
-        expected_result = parsed_pgn.headers.get(chessai.core.parser.StandardPGNHeaders.RESULT, '')
-        expected_result = chessai.core.parser.PGNResult(expected_result)
+        expected_result = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.RESULT, '')
+        expected_result = chessai.core.gameparser.PGNResult(expected_result)
 
         return cls(
             game_info = game_info,
             fen = start_fen,
             save_path = save_path,
-            san_moves = parsed_pgn.san_moves,
+            initial_actions = parsed_pgn.initial_actions,
             expected_result = expected_result,
             **kwargs
         )
@@ -729,6 +730,10 @@ def init_from_args(
         game_info = GameInfo(
             all_agent_infos[-1],
             start_fen = all_fens[-1],
+            # Could create a partial state class that can be passed into the game info.
+            # Or could have a list of initial_moves.
+            # The actions could be able to represent offering a draw or accepting / rejecting a draw.
+            # Could have an action to surrender.
             isolation_level = chessai.core.isolation.level.Level(args.isolation_level),
             max_moves = args.max_moves,
             agent_start_timeout = args.agent_start_timeout,
