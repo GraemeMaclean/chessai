@@ -1,11 +1,7 @@
 import edq.testing.unittest
 
-import chessai.chess.piece
-import chessai.core.castling
-import chessai.core.coordinate
+import chessai.chess.gamestate
 import chessai.core.gameparser
-import chessai.core.piece
-import chessai.core.types
 
 # The standard starting position FEN, used across multiple tests.
 STARTING_FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -20,9 +16,17 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
         test_cases: list[tuple[str, str | None, chessai.core.gameparser.ParsedPGN]] = [
             # Default headers and move SANs.
             (
-                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
-                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "1/2-1/2"]\n\n'
-                '1. e4 e5 2. Nf3 Nc6 1/2-1/2',
+                """
+                [Event "Test"]
+                [Site "Here"]
+                [Date "2024.01.01"]
+                [Round "1"]
+                [White "A"]
+                [Black "B"]
+                [Result "1/2-1/2"]
+
+                1. e4 e5 2. Nf3 Nc6 1/2-1/2
+                """,
                 None,
                 chessai.core.gameparser.ParsedPGN(
                     headers = chessai.core.gameparser.StandardHeadersDict({
@@ -34,16 +38,29 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.BLACK: "B",
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "1/2-1/2",
                     }),
-                    initial_actions = ["e4", "e5", "Nf3", "Nc6"],
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("e2e4"),
+                        chessai.core.action.Action.from_uci("e7e5"),
+                        chessai.core.action.Action.from_uci("g1f3"),
+                        chessai.core.action.Action.from_uci("b8c6"),
+                    ],
                     result = chessai.core.gameparser.PGNResult('1/2-1/2'),
                 )
             ),
 
             # Ignore RAVs.
             (
-                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
-                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "0-1"]\n\n'
-                '1. e4 (1. d4 d5) e5 2. Nf3 Nc6 0-1',
+                """
+                [Event "Test"]
+                [Site "Here"]
+                [Date "2024.01.01"]
+                [Round "1"]
+                [White "A"]
+                [Black "B"]
+                [Result "0-1"]
+
+                1. e4 (1. d4 d5) e5 2. Nf3 Nc6 0-1
+                """,
                 None,
                 chessai.core.gameparser.ParsedPGN(
                     headers = chessai.core.gameparser.StandardHeadersDict({
@@ -55,16 +72,29 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.BLACK: "B",
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "0-1",
                     }),
-                    initial_actions = ["e4", "e5", "Nf3", "Nc6"],
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("e2e4"),
+                        chessai.core.action.Action.from_uci("e7e5"),
+                        chessai.core.action.Action.from_uci("g1f3"),
+                        chessai.core.action.Action.from_uci("b8c6"),
+                    ],
                     result = chessai.core.gameparser.PGNResult('0-1'),
                 )
             ),
 
             # Ignore nested RAVs.
             (
-                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
-                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n'
-                '1. e4 (1. d4 (1... d5) d5) e5 2. Nf3 Nc6 1-0',
+                """
+                [Event "Test"]
+                [Site "Here"]
+                [Date "2024.01.01"]
+                [Round "1"]
+                [White "A"]
+                [Black "B"]
+                [Result "1-0"]
+
+                1. e4 (1. d4 (1... d5) d5) e5 2. Nf3 Nc6 1-0
+                """,
                 None,
                 chessai.core.gameparser.ParsedPGN(
                     headers = chessai.core.gameparser.StandardHeadersDict({
@@ -76,16 +106,29 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.BLACK: "B",
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "1-0",
                     }),
-                    initial_actions = ["e4", "e5", "Nf3", "Nc6"],
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("e2e4"),
+                        chessai.core.action.Action.from_uci("e7e5"),
+                        chessai.core.action.Action.from_uci("g1f3"),
+                        chessai.core.action.Action.from_uci("b8c6"),
+                    ],
                     result = chessai.core.gameparser.PGNResult('1-0'),
                 )
             ),
 
             # Capture in-line comments.
             (
-                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
-                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "*"]\n\n'
-                '1. e4 {Very interesting move!} e5 2. Nf3 Nc6 *',
+                """
+                [Event "Test"]
+                [Site "Here"]
+                [Date "2024.01.01"]
+                [Round "1"]
+                [White "A"]
+                [Black "B"]
+                [Result "*"]
+
+                1. e4 {Very interesting move!} e5 2. Nf3 Nc6 *
+                """,
                 None,
                 chessai.core.gameparser.ParsedPGN(
                     headers = chessai.core.gameparser.StandardHeadersDict({
@@ -97,7 +140,12 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.BLACK: "B",
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "*",
                     }),
-                    initial_actions = ["e4", "e5", "Nf3", "Nc6"],
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("e2e4"),
+                        chessai.core.action.Action.from_uci("e7e5"),
+                        chessai.core.action.Action.from_uci("g1f3"),
+                        chessai.core.action.Action.from_uci("b8c6"),
+                    ],
                     comments = ["Very interesting move!"],
                     result = chessai.core.gameparser.PGNResult('*'),
                 )
@@ -105,9 +153,19 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
 
             # Capture multi-line comments.
             (
-                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
-                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "1-0"]\n\n'
-                '1. e4 {This is a\nmulti-line\ncomment!} e5 2. Nf3 Nc6 1-0',
+                """
+                [Event "Test"]
+                [Site "Here"]
+                [Date "2024.01.01"]
+                [Round "1"]
+                [White "A"]
+                [Black "B"]
+                [Result "*"]
+
+                1. e4 {This is a
+                multi-line
+                comment!} e5 2. Nf3 Nc6 *
+                """,
                 None,
                 chessai.core.gameparser.ParsedPGN(
                     headers = chessai.core.gameparser.StandardHeadersDict({
@@ -117,20 +175,35 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.ROUND: "1",
                         chessai.core.gameparser.StandardPGNHeaders.WHITE: "A",
                         chessai.core.gameparser.StandardPGNHeaders.BLACK: "B",
-                        chessai.core.gameparser.StandardPGNHeaders.RESULT: "1-0",
+                        chessai.core.gameparser.StandardPGNHeaders.RESULT: "*",
                     }),
-                    initial_actions = ["e4", "e5", "Nf3", "Nc6"],
-                    comments = ["This is a\nmulti-line\ncomment!"],
-                    result = chessai.core.gameparser.PGNResult('1-0'),
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("e2e4"),
+                        chessai.core.action.Action.from_uci("e7e5"),
+                        chessai.core.action.Action.from_uci("g1f3"),
+                        chessai.core.action.Action.from_uci("b8c6"),
+                    ],
+                    comments = [
+                        """This is a\nmulti-line\ncomment!"""
+                    ],
+                    result = chessai.core.gameparser.PGNResult('*'),
                 )
             ),
 
             # Custom starting position with FEN header.
             (
-                '[Event "Test"]\n[Site "Here"]\n[Date "2024.01.01"]\n'
-                '[Round "1"]\n[White "A"]\n[Black "B"]\n[Result "1-0"]\n'
-                '[FEN "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"]\n\n'
-                '1... Nc6 2. Nf3 Nf6 1-0',
+                """
+                [Event "Test"]
+                [Site "Here"]
+                [Date "2024.01.01"]
+                [Round "1"]
+                [White "A"]
+                [Black "B"]
+                [Result "*"]
+                [FEN "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"]
+
+                1... Nc6 2. Nf3 Nf6 *
+                """,
                 None,
                 chessai.core.gameparser.ParsedPGN(
                     headers = chessai.core.gameparser.StandardHeadersDict({
@@ -140,17 +213,25 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.ROUND: "1",
                         chessai.core.gameparser.StandardPGNHeaders.WHITE: "A",
                         chessai.core.gameparser.StandardPGNHeaders.BLACK: "B",
-                        chessai.core.gameparser.StandardPGNHeaders.RESULT: "1-0",
+                        chessai.core.gameparser.StandardPGNHeaders.RESULT: "*",
                     }),
-                    optional_headers = {"Fen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"},
-                    initial_actions = ["Nc6", "Nf3", "Nf6"],
-                    result = "1-0",
+                    optional_headers = {"FEN": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"},
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("b8c6"),
+                        chessai.core.action.Action.from_uci("g1f3"),
+                        chessai.core.action.Action.from_uci("g8f6"),
+                    ],
+                    result = "*",
                 )
             ),
 
             # Error: missing required headers.
             (
-                '[Event "Test"]\n\n1. e4 e5',
+                """
+                [Event "Test"]
+
+                1. e4 e5
+                """,
                 "Did not find all required headers",
                 None,
             ),
@@ -161,8 +242,7 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
 
             with self.subTest(msg = f"Case {i}:"):
                 try:
-                    actual_pgn = chessai.core.gameparser.parse_pgn_game(raw_pgn, chessai.core.gamestate.GameState)
-
+                    actual_pgn = chessai.core.gameparser.parse_pgn_game(raw_pgn, chessai.chess.gamestate.GameState)
                 except Exception as ex:
                     if (error_substring is None):
                         self.fail(f"Unexpected error: '{str(ex)}'.")
@@ -173,6 +253,7 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                 if (error_substring is not None):
                     self.fail(f"Did not get expected error: '{error_substring}'.")
 
+                self.assertIsNotNone(actual_pgn)
                 self.assertTrue(actual_pgn.headers.is_complete())
 
                 self.assertEqual(expected_pgn, actual_pgn)

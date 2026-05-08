@@ -3,12 +3,12 @@ import chessai.core.piece
 import chessai.core.types
 
 UNICODE_PIECE_SYMBOLS: dict[str, str] = {
-    "R": "♖", "r": "♜",
-    "N": "♘", "n": "♞",
-    "B": "♗", "b": "♝",
-    "Q": "♕", "q": "♛",
-    "K": "♔", "k": "♚",
-    "P": "♙", "p": "♟",
+    "r": "♖", "R": "♜",
+    "n": "♘", "N": "♞",
+    "b": "♗", "B": "♝",
+    "q": "♕", "Q": "♛",
+    "k": "♔", "K": "♚",
+    "p": "♙", "P": "♟",
 }
 
 class King(chessai.core.piece.Piece):

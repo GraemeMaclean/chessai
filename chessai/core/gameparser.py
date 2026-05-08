@@ -36,6 +36,7 @@ MOVETEXT_PATTERN: re.Pattern = re.compile(r"""
         |O-O(?:-O)?
         |0-0(?:-0)?
     )
+    |(\{.*})
     |(\{.*)
     |(;.*)
     |(\$[0-9]+)
@@ -193,21 +194,21 @@ def parse_pgn_game(pgn: str, state_class: typing.Type[chessai.core.gamestate.Gam
         # Track where we are in the lines.
         index = i
 
-        line.strip()
+        clean_line = line.strip()
 
         # Skip empty lines.
         if (len(line) == 0):
             continue
 
         # Skip comments.
-        if (_is_pgn_comment_line(line)):
+        if (_is_pgn_comment_line(clean_line)):
             continue
 
         # Headers must begin with an open bracket.
-        if (not line.startswith("[")):
+        if (not clean_line.startswith("[")):
             break
 
-        tag_match = TAG_PATTERN.match(line)
+        tag_match = TAG_PATTERN.match(clean_line)
 
         # Ignore malformed tags.
         if (not tag_match):
@@ -229,7 +230,8 @@ def parse_pgn_game(pgn: str, state_class: typing.Type[chessai.core.gamestate.Gam
     # Ensure all required headers are present.
     if (not headers.is_complete()):
         expected_headers = [header.value for header in StandardPGNHeaders]
-        raise ValueError(f"Did not find all required headers. Expected: '{expected_headers}', Found: '{headers.keys()}'")
+        actual_headers = [header.value for header in headers.keys()]
+        raise ValueError(f"Did not find all required headers. Expected: '{expected_headers}', Found: '{actual_headers}'.")
 
     # Start scanning for moves from the end of the headers.
     lines = lines[index:]
@@ -275,7 +277,6 @@ def parse_pgn_game(pgn: str, state_class: typing.Type[chessai.core.gamestate.Gam
                 comment_buffer = []
                 in_comment = False
 
-                i = end_idx + 1
                 continue
 
             match = MOVETEXT_PATTERN.match(line, i)
@@ -299,8 +300,7 @@ def parse_pgn_game(pgn: str, state_class: typing.Type[chessai.core.gamestate.Gam
                     comment_buffer.append(content)
                 else:
                     # Add the in-line comment and continue processing this line.
-                    comments.append(token[1:end_index + 1].strip())
-                    i = end_index
+                    comments.append(content[:end_index].strip())
 
                 continue
 
@@ -358,7 +358,10 @@ def _is_pgn_comment_line(line: str) -> bool:
     A line is a comment in a PGN if it  starts with a '%' or ';'.
     """
 
-    line.strip()
+    line = line.strip()
+    if (len(line) == 0):
+        return True
+
     if (line[0] == '%'):
         return True
 

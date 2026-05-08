@@ -173,7 +173,7 @@ class GameState(edq.util.json.DictConverter):
 
             neighbors.append((action, action.end_coordinate))
 
-        # Sort the neighbors for consistenct.
+        # Sort the neighbors for consistency.
         neighbors.sort()
 
         return neighbors
@@ -243,10 +243,129 @@ class GameState(edq.util.json.DictConverter):
         So, this is not a useful method for students.
         """
 
+        # Remove check (+) and checkmate (#) indicators and captures (x).
+        san_clean = san.replace('+', '').replace('#', '').replace('x', '')
+
+        # Handle castling.
+        if (san_clean in ['O-O', '0-0', 'O-O-O', '0-0-0']):
+            if (self.turn == chessai.core.types.Color.WHITE):
+                rank = 0
+            else:
+                rank = self.board.num_ranks - 1
+
+            # Find the king.
+            king_coord: chessai.core.coordinate.Coordinate | None = None
+            for (coordinate, piece) in self.board.pieces.items():
+                if (piece.symbol() not in ['k', 'K']):
+                    continue
+
+                if (piece.color != self.turn):
+                    continue
+
+                king_coord = coordinate
+
+            if ((king_coord is None) or (king_coord.rank != rank)):
+                return chessai.core.action.NULL_ACTION
+
+            start_file = king_coord.file
+
+            if (san_clean in ['O-O', '0-0']):
+                # Kingside castling.
+                end_file = self.board.num_files - 2
+            else:
+                # Queenside castling.
+                end_file = 2
+
+            return chessai.core.action.Action(
+                chessai.core.coordinate.Coordinate(start_file, rank),
+                chessai.core.coordinate.Coordinate(end_file, rank)
+            )
+
+        # Parse promotion piece if present.
+        promotion_piece = None
+        if '=' in san_clean:
+            parts = san_clean.split('=')
+            san_clean = parts[0]
+
+            if (self.turn == chessai.core.types.Color.WHITE):
+                promotion_symbol = parts[1].upper()
+            else:
+                promotion_symbol = parts[1].lower()
+
+            promotion_piece = chessai.core.piece.get_registered_piece(promotion_symbol)
+
+        # Extract the destination coordinate, which is always the last 2 characters for standard moves.
+        dest_coord = chessai.core.coordinate.Coordinate.from_uci(san_clean[-2:])
+
+        # Determine the piece type from the first character and default to Pawn if first character is lowercase,
+        # which denotes the file.
+        piece_symbol = None
+        disambig_file = None
+        disambig_rank = None
+
+        if san_clean[0].isupper():
+            # Piece move (e.g., Nf3, Qd4, Raxe1).
+            if (self.turn == chessai.core.types.Color.WHITE):
+                piece_symbol = san_clean[0].upper()
+            else:
+                piece_symbol = san_clean[0].lower()
+
+            # Check for disambiguation.
+            # TODO(Lucas): Our disambiguation logic does not support multiple digits, so we cannot have more than 10 ranks or 26 files.
+            middle = san_clean[1:-2]
+            if middle:
+                if middle[0].isalpha():
+                    disambig_file = ord(middle[0]) - ord('a')
+
+                if middle[-1].isdigit():
+                    disambig_rank = int(middle[-1]) - 1
+        else:
+            # Pawn move (e.g., e4, exd5, e8=Q).
+            if (self.turn == chessai.core.types.Color.WHITE):
+                piece_symbol = 'P'
+            else:
+                piece_symbol = 'p'
+
+            # Check for pawn capture disambiguation (file)
+            if (len(san_clean) > 2 and san_clean[0].isalpha()):
+                disambig_file = ord(san_clean[0]) - ord('a')
+
+        # Get the piece class for comparison.
+        piece = chessai.core.piece.get_registered_piece(piece_symbol)
+
+        # Find matching legal action.
         legal_actions = self.get_legal_actions()
+        candidates = []
+
         for legal_action in legal_actions:
-            # Convert the legal action to a SAN based on the gamestate for comparison.
-            continue
+            if (legal_action.end_coordinate != dest_coord):
+                continue
+
+            if (promotion_piece is not None):
+                if ((legal_action.promotion is None) or (type(legal_action.promotion) != type(promotion_piece))):
+                    continue
+            else:
+                if (legal_action.promotion is not None):
+                    continue
+
+            piece_at_start = self.board.pieces.get(legal_action.start_coordinate)
+            if (piece_at_start is None):
+                continue
+
+            if (piece_at_start != piece):
+                continue
+
+            if ((disambig_file is not None) and (legal_action.start_coordinate.file != disambig_file)):
+                continue
+
+            if ((disambig_rank is not None) and (legal_action.start_coordinate.rank != disambig_rank)):
+                continue
+
+            candidates.append(legal_action)
+
+        # Return the unambiguous match.
+        if (len(candidates) == 1):
+            return candidates[0]
 
         return chessai.core.action.NULL_ACTION
 
@@ -458,7 +577,7 @@ class GameState(edq.util.json.DictConverter):
         """
         Process the current agent's turn with the given action.
         This will modify the current state.
-        First procecss_turn() will be called,
+        First process_turn() will be called,
         then any bookkeeping will be performed.
         Child classes should prefer overriding the simpler process_turn().
 

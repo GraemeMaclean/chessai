@@ -23,9 +23,17 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
         test_cases: list[tuple[str, chessai.chess.game.Game]] = [
             # Basic game with default starting position.
             (
-                '[Event "Test Tournament"]\n[Site "Test City"]\n[Date "2024.01.01"]\n'
-                + '[Round "1"]\n[White "Alice"]\n[Black "Bob"]\n[Result "1-0"]\n\n'
-                + '1. e4 e5 2. Nf3 Nc6 3. Bb5 1-0',
+                """
+                [Event "Test Tournament"]
+                [Site "Test City"]
+                [Date "2024.01.01"]
+                [Round "1"]
+                [White "Alice"]
+                [Black "Bob"]
+                [Result "1-0"]
+
+                1. e4 e5 2. Nf3 Nc6 3. Bb5 1-0
+                """,
                 chessai.chess.game.Game(
                     game_info = chessai.core.game.GameInfo(
                         agent_infos = AGENT_INFOS,
@@ -38,17 +46,31 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         black_player = "Bob",
                     ),
                     fen = chessai.core.gamestate.DEFAULT_FEN,
-                    initial_actions = ["e4", "e5", "Nf3", "Nc6", "Bb5"],
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("e2e4"),
+                        chessai.core.action.Action.from_uci("e7e5"),
+                        chessai.core.action.Action.from_uci("g1f3"),
+                        chessai.core.action.Action.from_uci("b8c6"),
+                        chessai.core.action.Action.from_uci("f1b5"),
+                    ],
                     expected_result = chessai.core.gameparser.PGNResult("1-0"),
                 ),
             ),
 
             # Game with custom starting position (FEN header).
             (
-                '[Event "Puzzle"]\n[Site "Online"]\n[Date "2024.01.15"]\n'
-                '[Round "-"]\n[White "White"]\n[Black "Black"]\n[Result "*"]\n'
-                '[FEN "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"]\n\n'
-                '3. Bb5 a6 *',
+                """
+                [Event "Puzzle"]
+                [Site "Online"]
+                [Date "2024.01.15"]
+                [Round "-"]
+                [White "White"]
+                [Black "Black"]
+                [Result "*"]
+                [FEN "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"]
+
+                3. Bb5 a6 *
+                """,
                 chessai.chess.game.Game(
                     game_info = chessai.core.game.GameInfo(
                         agent_infos = AGENT_INFOS,
@@ -61,14 +83,18 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         black_player = "Black",
                     ),
                     fen = "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
-                    initial_actions = ["Bb5", "a6"],
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("f1b5"),
+                        chessai.core.action.Action.from_uci("a7a6"),
+                    ],
                     expected_result = chessai.core.gameparser.PGNResult("*"),
                 ),
             ),
 
             # Draw result.
             (
-                """[Event "Draw Game"]
+                """
+                [Event "Draw Game"]
                 [Site "Test"]
                 [Date "2024.02.01"]
                 [Round "5"]
@@ -76,7 +102,8 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                 [Black "Player2"]
                 [Result "1/2-1/2"]
 
-                1. e4 e5 2. Nf3 Nc6 1/2-1/2""",
+                1. e4 e5 2. Nf3 Nc6 1/2-1/2
+                """,
                 chessai.chess.game.Game(
                     game_info = chessai.core.game.GameInfo(
                         agent_infos = AGENT_INFOS,
@@ -89,7 +116,12 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         black_player = "Player2",
                     ),
                     fen = chessai.core.gamestate.DEFAULT_FEN,
-                    initial_actions = ["e4", "e5", "Nf3", "Nc6"],
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("e2e4"),
+                        chessai.core.action.Action.from_uci("e7e5"),
+                        chessai.core.action.Action.from_uci("g1f3"),
+                        chessai.core.action.Action.from_uci("b8c6"),
+                    ],
                     expected_result = chessai.core.gameparser.PGNResult("1/2-1/2"),
                 ),
             ),
@@ -123,14 +155,17 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         agent_infos = AGENT_INFOS,
                         start_fen = chessai.core.gamestate.DEFAULT_FEN,
                         event = "casual correspondence game",
-                        site = "Test",
-                        date = "2026.02.01",
-                        game_round = "5",
+                        site = "https://lichess.org/s7o9V5ny",
+                        date = "2026.05.07",
+                        game_round = "-",
                         white_player = "ScrimScram",
                         black_player = "Anonymous",
                     ),
                     fen = chessai.core.gamestate.DEFAULT_FEN,
-                    initial_actions = ["e4", "e5", "Nf3", "Nc6"],
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("e2e4"),
+                        chessai.core.action.Action.from_uci("e7e6"),
+                    ],
                     expected_result = chessai.core.gameparser.PGNResult("1/2-1/2"),
                 ),
             ),
