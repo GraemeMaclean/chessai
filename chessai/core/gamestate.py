@@ -117,15 +117,28 @@ class GameState(edq.util.json.DictConverter):
     def get_legal_actions(self) -> list[chessai.core.action.Action]:
         """ Return the list of legal actions for the current player. """
 
+        # If the most recent move was a draw proposal, the opponent must respond.
+        if (self.get_previous_action() == chessai.core.action.PROPOSE_DRAW_ACTION):
+            print(self.get_previous_action().uci())
+            return [
+                chessai.core.action.ACCEPT_DRAW_ACTION,
+                chessai.core.action.REJECT_DRAW_ACTION,
+                chessai.core.action.FORFEIT_ACTION,
+            ]
+
         # Check if we have previously calculated the legal actions for this gamestate.
         partial_fen = self.get_fen(partial = True)
         precomputed_legal_actions = _KNOWN_LEGAL_ACTIONS.get(partial_fen, None)
         if (precomputed_legal_actions is not None):
             return precomputed_legal_actions
 
-        legal_actions: list[chessai.core.action.Action] = []
-        pseudo_legal_moves = self._get_pseudo_legal_moves()
+        # Players can always propose a draw or forfeit.
+        legal_actions: list[chessai.core.action.Action] = [
+            chessai.core.action.PROPOSE_DRAW_ACTION,
+            chessai.core.action.FORFEIT_ACTION,
+        ]
 
+        pseudo_legal_moves = self._get_pseudo_legal_moves()
         for action in pseudo_legal_moves:
             # Get the piece before pushing (needed for special move processing).
             piece = self.board.get(action.start_coordinate)
@@ -187,12 +200,26 @@ class GameState(edq.util.json.DictConverter):
         """ Determines if the current player is in checkmate. """
 
         legal_actions = self.get_legal_actions()
+
+        # Do not count draw proposals or forfeits towards the check.
+        for action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.FORFEIT_ACTION]:
+            if (action in legal_actions):
+                legal_actions.remove(action)
+
         return ((len(legal_actions) == 0) and self.is_check(self.turn))
 
     def is_stalemate(self) -> bool:
         """ Determines if the current player is in stalemate. """
 
         legal_actions = self.get_legal_actions()
+
+        # Do not count draw proposals or forfeits towards the check.
+        if (chessai.core.action.PROPOSE_DRAW_ACTION in legal_actions):
+            legal_actions.remove(chessai.core.action.PROPOSE_DRAW_ACTION)
+
+        if (chessai.core.action.FORFEIT_ACTION in legal_actions):
+            legal_actions.remove(chessai.core.action.FORFEIT_ACTION)
+
         return ((len(legal_actions) == 0) and (not self.is_check(self.turn)))
 
     def is_insufficient_material(self) -> bool:
@@ -223,6 +250,11 @@ class GameState(edq.util.json.DictConverter):
         An empty list signifies the game is in progress or it is a tie.
         """
 
+        # If the agent forfeited the game, the opponent won.
+        if (self.get_previous_action() == chessai.core.action.FORFEIT_ACTION):
+            return [self.turn.opposite()]
+
+        # If the agent is in checkmate, the opponent won.
         if (self.is_checkmate()):
             return [self.turn.opposite()]
 
@@ -377,6 +409,16 @@ class GameState(edq.util.json.DictConverter):
     def push(self, action: chessai.core.action.Action) -> None:
         """ Apply action to the game state and update all metadata. """
 
+        # If the agent forfeits the game or accepts a draw, end the game.
+        if action in (chessai.core.action.FORFEIT_ACTION, chessai.core.action.ACCEPT_DRAW_ACTION):
+            self.game_over = True
+            return
+
+        # If the agent proposes a draw offer or rejects a draw offer, progress the state to the opponent.
+        if action in (chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.REJECT_DRAW_ACTION):
+            self._progress_state(action, False)
+            return
+
         piece = self.board.get(action.start_coordinate)
         if (piece is None):
             raise ValueError(f"Cannot push an action from an empty coordinate: '{action.uci()}'.")
@@ -394,6 +436,7 @@ class GameState(edq.util.json.DictConverter):
 
         # Update the clocks.
         self._progress_state(action, (reset_clock or is_capture or is_special_capture))
+        return
 
     def _progress_state(self, action: chessai.core.action.Action, reset_clock: bool) -> None:
         """ A helper function to update the basic state of the game. """

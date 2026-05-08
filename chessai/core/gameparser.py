@@ -416,12 +416,11 @@ def load_pgn_from_gzip(path: str) -> str:
     if (not os.path.exists(path)):
         raise ValueError(f"Could not find PGN file, path does not exist: '{raw_path}'.")
 
-    with gzip.open(path, 'rb', encoding = DEFAULT_ENCODING) as file:
-        contents = file.read()
-        if (isinstance(contents, bytes)):
-            contents = contents.decode(DEFAULT_ENCODING)
+    with gzip.open(path, 'rb') as file:
+        uncompressed_contents = file.read()
+        decompressed_contents = uncompressed_contents.decode(DEFAULT_ENCODING)
 
-    return contents
+    return decompressed_contents
 
 def _is_pgn_comment_line(line: str) -> bool:
     """

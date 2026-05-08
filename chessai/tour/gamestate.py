@@ -64,6 +64,16 @@ class GameState(chessai.core.gamestate.GameState):
 
         return (len(self.search_targets) == 0)
 
+    def get_legal_actions(self) -> list[chessai.core.action.Action]:
+        legal_actions = super().get_legal_actions()
+
+        # Tour agents cannot propose a draw or forfeit the game.
+        for action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.FORFEIT_ACTION]:
+            if (action in legal_actions):
+                legal_actions.remove(action)
+
+        return legal_actions
+
     def remove_search_target(self, coordinate: chessai.core.coordinate.Coordinate) -> None:
         """
         Remove a search target from the gamestate.

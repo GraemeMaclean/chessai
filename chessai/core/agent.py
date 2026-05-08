@@ -84,7 +84,7 @@ class Agent(abc.ABC):
         see that method for full details.
         """
 
-        return chessai.core.action.Action()
+        return chessai.core.action.NULL_ACTION
 
     def game_start_full(self,
             player: chessai.core.types.Color,
@@ -157,7 +157,7 @@ class Agent(abc.ABC):
         A single chessai.core.action.Action type object.
         """
 
-        return chessai.core.action.Action()
+        return chessai.core.action.NULL_ACTION
 
 
     def get_expectimax_move(self,
@@ -172,7 +172,7 @@ class Agent(abc.ABC):
         A single chessai.core.action.Action type object.
         """
 
-        return chessai.core.action.Action()
+        return chessai.core.action.NULL_ACTION
 
 def load(agent_info: chessai.core.agentinfo.AgentInfo) -> Agent:
     """

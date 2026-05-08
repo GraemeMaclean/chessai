@@ -130,7 +130,7 @@ class Action(edq.util.json.DictConverter):
             raise ValueError(f"Cannot compare an action with an object of type '{type(other)}'.")
 
         self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion, self.propose_draw, self.accept_draw, self.forfeit)
-        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw, self.accept_draw, self.forfeit)
+        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw, other.accept_draw, other.forfeit)
 
         return (self_tuple < other_tuple)
 
