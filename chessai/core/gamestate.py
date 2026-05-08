@@ -119,7 +119,6 @@ class GameState(edq.util.json.DictConverter):
 
         # If the most recent move was a draw proposal, the opponent must respond.
         if (self.get_previous_action() == chessai.core.action.PROPOSE_DRAW_ACTION):
-            print(self.get_previous_action().uci())
             return [
                 chessai.core.action.ACCEPT_DRAW_ACTION,
                 chessai.core.action.REJECT_DRAW_ACTION,

@@ -129,8 +129,12 @@ class Action(edq.util.json.DictConverter):
         if (not isinstance(other, Action)):
             raise ValueError(f"Cannot compare an action with an object of type '{type(other)}'.")
 
-        self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion, self.propose_draw, self.accept_draw, self.forfeit)
-        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw, other.accept_draw, other.forfeit)
+        self_tuple = (
+                self.start_coordinate, self.end_coordinate, self.promotion, self.propose_draw,
+                (self.accept_draw is None), (self.accept_draw is True), self.forfeit)
+        other_tuple = (
+                other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw,
+                (other.accept_draw is None), (other.accept_draw is True), other.forfeit)
 
         return (self_tuple < other_tuple)
 
@@ -138,8 +142,12 @@ class Action(edq.util.json.DictConverter):
         if (not isinstance(other, Action)):
             return False
 
-        self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion, self.propose_draw, self.accept_draw, self.forfeit)
-        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw, other.accept_draw, other.forfeit)
+        self_tuple = (
+                self.start_coordinate, self.end_coordinate, self.promotion, self.propose_draw,
+                (self.accept_draw is None), (self.accept_draw is True), self.forfeit)
+        other_tuple = (
+                other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw,
+                (other.accept_draw is None), (other.accept_draw is True), other.forfeit)
 
         return (self_tuple == other_tuple)
 
