@@ -115,7 +115,7 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
             return [], self.evaluate_state(state)
 
         # If the game is over, then stop descending.
-        if (state.game_over):
+        if (state.is_game_over()):
             return [], self.evaluate_state(state)
 
         legal_actions = state.get_legal_actions()

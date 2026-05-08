@@ -516,17 +516,13 @@ def base_eval(
     """
 
     # Return really low scores for choosing a meta action.
-    if (action == chessai.core.action.FORFEIT_ACTION):
-        return -9999
-
-    if (action == chessai.core.action.PROPOSE_DRAW_ACTION):
-        return -9998
-
-    if (action == chessai.core.action.ACCEPT_DRAW_ACTION):
-        return -9997
-
-    if (action == chessai.core.action.REJECT_DRAW_ACTION):
-        return -9996
+    if (action in [
+                chessai.core.action.FORFEIT_ACTION,
+                chessai.core.action.PROPOSE_DRAW_ACTION,
+                chessai.core.action.ACCEPT_DRAW_ACTION,
+                chessai.core.action.REJECT_DRAW_ACTION,
+            ]):
+        return -math.inf
 
     piece_values: dict[type[chessai.core.piece.Piece], int] = {
         chessai.chess.piece.Pawn: 1,
