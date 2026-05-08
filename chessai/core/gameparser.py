@@ -1,4 +1,5 @@
 import enum
+import gzip
 import os
 import random
 import re
@@ -17,7 +18,10 @@ import chessai.core.types
 THIS_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 GAMES_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'games')
 
-PGN_FILE_EXTENSION = '.pgn'
+PGN_FILE_EXTENSION: str = '.pgn'
+GZIP_FILE_EXTENSION: str = '.gz'
+
+DEFAULT_ENCODING: str = 'utf-8'
 
 # File parsing patterns.
 SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
@@ -183,6 +187,11 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
     """
 
     lines = pgn.splitlines()
+
+    # If it is only one line, try loading it from a file.
+    if (len(lines) == 0):
+        pgn = load_pgn_from_file(pgn)
+        lines = pgn.splitlines()
 
     index = 0
 
@@ -351,6 +360,65 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
         comments         = comments,
         result           = result,
     )
+
+def load_pgn_from_file(path: str) -> str:
+    """
+    Load the PGN string from a file.
+
+    If the given path does not exist,
+    try to prefix the path with the standard game directory and suffix with the standard extension.
+    """
+
+    raw_path = path
+
+    # If the path does not exist, try the boards directory.
+    if (not os.path.exists(path)):
+        path = os.path.join(GAMES_DIR, path)
+
+        # If this path does not have a good extension, add one.
+        if ((os.path.splitext(path)[-1] != PGN_FILE_EXTENSION) and (os.path.splitext(path)[-1] != GZIP_FILE_EXTENSION)):
+            path = path + PGN_FILE_EXTENSION
+
+    # If the path still does not exist, try adding the GZip extension.
+    if (not os.path.exists(path)):
+        if (os.path.splitext(path)[-1] != GZIP_FILE_EXTENSION):
+            path = path + GZIP_FILE_EXTENSION
+
+    if (not os.path.exists(path)):
+        raise ValueError(f"Could not find PGN file, path does not exist: '{raw_path}'.")
+
+    if (os.path.splitext(path)[-1] == GZIP_FILE_EXTENSION):
+        return load_pgn_from_gzip(path)
+
+    return edq.util.dirent.read_file(path, strip = False)
+
+def load_pgn_from_gzip(path: str) -> str:
+    """
+    Load the PGN string from a file.
+
+    If the given path does not exist,
+    try to prefix the path with the standard game directory and suffix with the standard extension.
+    """
+
+    raw_path = path
+
+    # If the path does not exist, try the boards directory.
+    if (not os.path.exists(path)):
+        path = os.path.join(GAMES_DIR, path)
+
+        # If this path does not have a good extension, add one.
+        if (os.path.splitext(path)[-1] != GZIP_FILE_EXTENSION):
+            path = path + GZIP_FILE_EXTENSION
+
+    if (not os.path.exists(path)):
+        raise ValueError(f"Could not find PGN file, path does not exist: '{raw_path}'.")
+
+    with gzip.open(path, 'rb', encoding = DEFAULT_ENCODING) as file:
+        contents = file.read()
+        if (isinstance(contents, bytes)):
+            contents = contents.decode(DEFAULT_ENCODING)
+
+    return contents
 
 def _is_pgn_comment_line(line: str) -> bool:
     """

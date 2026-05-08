@@ -13,10 +13,10 @@ import chessai.core.types
 
 THIS_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 BOARDS_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'boards')
-# TODO(Lucas): Put puzzles into their own directory.
 PUZZLES_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'puzzles')
 
-FEN_FILE_EXTENSION = '.board'
+FEN_FILE_EXTENSION = '.fen'
+PUZZLE_FILE_EXTENSION = '.puzzle'
 
 # File parsing patterns.
 SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
@@ -238,8 +238,16 @@ def load_fen_from_path(path: str, **kwargs: typing.Any) -> ParsedFEN:
         path = os.path.join(BOARDS_DIR, path)
 
         # If this path does not have a good extension, add one.
-        if os.path.splitext(path)[-1] != FEN_FILE_EXTENSION:
+        if (os.path.splitext(path)[-1] != FEN_FILE_EXTENSION):
             path = path + FEN_FILE_EXTENSION
+
+    # If the path does not exist, try the puzzles directory.
+    if (not os.path.exists(path)):
+        path = os.path.join(PUZZLES_DIR, raw_path)
+
+        # If this path does not have a good extension, add one.
+        if (os.path.splitext(path)[-1] != PUZZLE_FILE_EXTENSION):
+            path = path + PUZZLE_FILE_EXTENSION
 
     if (not os.path.exists(path)):
         raise ValueError(f"Could not find FEN file, path does not exist: '{raw_path}'.")
