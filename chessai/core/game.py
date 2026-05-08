@@ -348,18 +348,24 @@ class Game(abc.ABC):
 
     @classmethod
     def from_pgn(cls,
-                 parsed_pgn: chessai.core.gameparser.ParsedPGN,
+                 pgn: str,
+                 state_class: typing.Type[chessai.core.gamestate.GameState],
                  agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] | None = None,
                  isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
                  save_path: str | None = None,
                  seed: int | None = None,
-                 **kwargs: typing.Any) -> 'Game':
+                 **kwargs: typing.Any) -> typing.Optional['Game']:
         """
-        Create a Game from a ParsedPGN.
+        Create a Game from a PGN.
 
-        The game will be initialized with metadata from the PGN headers
-        and will store the SAN moves for replay.
+        The game will be initialized with metadata from the PGN headers and will store the moves for replay.
+
+        Returns the game and whether the PGN parsing was successful.
         """
+
+        parsed_pgn = chessai.core.gameparser.parse_pgn(pgn, state_class)
+        if (parsed_pgn is None):
+            return None
 
         # Extract starting FEN from optional headers or use default.
         start_fen = parsed_pgn.get_starting_fen()
@@ -391,16 +397,12 @@ class Game(abc.ABC):
             black_player = black_player,
         )
 
-        # Extract expected result from Result header.
-        expected_result = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.RESULT, '')
-        expected_result = chessai.core.gameparser.PGNResult(expected_result)
-
         return cls(
             game_info = game_info,
             fen = start_fen,
             save_path = save_path,
             initial_actions = parsed_pgn.initial_actions,
-            expected_result = expected_result,
+            expected_result = parsed_pgn.result,
             **kwargs
         )
 

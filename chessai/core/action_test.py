@@ -81,7 +81,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (start_coordinate, end_coordinate, promotion, expected)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 action = chessai.core.action.Action(start_coordinate, end_coordinate, promotion)
                 self.assertEqual(expected, action.uci())
 
@@ -224,7 +224,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, (uci, error_substring, expected_start, expected_end, expected_promotion)) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 try:
                     action = chessai.core.action.Action.from_uci(uci)
                 except Exception as ex:
@@ -257,10 +257,16 @@ class ActionTest(edq.testing.unittest.BaseTest):
             'e7e8b',
             'e7e8n',
             'aa1ab2q',
+
+            # Custom Actions
+            'Propose Draw',
+            'Accept Draw',
+            'Reject Draw',
+            'Forfeit',
         ]
 
         for (i, uci) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 action = chessai.core.action.Action.from_uci(uci)
                 self.assertEqual(uci, action.uci())
 
@@ -301,7 +307,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
         ]
 
         for (i, test_case) in enumerate(test_cases):
-            with self.subTest(msg=f"Case {i}:"):
+            with self.subTest(msg = f"Case {i}:"):
                 (raw_input, raw_expected_actions) = test_case
 
                 expected: list[list[chessai.core.action.Action]] = []

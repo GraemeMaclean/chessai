@@ -174,7 +174,7 @@ class ParsedPGN(edq.util.json.DictConverter):
 
         return self.optional_headers.get(FEN_HEADER_KEY, None)
 
-def parse_pgn_game(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameState]) -> ParsedPGN | None:
+def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameState]) -> ParsedPGN | None:
     """
     Parse a single PGN string into a ParsedPGN.
 

@@ -17,6 +17,10 @@ ACTION_PATTERN: re.Pattern = re.compile(r'^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$')
 ACTION_KEY: str = 'actions'
 
 UCI_NULL_ACTION: str = '0000'
+UCI_PROPOSE_DRAW_ACTION: str = 'Propose Draw'
+UCI_ACCEPT_DRAW_ACTION: str = 'Accept Draw'
+UCI_REJECT_DRAW_ACTION: str = 'Reject Draw'
+UCI_FORFEIT_ACTION: str = 'Forfeit'
 
 class Action(edq.util.json.DictConverter):
     """
@@ -29,7 +33,10 @@ class Action(edq.util.json.DictConverter):
     def __init__(self,
                  start_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE,
                  end_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE,
-                 promotion: chessai.core.piece.Piece | None = None) -> None:
+                 promotion: chessai.core.piece.Piece | None = None,
+                 propose_draw: bool = False,
+                 accept_draw: bool | None = None,
+                 forfeit: bool = False) -> None:
 
         self.start_coordinate: chessai.core.coordinate.Coordinate = start_coordinate
         """ The starting coordinate for the action. """
@@ -40,12 +47,33 @@ class Action(edq.util.json.DictConverter):
         self.promotion: chessai.core.piece.Piece | None = promotion
         """ The piece to promote to, or None if this is not a promotion move. """
 
+        self.propose_draw: bool = propose_draw
+        """ Signal if the player is proposing a draw. """
+
+        self.accept_draw: bool | None = accept_draw
+        """ If present, signals acceptance or rejection a draw proposal. """
+
+        self.forfeit: bool = forfeit
+        """ Forfeit the game, which counts as a loss. """
+
     def uci(self) -> str:
         """ Represent the agent action as a chess move in UCI format. """
 
         # The null action in UCI is encoded as '0000'.
         if (self == NULL_ACTION):
             return UCI_NULL_ACTION
+
+        if (self.propose_draw):
+            return UCI_PROPOSE_DRAW_ACTION
+
+        if (self.accept_draw):
+            return UCI_ACCEPT_DRAW_ACTION
+
+        if ((self.accept_draw is not None) and (not self.accept_draw)):
+            return UCI_REJECT_DRAW_ACTION
+
+        if (self.forfeit):
+            return UCI_FORFEIT_ACTION
 
         start = self.start_coordinate.uci()
         end = self.end_coordinate.uci()
@@ -60,9 +88,21 @@ class Action(edq.util.json.DictConverter):
         Note that this project supports arbitrary sized boards.
         """
 
-        # Check for the null UCI move.
+        # Check for the special actions.
         if (uci == UCI_NULL_ACTION):
             return cls()
+
+        if (uci == UCI_PROPOSE_DRAW_ACTION):
+            return cls(propose_draw = True)
+
+        if (uci == UCI_ACCEPT_DRAW_ACTION):
+            return cls(accept_draw = True)
+
+        if (uci == UCI_REJECT_DRAW_ACTION):
+            return cls(accept_draw = False)
+
+        if (uci == UCI_FORFEIT_ACTION):
+            return cls(forfeit = True)
 
         match = ACTION_PATTERN.fullmatch(uci)
         if (match is None):
@@ -89,8 +129,8 @@ class Action(edq.util.json.DictConverter):
         if (not isinstance(other, Action)):
             raise ValueError(f"Cannot compare an action with an object of type '{type(other)}'.")
 
-        self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
-        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion)
+        self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion, self.propose_draw, self.accept_draw, self.forfeit)
+        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw, self.accept_draw, self.forfeit)
 
         return (self_tuple < other_tuple)
 
@@ -98,8 +138,8 @@ class Action(edq.util.json.DictConverter):
         if (not isinstance(other, Action)):
             return False
 
-        self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion)
-        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion)
+        self_tuple = (self.start_coordinate, self.end_coordinate, self.promotion, self.propose_draw, self.accept_draw, self.forfeit)
+        other_tuple = (other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw, other.accept_draw, other.forfeit)
 
         return (self_tuple == other_tuple)
 
@@ -126,3 +166,7 @@ def actions_list_from_dict(data: dict[str, typing.Any]) -> list[list[Action]]:
     return clean_actions
 
 NULL_ACTION = Action()
+PROPOSE_DRAW_ACTION = Action(propose_draw = True)
+ACCEPT_DRAW_ACTION = Action(accept_draw = True)
+REJECT_DRAW_ACTION = Action(accept_draw = False)
+FORFEIT_ACTION = Action(forfeit = True)

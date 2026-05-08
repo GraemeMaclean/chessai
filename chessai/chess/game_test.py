@@ -175,16 +175,15 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
             (pgn_string, expected_game) = test_case
 
             with self.subTest(msg = f"Case {i}:"):
-                # Parse the PGN.
-                parsed_pgn = chessai.core.gameparser.parse_pgn_game(pgn_string, chessai.chess.gamestate.GameState)
-                self.assertIsNotNone(parsed_pgn)
-
                 # Create Game from ParsedPGN.
                 game = chessai.chess.game.Game.from_pgn(
-                    parsed_pgn,
+                    pgn = pgn_string,
+                    state_class = chessai.chess.gamestate.GameState,
                     agent_infos = AGENT_INFOS,
                     seed = DEFAULT_SEED,
                 )
+
+                self.assertIsNotNone(game)
 
                 # Set the seed to the default seed to compare game info's directly.
                 expected_game.game_info.seed = DEFAULT_SEED

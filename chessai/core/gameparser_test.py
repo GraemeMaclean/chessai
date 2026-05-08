@@ -242,7 +242,7 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
 
             with self.subTest(msg = f"Case {i}:"):
                 try:
-                    actual_pgn = chessai.core.gameparser.parse_pgn_game(raw_pgn, chessai.chess.gamestate.GameState)
+                    actual_pgn = chessai.core.gameparser.parse_pgn(raw_pgn, chessai.chess.gamestate.GameState)
                 except Exception as ex:
                     if (error_substring is None):
                         self.fail(f"Unexpected error: '{str(ex)}'.")
