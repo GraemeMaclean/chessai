@@ -515,15 +515,6 @@ def base_eval(
     The most basic evaluation function, which just uses the difference in piece value on the board.
     """
 
-    # Return really low scores for choosing a meta action.
-    if (action in [
-                chessai.core.action.FORFEIT_ACTION,
-                chessai.core.action.PROPOSE_DRAW_ACTION,
-                chessai.core.action.ACCEPT_DRAW_ACTION,
-                chessai.core.action.REJECT_DRAW_ACTION,
-            ]):
-        return -math.inf
-
     piece_values: dict[type[chessai.core.piece.Piece], int] = {
         chessai.chess.piece.Pawn: 1,
         chessai.chess.piece.Knight: 3,
