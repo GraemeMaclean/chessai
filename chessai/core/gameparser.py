@@ -189,6 +189,8 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
     headers: StandardHeadersDict = StandardHeadersDict()
     optional_headers: dict[str, typing.Any] = {}
 
+    required_headers = {header.value for header in StandardPGNHeaders}
+
     # Parse the header fields.
     for i, line in enumerate(lines):
         # Track where we are in the lines.
@@ -218,7 +220,7 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
         tag_header_value = tag_match.group(2)
 
         # Determine if this is a standard header key or not.
-        if (tag_header_key in StandardPGNHeaders):
+        if (tag_header_key in required_headers):
             headers[StandardPGNHeaders(tag_header_key)] = tag_header_value
         else:
             optional_headers[tag_header_key] = tag_header_value
@@ -229,9 +231,8 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
 
     # Ensure all required headers are present.
     if (not headers.is_complete()):
-        expected_headers = [header.value for header in StandardPGNHeaders]
-        actual_headers = [header.value for header in headers.keys()]
-        raise ValueError(f"Did not find all required headers. Expected: '{expected_headers}', Found: '{actual_headers}'.")
+        actual_headers = {header.value for header in headers.keys()}
+        raise ValueError(f"Did not find all required headers. Expected: '{required_headers}', Found: '{actual_headers}'.")
 
     # Start scanning for moves from the end of the headers.
     lines = lines[index:]
