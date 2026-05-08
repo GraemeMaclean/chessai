@@ -316,7 +316,6 @@ class Game(abc.ABC):
 
     def __init__(self,
                  game_info: GameInfo,
-                 fen: str,
                  save_path: str | None = None,
                  is_replay: bool = False,
                  initial_actions: list[chessai.core.action.Action] | None = None,
@@ -324,9 +323,6 @@ class Game(abc.ABC):
                  ) -> None:
         self.game_info: GameInfo = game_info
         """ The core information about this game. """
-
-        self.fen: str = fen
-        """ The starting FEN for the game. """
 
         self._save_path: str | None = save_path
         """ Where to save the results of this game. """
@@ -350,10 +346,8 @@ class Game(abc.ABC):
     def from_pgn(cls,
                  pgn: str,
                  state_class: typing.Type[chessai.core.gamestate.GameState],
-                 agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] | None = None,
-                 isolation_level: chessai.core.isolation.level.Level = chessai.core.isolation.level.Level.NONE,
+                 game_info: GameInfo,
                  save_path: str | None = None,
-                 seed: int | None = None,
                  **kwargs: typing.Any) -> typing.Optional['Game']:
         """
         Create a Game from a PGN.
@@ -369,37 +363,20 @@ class Game(abc.ABC):
 
         # Extract starting FEN from optional headers or use default.
         start_fen = parsed_pgn.get_starting_fen()
-        if (start_fen is None):
-            start_fen = chessai.core.gamestate.DEFAULT_FEN
+        if (start_fen is not None):
+            game_info.start_fen = start_fen
 
-        # Use provided agent_infos or create default random agents.
-        if (agent_infos is None):
-            agent_infos = {
-                chessai.core.types.Color.WHITE: chessai.core.agentinfo.AgentInfo(name = DEFAULT_AGENT),
-                chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = DEFAULT_AGENT),
-            }
-
-        # Extract player names from headers if available.
-        white_player = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.WHITE, None)
-        black_player = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.BLACK, None)
-
-        # Create GameInfo with PGN metadata.
-        game_info = GameInfo(
-            agent_infos = agent_infos,
-            start_fen = start_fen,
-            isolation_level = isolation_level,
-            seed = seed,
-            event = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.EVENT, None),
-            site = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.SITE, None),
-            date = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.DATE, None),
-            game_round = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.ROUND, None),
-            white_player = white_player,
-            black_player = black_player,
-        )
+        # Extract header information into the game info.
+        game_info.event = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.EVENT, '?')
+        game_info.site = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.SITE, '?')
+        game_info.date = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.DATE, '????.??.??')
+        game_info.game_round = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.ROUND, '?')
+        game_info.white_player = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.WHITE, '?')
+        game_info.black_player = parsed_pgn.headers.get(chessai.core.gameparser.StandardPGNHeaders.BLACK, '?')
+        game_info.extra_info.update(parsed_pgn.optional_headers)
 
         return cls(
             game_info = game_info,
-            fen = start_fen,
             save_path = save_path,
             initial_actions = parsed_pgn.initial_actions,
             expected_result = parsed_pgn.result,
@@ -489,7 +466,7 @@ class Game(abc.ABC):
         isolator.init_agents(self.game_info.agent_infos)
 
         # Create the initial game state (and force it's seed).
-        state = self.get_initial_state(rng, self.fen)
+        state = self.get_initial_state(rng, self.game_info.start_fen)
         state.seed = game_id
         state.game_start()
 
@@ -513,8 +490,16 @@ class Game(abc.ABC):
         while (not self.check_end(state)):
             logging.trace("Turn %d, agent %s.", state.fullmove_number, state.turn) # type: ignore[attr-defined]  # pylint: disable=no-member
 
-            # Get the next action from the agent.
-            action_record = isolator.get_action(state, self.game_info.agent_action_timeout)
+            if (len(self.initial_actions) > 0):
+                # Get the action from the pre-loaded actions.
+                action = self.initial_actions.pop(0)
+                agent_action = chessai.core.agentaction.AgentAction(action = action)
+                duration = edq.util.time.Duration(0)
+
+                action_record = chessai.core.agentaction.AgentActionRecord(state.turn, agent_action, duration)
+            else:
+                # Get the next action from the agent.
+                action_record = isolator.get_action(state, self.game_info.agent_action_timeout)
 
             # Execute the next action and update the state.
             state = self.process_turn(state, action_record, result, rng)
@@ -622,7 +607,15 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
             help = ('Play on this board (default: %(default)s).'
                     + ' This may be a FEN of the board.'
                     + ' It may also be the full path to a board, or just a filename.'
-                    + ' If just a filename, than the `chessai/resources/boards` directory will be checked (using a ".board" extension.'))
+                    + ' If just a filename, than the `chessai/resources/boards` directory will be checked (using a ".fen" extension.'))
+
+    parser.add_argument('--game', dest = 'game',
+            action = 'store', type = str, default = None,
+            help = ('Play on from this PGN (default: %(default)s).'
+                    + ' This may be a PGN of the game.'
+                    + ' It may also be the full path to a game, or just a filename.'
+                    + ' If just a filename, than the `chessai/resources/games` directory will be checked (using a ".pgn" extension.'
+                    + ' Overrides the board given by the `--board` option.'))
 
     parser.add_argument('--num-games', dest = 'num_games',
             action = 'store', type = int, default = 1,
@@ -682,6 +675,7 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
 def init_from_args(
         args: argparse.Namespace,
         game_class: typing.Type[Game],
+        state_class: typing.Type[chessai.core.gamestate.GameState],
         base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] | None = None,
         **kwargs: typing.Any,
         ) -> argparse.Namespace:
@@ -732,10 +726,6 @@ def init_from_args(
         game_info = GameInfo(
             all_agent_infos[-1],
             start_fen = all_fens[-1],
-            # Could create a partial state class that can be passed into the game info.
-            # Or could have a list of initial_moves.
-            # The actions could be able to represent offering a draw or accepting / rejecting a draw.
-            # Could have an action to surrender.
             isolation_level = chessai.core.isolation.level.Level(args.isolation_level),
             max_moves = args.max_moves,
             agent_start_timeout = args.agent_start_timeout,
@@ -750,13 +740,20 @@ def init_from_args(
             parts = os.path.splitext(save_path)
             save_path = f"{parts[0]}_{i:03d}{parts[1]}"
 
-        game_args = {
-            'game_info': game_info,
-            'fen': args.board,
-            'save_path': save_path,
-        }
+        if (args.game is None):
+            game_args = {
+                'game_info': game_info,
+                'save_path': save_path,
+            }
 
-        game = game_class(**game_args)
+            game = game_class(**game_args)
+        else:
+            raw_game = Game.from_pgn(args.game, state_class, game_info, save_path)
+            if (raw_game is None):
+                raise ValueError(f"Failed to initialize game number {i} from the PGN: '{args.game}'.")
+
+            game = raw_game
+
         game.process_args(args)
 
         all_games.append(game)

@@ -45,7 +45,6 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         white_player = "Alice",
                         black_player = "Bob",
                     ),
-                    fen = chessai.core.gamestate.DEFAULT_FEN,
                     initial_actions = [
                         chessai.core.action.Action.from_uci("e2e4"),
                         chessai.core.action.Action.from_uci("e7e5"),
@@ -82,7 +81,6 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         white_player = "White",
                         black_player = "Black",
                     ),
-                    fen = "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
                     initial_actions = [
                         chessai.core.action.Action.from_uci("f1b5"),
                         chessai.core.action.Action.from_uci("a7a6"),
@@ -115,7 +113,6 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         white_player = "Player1",
                         black_player = "Player2",
                     ),
-                    fen = chessai.core.gamestate.DEFAULT_FEN,
                     initial_actions = [
                         chessai.core.action.Action.from_uci("e2e4"),
                         chessai.core.action.Action.from_uci("e7e5"),
@@ -161,7 +158,6 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         white_player = "ScrimScram",
                         black_player = "Anonymous",
                     ),
-                    fen = chessai.core.gamestate.DEFAULT_FEN,
                     initial_actions = [
                         chessai.core.action.Action.from_uci("e2e4"),
                         chessai.core.action.Action.from_uci("e7e6"),
@@ -179,8 +175,7 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                 game = chessai.chess.game.Game.from_pgn(
                     pgn = pgn_string,
                     state_class = chessai.chess.gamestate.GameState,
-                    agent_infos = AGENT_INFOS,
-                    seed = DEFAULT_SEED,
+                    game_info = expected_game.game_info,
                 )
 
                 self.assertIsNotNone(game)
@@ -192,6 +187,6 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                 self.assertEqual(game.game_info, expected_game.game_info)
 
                 # Verify the fen, initial_actions, and expected_result of the Game.
-                self.assertEqual(game.fen, expected_game.fen)
+                self.assertEqual(game.game_info.start_fen, expected_game.game_info.start_fen)
                 self.assertEqual(game.initial_actions, expected_game.initial_actions)
                 self.assertEqual(game.expected_result, expected_game.expected_result)

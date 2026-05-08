@@ -24,11 +24,10 @@ class Game(chessai.core.game.Game):
 
     def __init__(self,
             game_info: chessai.core.game.GameInfo,
-            fen: str,
             save_path: str | None = None,
             is_replay: bool = False,
             move_lines: list[list[chessai.core.action.Action]] | dict[str, typing.Any] | None = None) -> None:
-        super().__init__(game_info, fen, save_path, is_replay)
+        super().__init__(game_info, save_path, is_replay)
 
         if (move_lines is None):
             move_lines = []

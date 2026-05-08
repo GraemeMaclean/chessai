@@ -43,8 +43,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
 
     return base_agent_infos, [], {}
 
-def main(argv: list[str] | None = None,
-        ) -> list[chessai.core.game.GameResult]:
+def main(argv: list[str] | None = None) -> list[chessai.core.game.GameResult]:
     """
     Invoke a game of chess.
 
@@ -54,6 +53,7 @@ def main(argv: list[str] | None = None,
     return chessai.util.bin.run_main(
         description = "Play a game of chess.",
         game_class = chessai.chess.game.Game,
+        state_class = chessai.chess.gamestate.GameState,
         default_board = None,
         custom_set_cli_args = set_cli_args,
         custom_init_from_args = init_from_args,

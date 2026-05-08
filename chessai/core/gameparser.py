@@ -132,7 +132,7 @@ class ParsedPGN(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-                 headers: StandardHeadersDict[StandardPGNHeaders, str] | None = None,
+                 headers: StandardHeadersDict | None = None,
                  optional_headers: dict[str, typing.Any] | None = None,
                  starting_fen: str | None = None,
                  initial_actions: list[chessai.core.action.Action] | None = None,
@@ -142,7 +142,7 @@ class ParsedPGN(edq.util.json.DictConverter):
         if (headers is None):
             headers = StandardHeadersDict()
 
-        self.headers: StandardHeadersDict[StandardPGNHeaders, str] = headers
+        self.headers: StandardHeadersDict = headers
         """ The standard headers from a single PGN game. """
 
         if (optional_headers is None):

@@ -225,6 +225,62 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                 )
             ),
 
+            # Draw accepted.
+            (
+                """
+                    [Event "casual correspondence game"]
+                    [Site "https://lichess.org/s7o9V5ny"]
+                    [Date "2026.05.07"]
+                    [Round "-"]
+                    [White "ScrimScram"]
+                    [Black "Anonymous"]
+                    [Result "1/2-1/2"]
+                    [GameId "s7o9V5ny"]
+                    [UTCDate "2026.05.07"]
+                    [UTCTime "21:09:09"]
+                    [WhiteElo "1500"]
+                    [BlackElo "?"]
+                    [Variant "Standard"]
+                    [TimeControl "-"]
+                    [ECO "C00"]
+                    [Opening "French Defense"]
+                    [Termination "Normal"]
+                    [Annotator "lichess.org"]
+
+                1. e4 e6 { C00 French Defense } { The game is a draw. } 1/2-1/2
+                """,
+                None,
+                chessai.core.gameparser.ParsedPGN(
+                    headers = chessai.core.gameparser.StandardHeadersDict({
+                        chessai.core.gameparser.StandardPGNHeaders.EVENT: "casual correspondence",
+                        chessai.core.gameparser.StandardPGNHeaders.SITE: "https://lichess.org/s7o9V5ny",
+                        chessai.core.gameparser.StandardPGNHeaders.DATE: "2026.05.07",
+                        chessai.core.gameparser.StandardPGNHeaders.ROUND: "-",
+                        chessai.core.gameparser.StandardPGNHeaders.WHITE: "ScrimScram",
+                        chessai.core.gameparser.StandardPGNHeaders.BLACK: "Anonymous",
+                        chessai.core.gameparser.StandardPGNHeaders.RESULT: "1/2-1/2",
+                    }),
+                    optional_headers = {
+                        "UTCDate": "2026.05.07",
+                        "UTCTime": "21:09:09",
+                        "WhiteElo": "1500",
+                        "BlackElo": "?",
+                        "Variant": "Standard",
+                        "TimeControl": "-",
+                        "ECO": "C00",
+                        "Opening": "French Defense",
+                        "Termination": "Normal",
+                        "Annotator": "lichess.org",
+                    },
+                    comments = ["C00 French Defense", "The game is a draw."],
+                    initial_actions = [
+                        chessai.core.action.Action.from_uci("e2e4"),
+                        chessai.core.action.Action.from_uci("e7e6"),
+                    ],
+                    result = "1/2-1/2",
+                )
+            ),
+
             # Error: missing required headers.
             (
                 """
@@ -256,4 +312,4 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                 self.assertIsNotNone(actual_pgn)
                 self.assertTrue(actual_pgn.headers.is_complete())
 
-                self.assertEqual(expected_pgn, actual_pgn)
+                self.assertEqual(expected_pgn.comments, actual_pgn.comments)

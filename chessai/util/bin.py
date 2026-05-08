@@ -139,6 +139,7 @@ def base_log_results(results: list[chessai.core.game.GameResult], winning_agent_
 def run_main(
         description: str,
         game_class: typing.Type[chessai.core.game.Game],
+        state_class: typing.Type[chessai.core.gamestate.GameState],
         default_board: str | None = None,
         custom_set_cli_args: SetCLIArgs | None = None,
         custom_init_from_args: InitFromArgs = base_init_from_args,
@@ -156,7 +157,7 @@ def run_main(
     parser = get_parser(description, default_board, custom_set_cli_args = custom_set_cli_args)
 
     # Parse the CLI args.
-    args = parse_args(parser, game_class,
+    args = parse_args(parser, game_class, state_class,
             custom_init_from_args = custom_init_from_args,
             argv = argv)
 
@@ -186,6 +187,7 @@ def get_parser(
 def parse_args(
         parser: argparse.ArgumentParser,
         game_class: typing.Type[chessai.core.game.Game],
+        state_class: typing.Type[chessai.core.gamestate.GameState],
         custom_init_from_args: InitFromArgs = base_init_from_args,
         argv: list[str] | None = None,
         ) -> argparse.Namespace:
@@ -200,7 +202,7 @@ def parse_args(
     base_agent_infos, _, kwargs = custom_init_from_args(args)
 
     # Parse game arguments.
-    args = chessai.core.game.init_from_args(args, game_class,
+    args = chessai.core.game.init_from_args(args, game_class, state_class,
             base_agent_infos = base_agent_infos, **kwargs)
 
     return args
