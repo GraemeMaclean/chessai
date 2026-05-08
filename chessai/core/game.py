@@ -748,7 +748,7 @@ def init_from_args(
 
             game = game_class(**game_args)
         else:
-            raw_game = Game.from_pgn(args.game, state_class, game_info, save_path)
+            raw_game = game_class.from_pgn(args.game, state_class, game_info, save_path)
             if (raw_game is None):
                 raise ValueError(f"Failed to initialize game number {i} from the PGN: '{args.game}'.")
 

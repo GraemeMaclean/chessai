@@ -252,7 +252,7 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                 None,
                 chessai.core.gameparser.ParsedPGN(
                     headers = chessai.core.gameparser.StandardHeadersDict({
-                        chessai.core.gameparser.StandardPGNHeaders.EVENT: "casual correspondence",
+                        chessai.core.gameparser.StandardPGNHeaders.EVENT: "casual correspondence game",
                         chessai.core.gameparser.StandardPGNHeaders.SITE: "https://lichess.org/s7o9V5ny",
                         chessai.core.gameparser.StandardPGNHeaders.DATE: "2026.05.07",
                         chessai.core.gameparser.StandardPGNHeaders.ROUND: "-",
@@ -261,6 +261,7 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "1/2-1/2",
                     }),
                     optional_headers = {
+                        "GameId": "s7o9V5ny",
                         "UTCDate": "2026.05.07",
                         "UTCTime": "21:09:09",
                         "WhiteElo": "1500",
@@ -312,4 +313,4 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                 self.assertIsNotNone(actual_pgn)
                 self.assertTrue(actual_pgn.headers.is_complete())
 
-                self.assertEqual(expected_pgn.comments, actual_pgn.comments)
+                self.assertEqual(expected_pgn, actual_pgn)

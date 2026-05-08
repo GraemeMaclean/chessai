@@ -40,7 +40,7 @@ MOVETEXT_PATTERN: re.Pattern = re.compile(r"""
         |O-O(?:-O)?
         |0-0(?:-0)?
     )
-    |(\{.*})
+    |(\{.*?})
     |(\{.*)
     |(;.*)
     |(\$[0-9]+)
@@ -189,7 +189,7 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
     lines = pgn.splitlines()
 
     # If it is only one line, try loading it from a file.
-    if (len(lines) == 0):
+    if (len(lines) == 1):
         pgn = load_pgn_from_file(pgn)
         lines = pgn.splitlines()
 
@@ -273,19 +273,21 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
         i = 0
         while (i < len(line)):
             if in_comment:
-                end_idx = line.find("}", i)
+                end_index = line.find("}", i)
 
                 # The rest of the line is part of the comment.
-                if (end_idx == -1):
+                if (end_index == -1):
                     comment_buffer.append(line[i:])
                     break
 
                 # Add the remainder of the comment and continue processing the current line.
-                comment_buffer.append(line[i:end_idx])
+                comment_buffer.append(line[i:end_index])
                 comments.append("\n".join(comment_buffer).strip())
 
                 comment_buffer = []
                 in_comment = False
+
+                i = end_index + 1
 
                 continue
 
@@ -390,7 +392,8 @@ def load_pgn_from_file(path: str) -> str:
     if (os.path.splitext(path)[-1] == GZIP_FILE_EXTENSION):
         return load_pgn_from_gzip(path)
 
-    return edq.util.dirent.read_file(path, strip = False)
+    contents = edq.util.dirent.read_file(path, strip = False)
+    return contents
 
 def load_pgn_from_gzip(path: str) -> str:
     """
