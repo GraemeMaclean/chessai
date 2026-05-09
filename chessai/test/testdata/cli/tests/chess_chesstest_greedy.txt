@@ -1,15 +1,15 @@
 {
     "cli": "chessai.chess.bin",
     "arguments": [
-        "--seed", "4",
+        "--seed", "1",
         "--max-moves", "100",
-        "--white-team", "agent-reflex",
-        "--black-team", "agent-reflex",
+        "--white-team", "agent-greedy",
+        "--black-team", "agent-greedy"
     ]
 }
 ---
 <LOG_PREFIX> -- Average Score: 0.50
 <LOG_PREFIX> -- Scores:        0.5
 <LOG_PREFIX> -- Record:        Tie
-<LOG_PREFIX> -- Average Moves: 95.0
-<LOG_PREFIX> -- Move Counts:   95
+<LOG_PREFIX> -- Average Moves: 32.0
+<LOG_PREFIX> -- Move Counts:   32

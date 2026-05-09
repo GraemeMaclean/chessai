@@ -92,7 +92,7 @@ def _call_agent_method(
         agent_action = agent_method(**agent_method_kwargs)
     except Exception as ex:
         crashed = True
-        logging.warning("Agent %d crashed.", player, exc_info = ex)
+        logging.warning("Player %s crashed.", player, exc_info = ex)
 
     end_time = edq.util.time.Timestamp.now()
 

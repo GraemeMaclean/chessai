@@ -29,6 +29,11 @@ class GameStateTest(edq.testing.unittest.BaseTest):
         for legal_action in legal_actions:
             self.assertIsNotNone(legal_action.start_coordinate)
             self.assertIsNotNone(legal_action.end_coordinate)
+
+            # Meta actions have equivalent start and end coordinates.
+            if (legal_action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.FORFEIT_ACTION]):
+                continue
+
             self.assertNotEqual(legal_action.start_coordinate, legal_action.end_coordinate)
 
         # Push an action and observe the resulting state.

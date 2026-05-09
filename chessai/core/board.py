@@ -137,7 +137,7 @@ class Board(edq.util.json.DictConverter):
         """ Returns if the move captures a piece. """
 
         if (self.get(action.start_coordinate) is None):
-            raise ValueError(f"Action has a start coordinate that does not have a piece on the board: '{action.start_coordinate.uci()}'.")
+            return False
 
         return (self.get(action.end_coordinate) is not None)
 

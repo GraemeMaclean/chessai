@@ -129,7 +129,7 @@ class GameState(edq.util.json.DictConverter):
         partial_fen = self.get_fen(partial = True)
         precomputed_legal_actions = _KNOWN_LEGAL_ACTIONS.get(partial_fen, None)
         if (precomputed_legal_actions is not None):
-            return precomputed_legal_actions
+            return precomputed_legal_actions.copy()
 
         # Players can always propose a draw or forfeit.
         legal_actions: list[chessai.core.action.Action] = [
@@ -164,7 +164,7 @@ class GameState(edq.util.json.DictConverter):
         # Cache the legal actions.
         _KNOWN_LEGAL_ACTIONS[partial_fen] = legal_actions
 
-        return legal_actions
+        return legal_actions.copy()
 
     def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Return whether the given action captures a piece. """
@@ -201,11 +201,14 @@ class GameState(edq.util.json.DictConverter):
         legal_actions = self.get_legal_actions()
 
         # Do not count draw proposals or forfeits towards the check.
-        for action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.FORFEIT_ACTION]:
-            if (action in legal_actions):
-                legal_actions.remove(action)
+        checkmate_escape_actions = [
+            action for action in legal_actions if action not in [
+                chessai.core.action.PROPOSE_DRAW_ACTION,
+                chessai.core.action.FORFEIT_ACTION,
+            ]
+        ]
 
-        return ((len(legal_actions) == 0) and self.is_check(self.turn))
+        return ((len(checkmate_escape_actions) == 0) and self.is_check(self.turn))
 
     def is_stalemate(self) -> bool:
         """ Determines if the current player is in stalemate. """
@@ -213,13 +216,14 @@ class GameState(edq.util.json.DictConverter):
         legal_actions = self.get_legal_actions()
 
         # Do not count draw proposals or forfeits towards the check.
-        if (chessai.core.action.PROPOSE_DRAW_ACTION in legal_actions):
-            legal_actions.remove(chessai.core.action.PROPOSE_DRAW_ACTION)
+        checkmate_escape_actions = [
+            action for action in legal_actions if action not in [
+                chessai.core.action.PROPOSE_DRAW_ACTION,
+                chessai.core.action.FORFEIT_ACTION,
+            ]
+        ]
 
-        if (chessai.core.action.FORFEIT_ACTION in legal_actions):
-            legal_actions.remove(chessai.core.action.FORFEIT_ACTION)
-
-        return ((len(legal_actions) == 0) and (not self.is_check(self.turn)))
+        return ((len(checkmate_escape_actions) == 0) and (not self.is_check(self.turn)))
 
     def is_insufficient_material(self) -> bool:
         """ Processes if there is insufficient material to get a checkmate for all colors. """
@@ -249,9 +253,9 @@ class GameState(edq.util.json.DictConverter):
         An empty list signifies the game is in progress or it is a tie.
         """
 
-        # If the agent forfeited the game, the opponent won.
+        # If the previous agent forfeited the game, the current agent won.
         if (self.get_previous_action() == chessai.core.action.FORFEIT_ACTION):
-            return [self.turn.opposite()]
+            return [self.turn]
 
         # If the agent is in checkmate, the opponent won.
         if (self.is_checkmate()):
@@ -408,21 +412,22 @@ class GameState(edq.util.json.DictConverter):
     def push(self, action: chessai.core.action.Action) -> None:
         """ Apply action to the game state and update all metadata. """
 
+        previous_board = self.board.copy()
+
         # If the agent forfeits the game or accepts a draw, end the game.
-        if action in (chessai.core.action.FORFEIT_ACTION, chessai.core.action.ACCEPT_DRAW_ACTION):
+        if action in [chessai.core.action.FORFEIT_ACTION, chessai.core.action.ACCEPT_DRAW_ACTION]:
+            self._progress_state(action, previous_board, False)
             self.game_over = True
             return
 
         # If the agent proposes a draw offer or rejects a draw offer, progress the state to the opponent.
-        if action in (chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.REJECT_DRAW_ACTION):
-            self._progress_state(action, False)
+        if action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.REJECT_DRAW_ACTION]:
+            self._progress_state(action, previous_board, False)
             return
 
         piece = self.board.get(action.start_coordinate)
         if (piece is None):
             raise ValueError(f"Cannot push an action from an empty coordinate: '{action.uci()}'.")
-
-        self.board_stack.append(self.board.copy())
 
         # Allow games to process any special moves.
         is_special_capture, self.en_passant_coordinate = self._process_special_move(action, piece)
@@ -434,10 +439,10 @@ class GameState(edq.util.json.DictConverter):
         reset_clock = self._should_reset_halfmove_clock(action, piece)
 
         # Update the clocks.
-        self._progress_state(action, (reset_clock or is_capture or is_special_capture))
+        self._progress_state(action, previous_board, (reset_clock or is_capture or is_special_capture))
         return
 
-    def _progress_state(self, action: chessai.core.action.Action, reset_clock: bool) -> None:
+    def _progress_state(self, action: chessai.core.action.Action, board: chessai.core.board.Board, reset_clock: bool) -> None:
         """ A helper function to update the basic state of the game. """
 
         if (reset_clock):
@@ -451,6 +456,7 @@ class GameState(edq.util.json.DictConverter):
         # Advance the turn.
         self.turn = self.turn.opposite()
 
+        self.board_stack.append(board)
         self.move_stack.append(action)
 
     def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:

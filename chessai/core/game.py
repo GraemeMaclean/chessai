@@ -498,6 +498,12 @@ class Game(abc.ABC):
 
                 action_record = chessai.core.agentaction.AgentActionRecord(state.turn, agent_action, duration)
             else:
+                if (self.expected_result in [
+                        chessai.core.gameparser.PGNResult.WHITE_WIN,
+                        chessai.core.gameparser.PGNResult.BLACK_WIN,
+                        chessai.core.gameparser.PGNResult.TIE]):
+                    raise ValueError(f"GameState did not agree with the PGNs expected result: {self.expected_result}.")
+
                 # Get the next action from the agent.
                 action_record = isolator.get_action(state, self.game_info.agent_action_timeout)
 

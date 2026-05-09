@@ -548,3 +548,129 @@ class ActionTest(edq.testing.unittest.BaseTest):
                 input_list.sort()
 
                 self.assertEqual(input_list, expected_list)
+
+    def test_action_membership(self):
+        """ Test sorting actions. """
+
+        # [(input, expected_output), ...]
+        test_cases: list[tuple[chessai.core.action.Action, list[chessai.core.action.Action]], bool] = [
+            (
+                chessai.core.action.REJECT_DRAW_ACTION,
+                [
+                    chessai.core.action.REJECT_DRAW_ACTION,
+                    chessai.core.action.ACCEPT_DRAW_ACTION,
+                    chessai.core.action.NULL_ACTION,
+                    chessai.core.action.FORFEIT_ACTION,
+                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.Action.from_uci("a1a1"),
+                    chessai.core.action.Action.from_uci("a1a2"),
+                    chessai.core.action.Action.from_uci("a1b1"),
+                    chessai.core.action.Action.from_uci("a2a1"),
+                    chessai.core.action.Action.from_uci("b1a1"),
+                ],
+                True,
+            ),
+
+            (
+                chessai.core.action.PROPOSE_DRAW_ACTION,
+                [
+                    chessai.core.action.REJECT_DRAW_ACTION,
+                    chessai.core.action.ACCEPT_DRAW_ACTION,
+                    chessai.core.action.NULL_ACTION,
+                    chessai.core.action.FORFEIT_ACTION,
+                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                ],
+                True,
+            ),
+
+            (
+                chessai.core.action.FORFEIT_ACTION,
+                [
+                    chessai.core.action.REJECT_DRAW_ACTION,
+                    chessai.core.action.ACCEPT_DRAW_ACTION,
+                    chessai.core.action.NULL_ACTION,
+                    chessai.core.action.FORFEIT_ACTION,
+                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                ],
+                True,
+            ),
+
+            (
+                chessai.core.action.ACCEPT_DRAW_ACTION,
+                [
+                    chessai.core.action.REJECT_DRAW_ACTION,
+                    chessai.core.action.ACCEPT_DRAW_ACTION,
+                    chessai.core.action.NULL_ACTION,
+                    chessai.core.action.FORFEIT_ACTION,
+                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                ],
+                True,
+            ),
+
+            (
+                chessai.core.action.NULL_ACTION,
+                [
+                    chessai.core.action.REJECT_DRAW_ACTION,
+                    chessai.core.action.ACCEPT_DRAW_ACTION,
+                    chessai.core.action.NULL_ACTION,
+                    chessai.core.action.FORFEIT_ACTION,
+                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                ],
+                True,
+            ),
+
+            (
+                chessai.core.action.REJECT_DRAW_ACTION,
+                [
+                    chessai.core.action.Action.from_uci("a1a1"),
+                    chessai.core.action.Action.from_uci("a1a2"),
+                    chessai.core.action.Action.from_uci("a1b1"),
+                    chessai.core.action.Action.from_uci("a2a1"),
+                    chessai.core.action.Action.from_uci("b1a1"),
+                ],
+                False,
+            ),
+
+            (
+                chessai.core.action.PROPOSE_DRAW_ACTION,
+                [],
+                False,
+            ),
+
+            (
+                chessai.core.action.FORFEIT_ACTION,
+                [
+                    chessai.core.action.REJECT_DRAW_ACTION,
+                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                ],
+                False,
+            ),
+
+            (
+                chessai.core.action.ACCEPT_DRAW_ACTION,
+                [
+                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                ],
+                False,
+            ),
+
+            (
+                chessai.core.action.NULL_ACTION,
+                [
+                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.REJECT_DRAW_ACTION,
+                    chessai.core.action.ACCEPT_DRAW_ACTION,
+                    chessai.core.action.FORFEIT_ACTION,
+                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                ],
+                False,
+            ),
+        ]
+
+        for (i, test_case) in enumerate(test_cases):
+            with self.subTest(msg = f"Case {i}:"):
+                (action, action_list, expected) = test_case
+
+                actual = action in action_list
+
+                self.assertEqual(actual, expected)

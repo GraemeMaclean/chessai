@@ -30,9 +30,9 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                 [Round "1"]
                 [White "Alice"]
                 [Black "Bob"]
-                [Result "1-0"]
+                [Result "*"]
 
-                1. e4 e5 2. Nf3 Nc6 3. Bb5 1-0
+                1. e4 e5 2. Nf3 Nc6 3. Bb5 *
                 """,
                 chessai.chess.game.Game(
                     game_info = chessai.core.game.GameInfo(
@@ -52,7 +52,7 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.action.Action.from_uci("b8c6"),
                         chessai.core.action.Action.from_uci("f1b5"),
                     ],
-                    expected_result = chessai.core.gameparser.PGNResult("1-0"),
+                    expected_result = chessai.core.gameparser.PGNResult("*"),
                 ),
             ),
 
@@ -118,6 +118,8 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.action.Action.from_uci("e7e5"),
                         chessai.core.action.Action.from_uci("g1f3"),
                         chessai.core.action.Action.from_uci("b8c6"),
+                        chessai.core.action.PROPOSE_DRAW_ACTION,
+                        chessai.core.action.ACCEPT_DRAW_ACTION,
                     ],
                     expected_result = chessai.core.gameparser.PGNResult("1/2-1/2"),
                 ),
@@ -161,6 +163,8 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                     initial_actions = [
                         chessai.core.action.Action.from_uci("e2e4"),
                         chessai.core.action.Action.from_uci("e7e6"),
+                        chessai.core.action.PROPOSE_DRAW_ACTION,
+                        chessai.core.action.ACCEPT_DRAW_ACTION,
                     ],
                     expected_result = chessai.core.gameparser.PGNResult("1/2-1/2"),
                 ),

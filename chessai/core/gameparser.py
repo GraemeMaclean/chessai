@@ -355,6 +355,16 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
             state.process_turn_full(action, rng)
             initial_actions.append(action)
 
+    # Check if the gamestate agrees with the expected result.
+    if ((result in [PGNResult.WHITE_WIN, PGNResult.BLACK_WIN]) and (not state.is_game_over())):
+        # The game is not over by checkmate when the PGN believes it should be.
+        raise ValueError(f"The PGN expects the result to be '{result.value}', but the game is not over.")
+
+    if ((result == PGNResult.TIE) and (not state.is_game_over())):
+        # The game must be a proposed draw, so add the draw handshake.
+        initial_actions.append(chessai.core.action.PROPOSE_DRAW_ACTION)
+        initial_actions.append(chessai.core.action.ACCEPT_DRAW_ACTION)
+
     return ParsedPGN(
         headers          = headers,
         optional_headers = optional_headers,

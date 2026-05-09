@@ -43,6 +43,8 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.action.Action.from_uci("e7e5"),
                         chessai.core.action.Action.from_uci("g1f3"),
                         chessai.core.action.Action.from_uci("b8c6"),
+                        chessai.core.action.PROPOSE_DRAW_ACTION,
+                        chessai.core.action.ACCEPT_DRAW_ACTION,
                     ],
                     result = chessai.core.gameparser.PGNResult('1/2-1/2'),
                 )
@@ -57,9 +59,9 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                 [Round "1"]
                 [White "A"]
                 [Black "B"]
-                [Result "0-1"]
+                [Result "*"]
 
-                1. e4 (1. d4 d5) e5 2. Nf3 Nc6 0-1
+                1. e4 (1. d4 d5) e5 2. Nf3 Nc6 *
                 """,
                 None,
                 chessai.core.gameparser.ParsedPGN(
@@ -70,7 +72,7 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.ROUND: "1",
                         chessai.core.gameparser.StandardPGNHeaders.WHITE: "A",
                         chessai.core.gameparser.StandardPGNHeaders.BLACK: "B",
-                        chessai.core.gameparser.StandardPGNHeaders.RESULT: "0-1",
+                        chessai.core.gameparser.StandardPGNHeaders.RESULT: "*",
                     }),
                     initial_actions = [
                         chessai.core.action.Action.from_uci("e2e4"),
@@ -78,7 +80,7 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.action.Action.from_uci("g1f3"),
                         chessai.core.action.Action.from_uci("b8c6"),
                     ],
-                    result = chessai.core.gameparser.PGNResult('0-1'),
+                    result = chessai.core.gameparser.PGNResult('*'),
                 )
             ),
 
@@ -91,9 +93,9 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                 [Round "1"]
                 [White "A"]
                 [Black "B"]
-                [Result "1-0"]
+                [Result "*"]
 
-                1. e4 (1. d4 (1... d5) d5) e5 2. Nf3 Nc6 1-0
+                1. e4 (1. d4 (1... d5) d5) e5 2. Nf3 Nc6 *
                 """,
                 None,
                 chessai.core.gameparser.ParsedPGN(
@@ -104,7 +106,7 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.ROUND: "1",
                         chessai.core.gameparser.StandardPGNHeaders.WHITE: "A",
                         chessai.core.gameparser.StandardPGNHeaders.BLACK: "B",
-                        chessai.core.gameparser.StandardPGNHeaders.RESULT: "1-0",
+                        chessai.core.gameparser.StandardPGNHeaders.RESULT: "*",
                     }),
                     initial_actions = [
                         chessai.core.action.Action.from_uci("e2e4"),
@@ -112,7 +114,7 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.action.Action.from_uci("g1f3"),
                         chessai.core.action.Action.from_uci("b8c6"),
                     ],
-                    result = chessai.core.gameparser.PGNResult('1-0'),
+                    result = chessai.core.gameparser.PGNResult('*'),
                 )
             ),
 
@@ -277,6 +279,8 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                     initial_actions = [
                         chessai.core.action.Action.from_uci("e2e4"),
                         chessai.core.action.Action.from_uci("e7e6"),
+                        chessai.core.action.PROPOSE_DRAW_ACTION,
+                        chessai.core.action.ACCEPT_DRAW_ACTION,
                     ],
                     result = "1/2-1/2",
                 )

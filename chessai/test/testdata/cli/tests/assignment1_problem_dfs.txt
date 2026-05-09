@@ -8,7 +8,7 @@
     ]
 }
 ---
-<LOG_PREFIX> -- Agent 1 crashed.
+<LOG_PREFIX> -- Player white crashed.
 Traceback (most recent call last):
 <TRACEBACK>
 NotImplementedError: depth_first_search

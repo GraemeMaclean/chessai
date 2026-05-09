@@ -30,6 +30,11 @@ class GameStateTest(edq.testing.unittest.BaseTest):
         for legal_action in legal_actions:
             self.assertIsNotNone(legal_action.start_coordinate)
             self.assertIsNotNone(legal_action.end_coordinate)
+
+            # Meta actions have equivalent start and end coordinates.
+            if (legal_action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.FORFEIT_ACTION]):
+                continue
+
             self.assertNotEqual(legal_action.start_coordinate, legal_action.end_coordinate)
 
         # Push an action and observe the resulting state.
@@ -81,7 +86,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         state = chessai.chess.gamestate.GameState()
 
-        fake_move = chessai.core.action.Action()
+        fake_move = chessai.core.action.NULL_ACTION
 
         with self.assertRaises(ValueError):
             state.push(fake_move)
@@ -97,44 +102,44 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                     'a2a3', 'a2a4', 'b2b3', 'b2b4', 'c2c3', 'c2c4',
                     'd2d3', 'd2d4', 'e2e3', 'e2e4', 'f2f3', 'f2f4',
                     'g2g3', 'g2g4', 'h2h3', 'h2h4', 'b1a3', 'b1c3',
-                    'g1f3', 'g1h3',
+                    'g1f3', 'g1h3', 'Propose Draw', 'Forfeit',
                 ],
                 False,
                 False,
             ),
             (
                 'rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3',
-                [],
+                ['Propose Draw', 'Forfeit'],
                 True,
                 False,
             ),
             (
                 'r1bqkbnr/pppp1Qpp/8/4P3/2Bn4/8/PPPP1PPP/RNB1KBNR b KQkq - 0 5',
-                [],
+                ['Propose Draw', 'Forfeit'],
                 True,
                 False,
             ),
             (
                 '7k/6R1/8/5N2/7R/8/8/K7 b - - 0 1',
-                [],
+                ['Propose Draw', 'Forfeit'],
                 True,
                 False,
             ),
             (
                 'rnb1kbnr/pppp1pPp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3',
-                [],
+                ['Propose Draw', 'Forfeit'],
                 True,
                 False,
             ),
             (
                 '4R1k1/p4ppp/8/8/8/5B2/PP1r1PPP/R5K1 b - - 0 1',
-                [],
+                ['Propose Draw', 'Forfeit'],
                 True,
                 False,
             ),
             (
                 '7k/p4p2/P4P2/1P6/6R1/3B4/6PP/R5K1 b - - 0 1',
-                [],
+                ['Propose Draw', 'Forfeit'],
                 False,
                 True,
             ),
