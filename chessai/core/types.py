@@ -37,14 +37,11 @@ class TerminationReason(enum.StrEnum):
     INSUFFICIENT_MATERIAL = 'Insufficient Material'
     """ See chessai.core.gamestate.GameState.is_insufficient_material(). """
 
-    SEVENTYFIVE_MOVES = 'Five-fold Repetition'
-    """ See chessai.core.gamestate.GameState.is_fivefold_repition(). """
+    FORFEIT = 'Forfeit'
+    """ An agent forfeited the match via chessai.core.action.FORFEIT_ACTION. """
 
-    FIFTY_MOVES = 'Fifty Moves'
-    """ See chessai.core.gamestate.GameState.can_claim_fifty_moves()`. """
-
-    THREEFOLD_REPETITION = 'Three-fold Repetition'
-    """ See chessai.core.gamestate.GameState.can_claim_threefold_repetition()`. """
+    ACCEPTED_DRAW_PROPOSAL = 'Accepted draw proposal.'
+    """ Agents agreed to draw via draw proposals. """
 
     VARIANT_WIN = 'Variant Win'
     """ See chessai.core.gamestate.GameState.is_variant_win()`. """

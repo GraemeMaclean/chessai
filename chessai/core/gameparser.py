@@ -432,6 +432,15 @@ def load_pgn_from_gzip(path: str) -> str:
 
     return decompressed_contents
 
+def game_to_pgn(headers: StandardHeadersDict, optional_headers: dict[str, typing.Any],
+                start_fen: str, actions: list[chessai.core.action.Action], result: PGNResult) -> str:
+    """
+    Convert a game into a PGN.
+
+    Raises an error if any of the seven required headers are missing.
+    If a move cannot be generated from an action and gamestate pair, an error is raised.
+    """
+
 def _is_pgn_comment_line(line: str) -> bool:
     """
     Returns if the line is a comment.

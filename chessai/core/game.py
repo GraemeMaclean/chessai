@@ -384,6 +384,40 @@ class Game(abc.ABC):
             **kwargs
         )
 
+    def to_pgn(self, final_state: chessai.core.gamestate.GameState) -> str:
+        """ Returns the PGN representation of the Game. """
+
+        headers = chessai.core.gameparser.StandardHeadersDict({
+                chessai.core.gameparser.StandardPGNHeaders.EVENT: self.game_info.event,
+                chessai.core.gameparser.StandardPGNHeaders.SITE:  self.game_info.site,
+                chessai.core.gameparser.StandardPGNHeaders.DATE:  self.game_info.date,
+                chessai.core.gameparser.StandardPGNHeaders.ROUND: self.game_info.game_round,
+                chessai.core.gameparser.StandardPGNHeaders.WHITE: self.game_info.white_player,
+                chessai.core.gameparser.StandardPGNHeaders.BLACK: self.game_info.black_player,
+                })
+
+        termination_reason = final_state.get_termination_reason()
+        if (termination_reason in [chessai.core.types.TerminationReason.CHECKMATE,
+                                   chessai.core.types.TerminationReason.FORFEIT]):
+            winners = final_state.get_winners()
+            if (chessai.core.types.Color.WHITE in winners):
+                result = chessai.core.gameparser.PGNResult.WHITE_WIN
+            elif (chessai.core.types.Color.BLACK in winners):
+                result = chessai.core.gameparser.PGNResult.BLACK_WIN
+            else:
+                result = chessai.core.gameparser.PGNResult.TIE
+        elif (termination_reason in [chessai.core.types.TerminationReason.STALEMATE,
+                                     chessai.core.types.TerminationReason.INSUFFICIENT_MATERIAL,
+                                     chessai.core.types.TerminationReason.ACCEPTED_DRAW_PROPOSAL]):
+            result = chessai.core.gameparser.PGNResult.TIE
+        elif (termination_reason == chessai.core.types.TerminationReason.IN_PROGRESS):
+            result = chessai.core.gameparser.PGNResult.IN_PROGRESS
+        else:
+            result = chessai.core.gameparser.PGNResult.UNKNOWN
+
+        return chessai.core.gameparser.game_to_pgn(headers, self.game_info.extra_info, self.game_info.start_fen,
+                                                   final_state.move_stack, result)
+
     def process_args(self, args: argparse.Namespace) -> None:
         """ Process any special arguments from the command-line. """
 
@@ -547,6 +581,8 @@ class Game(abc.ABC):
 
         if ((not self._is_replay) and (self._save_path is not None)):
             logging.info("Saving results to '%s'.", self._save_path)
+
+            pgn = self.to_pgn(state)
             edq.util.json.dump_path(result, self._save_path)
 
         return result

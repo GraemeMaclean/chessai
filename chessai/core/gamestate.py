@@ -266,6 +266,24 @@ class GameState(edq.util.json.DictConverter):
     def get_termination_reason(self) -> chessai.core.types.TerminationReason:
         """ Return the reason the game ended. """
 
+        if (self.is_checkmate()):
+            return chessai.core.types.TerminationReason.CHECKMATE
+
+        if (self.is_stalemate()):
+            return chessai.core.types.TerminationReason.STALEMATE
+
+        if (self.is_insufficient_material()):
+            return chessai.core.types.TerminationReason.INSUFFICIENT_MATERIAL
+
+        if (self.get_previous_action() == chessai.core.action.FORFEIT_ACTION):
+            return chessai.core.types.TerminationReason.FORFEIT
+
+        if (self.get_previous_action() == chessai.core.action.ACCEPT_DRAW_ACTION):
+            return chessai.core.types.TerminationReason.ACCEPTED_DRAW_PROPOSAL
+
+        if (not self.is_game_over()):
+            return chessai.core.types.TerminationReason.IN_PROGRESS
+
         return chessai.core.types.TerminationReason.UNKNOWN
 
     def get_action_from_san(self, san: str) -> chessai.core.action.Action:
@@ -408,7 +426,6 @@ class GameState(edq.util.json.DictConverter):
     # State mutation
     # -----------------------------------------------
 
-    # We also need to track if an action updates en-passant or castling rights.
     def push(self, action: chessai.core.action.Action) -> None:
         """ Apply action to the game state and update all metadata. """
 
@@ -530,7 +547,6 @@ class GameState(edq.util.json.DictConverter):
 
         return False, None
 
-    # TODO(Lucas): Making so many deep copies is hurting performance, can we do better?
     def copy(self) -> 'GameState':
         """
         Get a deep copy of this state.
