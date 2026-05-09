@@ -29,3 +29,6 @@ out*/
 /._site/
 *.zip
 *.xcf
+
+# Do track .gz files in the resources/games directory.
+!chessai/resources/games/*.gz
