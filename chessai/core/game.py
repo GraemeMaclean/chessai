@@ -1,5 +1,6 @@
 import abc
 import argparse
+import datetime
 import copy
 import logging
 import math
@@ -498,12 +499,6 @@ class Game(abc.ABC):
 
                 action_record = chessai.core.agentaction.AgentActionRecord(state.turn, agent_action, duration)
             else:
-                if (self.expected_result in [
-                        chessai.core.gameparser.PGNResult.WHITE_WIN,
-                        chessai.core.gameparser.PGNResult.BLACK_WIN,
-                        chessai.core.gameparser.PGNResult.TIE]):
-                    raise ValueError(f"GameState did not agree with the PGNs expected result: {self.expected_result}.")
-
                 # Get the next action from the agent.
                 action_record = isolator.get_action(state, self.game_info.agent_action_timeout)
 
@@ -729,6 +724,26 @@ def init_from_args(
         all_agent_infos.append(copy.deepcopy(agent_infos))
         all_fens.append(args.board)
 
+        white_agent_info = all_agent_infos[-1].get(chessai.core.types.Color.WHITE, None)
+        if (white_agent_info is not None):
+            white_reference = white_agent_info.name
+            if (isinstance(white_reference, chessai.util.reflection.Reference)):
+                white_player = str(white_reference)
+            else:
+                white_player = white_reference
+        else:
+            white_player = '?'
+
+        black_agent_info = all_agent_infos[-1].get(chessai.core.types.Color.BLACK, None)
+        if (black_agent_info is not None):
+            black_reference = black_agent_info.name
+            if (isinstance(black_reference, chessai.util.reflection.Reference)):
+                black_player = str(black_reference)
+            else:
+                black_player = black_reference
+        else:
+            black_player = '?'
+
         game_info = GameInfo(
             all_agent_infos[-1],
             start_fen = all_fens[-1],
@@ -738,6 +753,12 @@ def init_from_args(
             agent_end_timeout = args.agent_end_timeout,
             agent_action_timeout = args.agent_action_timeout,
             seed = game_seed,
+            event = 'Casual Chessai Game',
+            site = 'https://github.com/Lucas-Ellenberger/chessai',
+            date = datetime.date.today().isoformat(),
+            game_round = str(i),
+            white_player = white_player,
+            black_player = black_player,
         )
 
         # Suffix the save path if there is more than one game.
