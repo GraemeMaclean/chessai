@@ -1,5 +1,6 @@
 import enum
 import gzip
+import logging
 import os
 import random
 import re
@@ -50,9 +51,12 @@ MOVETEXT_PATTERN: re.Pattern = re.compile(r"""
     |([\?!]{1,2})
     """, re.DOTALL | re.VERBOSE)
 
-SKIP_MOVETEXT_REGEX = re.compile(r""";|\{|\}""")
+SKIP_MOVETEXT_PATTERN: re.Pattern = re.compile(r""";|\{|\}""")
 
 FEN_HEADER_KEY: str = 'FEN'
+SET_UP_HEADER_KEY: str = 'SetUp'
+
+MAX_SAN_MOVETEXT_LINE_LENGTH: int = 80
 
 class StandardPGNHeaders(enum.StrEnum):
     """
@@ -432,14 +436,225 @@ def load_pgn_from_gzip(path: str) -> str:
 
     return decompressed_contents
 
-def game_to_pgn(headers: StandardHeadersDict, optional_headers: dict[str, typing.Any],
-                start_fen: str, actions: list[chessai.core.action.Action], result: PGNResult) -> str:
+def to_pgn(headers: StandardHeadersDict, optional_headers: dict[str, typing.Any],
+           state_class: typing.Type[chessai.core.gamestate.GameState], start_fen: str,
+           actions: list[chessai.core.action.Action]) -> str:
     """
     Convert a game into a PGN.
 
     Raises an error if any of the seven required headers are missing.
     If a move cannot be generated from an action and gamestate pair, an error is raised.
     """
+
+    if (not headers.is_complete()):
+        actual = {header.value for header in headers.keys()}
+        required = {header.value for header in StandardPGNHeaders}
+        raise ValueError("Cannot write PGN without all required headers."
+                         + f" Expected: '{required}', found: '{actual}'.")
+
+    lines: list[str] = []
+
+    # Build the header information, starting with the required headers.
+    for header in StandardPGNHeaders:
+        lines.append(_to_tag(header, headers[header]))
+
+    # Non-default starting FENs require additional PGN information.
+    if (start_fen != chessai.core.gamestate.DEFAULT_FEN):
+        lines.append(_to_tag(SET_UP_HEADER_KEY, '1'))
+        lines.append(_to_tag(FEN_HEADER_KEY, start_fen))
+
+    # Add optional headers.
+    for (key, value) in optional_headers.items():
+        try:
+            str_value = str(value)
+        except Exception:
+            logging.warning("Could not convert optional header value for key '%s' to a string.", key)
+            continue
+
+        lines.append(_to_tag(str(key), str_value))
+
+    # Add an extra blank line after the header section.
+    lines.append('')
+
+    # Build the move SAN tokens while replaying the game.
+    state = state_class(fen = start_fen)
+    san_tokens: list[str] = []
+
+    for action in actions:
+        # Ignore meta actions as they do not have a valid SAN representation.
+        if (action in [chessai.core.action.PROPOSE_DRAW_ACTION,
+                       chessai.core.action.ACCEPT_DRAW_ACTION,
+                       chessai.core.action.REJECT_DRAW_ACTION,
+                       chessai.core.action.FORFEIT_ACTION,
+                       chessai.core.action.NULL_ACTION]):
+            continue
+
+        san = _action_to_san(action, state)
+        san_tokens.append(san)
+
+        state.push(action)
+
+    # Add the result token.
+    san_tokens.append(headers[StandardPGNHeaders.RESULT])
+
+    movetext_lines: list[str] = []
+    current_line = ''
+
+    for token in san_tokens:
+        if (len(current_line) == 0):
+            candidate_line = token
+        else:
+            candidate_line = f"{current_line} {token}"
+
+        # Keep building a line until it surpasses the max line length.
+        if (len(candidate_line) <= MAX_SAN_MOVETEXT_LINE_LENGTH):
+            current_line = candidate_line
+        else:
+            movetext_lines.append(current_line)
+            current_line = token
+
+    if (len(current_line) > 0):
+        movetext_lines.append(current_line)
+
+    lines.extend(movetext_lines)
+
+    # Add a trailing newline after the movetext.
+    lines.append('')
+
+    return '\n'.join(lines)
+
+def _escape_tag_value(value: str) -> str:
+    """ Escape the tag value to avoid parsing errors. """
+
+    escaped = value.replace('\\', '\\\\').replace('"', '\\"')
+    return escaped
+
+def _to_tag(header: str, value: str) -> str:
+    """ Write a header and its value to a PGN tag. """
+
+    escaped_value = _escape_tag_value(value)
+    return f'[{header} "{escaped_value}"]'
+
+def _action_to_san(action: chessai.core.action.Action, state: chessai.core.gamestate.GameState) -> str:
+    """
+    Convert an action to a SAN using the state before the action is applied evaluate SAN move ambiguity.
+
+    This method does not understand meta actions (i.e., forfeits or draw actions).
+    """
+
+    board = state.board
+    piece = board.get(action.start_coordinate)
+    if (piece is None):
+        raise ValueError(f"The start coordinate for action '{action.uci()}' does not have a piece.")
+
+    piece_symbol_upper = piece.symbol().upper()
+
+    move_san: str | None = None
+
+    # Detect castling by checking for a king moving two squares horizontally.
+    if (piece_symbol_upper == 'K'):
+        file_delta = action.end_coordinate.file - action.start_coordinate.file
+
+        if (file_delta == 2):
+            # Kingside castle.
+            move_san = 'O-O'
+        elif (file_delta == -2):
+            # Queenside castle.
+            move_san = 'O-O-O'
+
+    is_pawn = (piece_symbol_upper == 'P')
+
+    if (move_san is None):
+        is_capture = board.is_capture(action)
+
+        # Detect en-passant captures.
+        if (is_pawn and (action.end_coordinate == state.en_passant_coordinate)):
+            is_capture = True
+
+        # Check if the move is ambiguous.
+        ambiguous_actions: list[chessai.core.action.Action] = []
+        for alternate_action in state.get_legal_actions():
+            # An ambiguous move must end at the same coordinate.
+            if (alternate_action.end_coordinate != action.end_coordinate):
+                continue
+
+            # An ambiguous move cannot start at the same coordinate because that would be the same piece moving.
+            if (alternate_action.start_coordinate == action.start_coordinate):
+                continue
+
+            # An ambiguous action must have the same promotion.
+            if (alternate_action.promotion != action.promotion):
+                continue
+
+            # An ambiguous action must have a different piece type.
+            alternate_action_piece = board.get(alternate_action.start_coordinate)
+            if (alternate_action_piece is None):
+                continue
+
+            if (alternate_action_piece.symbol().upper() != piece_symbol_upper):
+                continue
+
+            ambiguous_actions.append(alternate_action)
+
+        disambiguation_str = ''
+
+        # Pawn actions cannot be ambiguous.
+        if ((len(ambiguous_actions) > 0) and (not is_pawn)):
+            # Check if there is an ambiguous action on the same file.
+            same_file = False
+            for ambiguous_action in ambiguous_actions:
+                if (ambiguous_action.start_coordinate.file != action.start_coordinate.file):
+                    continue
+
+                same_file = True
+
+            # Check if there is an ambiguous action on the same rank.
+            same_rank = False
+            for ambiguous_action in ambiguous_actions:
+                if (ambiguous_action.start_coordinate.rank != action.start_coordinate.rank):
+                    continue
+
+                same_rank = True
+
+            if (not same_file):
+                disambiguation_str = action.start_coordinate.uci(only_file = True)
+            elif (not same_rank):
+                disambiguation_str = action.start_coordinate.uci(only_rank = True)
+            else:
+                # Fallback to the entire coordinate.
+                disambiguation_str = action.start_coordinate.uci()
+
+        # Build the final SAN with the above information.
+        destination_str = action.end_coordinate.uci()
+
+        if (is_pawn):
+            if is_capture:
+                # Pawn captures require the starting file to disambiguate.
+                start_file = action.start_coordinate.uci(only_file = True)
+                move_san = f"{start_file}x{destination_str}"
+            else:
+                move_san = destination_str
+        else:
+            if is_capture:
+                capture_str = 'x'
+            else:
+                capture_str = ''
+
+            move_san = f"{piece_symbol_upper}{disambiguation_str}{capture_str}{destination_str}"
+
+        # Add the piece promotion suffix.
+        if (action.promotion is not None):
+            move_san += f"={action.promotion.symbol().upper()}"
+
+    # Apply the action and check for check and checkmate.
+    successor = state.generate_successor(action)
+
+    if (successor.is_checkmate()):
+        move_san += '#'
+    elif (successor.is_check(successor.turn)):
+        move_san += '+'
+
+    return move_san
 
 def _is_pgn_comment_line(line: str) -> bool:
     """

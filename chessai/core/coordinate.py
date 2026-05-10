@@ -56,7 +56,7 @@ class Coordinate(edq.util.json.DictConverter):
 
         return cls(file, rank)
 
-    def uci(self) -> str:
+    def uci(self, only_file: bool = False, only_rank: bool = False) -> str:
         """ The standard algebraic name of this coordinate. """
 
         # Convert the integer coordinate to a base-26 string, switching to the 1-indexed format.
@@ -70,6 +70,12 @@ class Coordinate(edq.util.json.DictConverter):
 
         file_str = ''.join(reversed(file_chars))
         rank_str = str(self.rank + 1)
+
+        if (only_file):
+            return file_str
+
+        if (only_rank):
+            return rank_str
 
         return f"{file_str}{rank_str}"
 

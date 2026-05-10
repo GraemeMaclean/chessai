@@ -129,7 +129,7 @@ class GameState(chessai.core.gamestate.GameState):
 
     def _process_special_move(self,
                               action: chessai.core.action.Action,
-                              piece: chessai.core.piece.Piece)-> tuple[bool, chessai.core.coordinate.Coordinate | None]:
+                              piece: chessai.core.piece.Piece) -> tuple[bool, chessai.core.coordinate.Coordinate | None]:
         # Handle promoting pieces.
         if (action.promotion is not None):
             self._handle_promotion(action, piece)

@@ -542,7 +542,7 @@ class GameState(edq.util.json.DictConverter):
 
     def _process_special_move(self,
                               action: chessai.core.action.Action,
-                              piece: chessai.core.piece.Piece)-> tuple[bool, chessai.core.coordinate.Coordinate | None]:
+                              piece: chessai.core.piece.Piece) -> tuple[bool, chessai.core.coordinate.Coordinate | None]:
         """ A helper function that allows gamestates to do any additional processing for special moves. """
 
         return False, None
