@@ -230,6 +230,7 @@ class GameTest(edq.testing.unittest.BaseTest):
         # Replay the game and get the same result.
         argv = [
             '--replay-path', replay_path,
+            '--log-level', 'CRITICAL',
         ]
         results = chessai.chess.bin.main(argv = argv)
 
