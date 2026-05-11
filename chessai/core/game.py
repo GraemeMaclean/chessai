@@ -379,6 +379,7 @@ class Game(abc.ABC):
         return cls(
             game_info = game_info,
             save_path = save_path,
+            is_replay = True,
             initial_actions = parsed_pgn.initial_actions,
             expected_result = parsed_pgn.result,
             **kwargs
@@ -599,41 +600,6 @@ class Game(abc.ABC):
     #     for user_inputs in agent_user_inputs.values():
     #         user_inputs += new_user_inputs
 
-    @classmethod
-    def override_args_with_replay(cls,
-            args: argparse.Namespace, base_agent_infos: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo]) -> None:
-        """
-        Override the args with the settings from the replay in the args.
-        Children may extend this for additional functionality.
-        """
-
-        logging.info("Loading replay from '%s'.", args.replay_path)
-        replay_info = typing.cast(GameResult, edq.util.json.load_object_path(args.replay_path, GameResult))
-
-        # Overrides from the replay info.
-        args.board = replay_info.game_info.start_fen
-        args.seed = replay_info.game_info.seed
-
-        # Special settings for replays.
-        args.num_games = 1
-        args.max_moves = len(replay_info.history)
-
-        # Script the moves for each agent based on the replay's history.
-        scripted_actions: dict[chessai.core.types.Color, list[chessai.core.action.Action]] = {}
-        for item in replay_info.history:
-            if (item.player not in scripted_actions):
-                scripted_actions[item.player] = []
-
-            scripted_actions[item.player].append(item.get_action())
-
-        base_agent_infos.clear()
-
-        for (player, actions) in scripted_actions.items():
-            base_agent_infos[player] = chessai.core.agentinfo.AgentInfo(
-                name = chessai.util.alias.AGENT_SCRIPTED.short,
-                actions = actions,
-            )
-
 def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = None) -> argparse.ArgumentParser:
     """
     Set common CLI arguments.
@@ -646,14 +612,6 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
                     + ' This may be a FEN of the board.'
                     + ' It may also be the full path to a board, or just a filename.'
                     + ' If just a filename, than the `chessai/resources/boards` directory will be checked (using a ".fen" extension.'))
-
-    parser.add_argument('--game', dest = 'game',
-            action = 'store', type = str, default = None,
-            help = ('Play on from this PGN (default: %(default)s).'
-                    + ' This may be a PGN of the game.'
-                    + ' It may also be the full path to a game, or just a filename.'
-                    + ' If just a filename, than the `chessai/resources/games` directory will be checked (using a ".pgn" extension.'
-                    + ' Overrides the board given by the `--board` option.'))
 
     parser.add_argument('--num-games', dest = 'num_games',
             action = 'store', type = int, default = 1,
@@ -706,7 +664,10 @@ def set_cli_args(parser: argparse.ArgumentParser, default_board: str | None = No
 
     parser.add_argument('--replay-path', dest = 'replay_path',
             action = 'store', type = str, default = None,
-            help = 'If specified, replay the game whose result was saved at the specified path with `--save-path`.')
+            help = ('If specified, replay the game whose result was saved at the specified path with `--save-path`.'
+                    + ' This may be a PGN of the game.'
+                    + ' It may also be the full path to a game, or just a filename.'
+                    + ' If just a filename, than the `chessai/resources/games` directory will be checked (using a ".pgn" extension.'))
 
     return parser
 
@@ -728,12 +689,6 @@ def init_from_args(
 
     if (base_agent_infos is None):
         base_agent_infos = {}
-
-    # If this is a replay,
-    # then all the core arguments are loaded differently (directly from the file).
-    # Use the replay file to override all the current options.
-    if (args.replay_path is not None):
-        game_class.override_args_with_replay(args, base_agent_infos)
 
     if (args.num_games <= 0):
         raise ValueError(f"At least one game must be played (--num-games), {args.num_games} was specified.")
@@ -804,7 +759,7 @@ def init_from_args(
             parts = os.path.splitext(save_path)
             save_path = f"{parts[0]}_{i:03d}{parts[1]}"
 
-        if (args.game is None):
+        if (args.replay_path is None):
             game_args = {
                 'game_info': game_info,
                 'save_path': save_path,
@@ -812,9 +767,9 @@ def init_from_args(
 
             game = game_class(**game_args)
         else:
-            raw_game = game_class.from_pgn(args.game, state_class, game_info, save_path)
+            raw_game = game_class.from_pgn(args.replay_path, state_class, game_info, save_path)
             if (raw_game is None):
-                raise ValueError(f"Failed to initialize game number {i} from the PGN: '{args.game}'.")
+                raise ValueError(f"Failed to initialize game number {i} from the PGN: '{args.replay_path}'.")
 
             game = raw_game
 

@@ -1,4 +1,3 @@
-import os
 import pathlib
 
 import edq.testing.unittest
@@ -16,15 +15,17 @@ class GameTest(edq.testing.unittest.BaseTest):
         expected_score = 1.0
 
         board_paths = []
-        boards_dir = pathlib.Path(chessai.core.parser.BOARDS_DIR)
+        boards_dir = pathlib.Path(chessai.core.parser.PUZZLES_DIR)
         for path in boards_dir.iterdir():
             if (not path.is_file()):
                 continue
 
-            if (os.path.basename(path).startswith('puzzle-')):
-                board_paths.append(str(path))
+            board_paths.append(str(path))
 
         board_paths.sort()
+
+        # Ensure we find at least one puzzle.
+        self.assertNotEqual(len(board_paths), 0)
 
         for (i, board_path) in enumerate(board_paths):
             with self.subTest(msg = f"Case {i}, path: {board_path}"):

@@ -2,7 +2,7 @@
     "cli": "chessai.chess.bin",
     "arguments": [
         "--max-moves", "100",
-        "--game", "black-checkmate",
+        "--replay-path", "black-checkmate",
     ]
 }
 ---

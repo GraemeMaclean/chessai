@@ -1,5 +1,10 @@
-import edq.testing.unittest
+import os
+import pathlib
 
+import edq.testing.unittest
+import edq.util.dirent
+
+import chessai.chess.bin
 import chessai.chess.game
 import chessai.core.game
 import chessai.core.agentinfo
@@ -13,8 +18,8 @@ AGENT_INFOS: dict[chessai.core.types.Color, chessai.core.agentinfo.AgentInfo] = 
 }
 DEFAULT_SEED: int = 1
 
-class GameFromPGNTest(edq.testing.unittest.BaseTest):
-    """ Test Game.from_pgn() construction from ParsedPGN. """
+class GameTest(edq.testing.unittest.BaseTest):
+    """ Test the game's interactions with PGNs. """
 
     def test_from_pgn(self):
         """ Test Game.from_pgn() with various PGN inputs. """
@@ -53,6 +58,7 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.action.Action.from_uci("f1b5"),
                     ],
                     expected_result = chessai.core.gameparser.PGNResult("*"),
+                    is_replay = True,
                 ),
             ),
 
@@ -86,6 +92,7 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.action.Action.from_uci("a7a6"),
                     ],
                     expected_result = chessai.core.gameparser.PGNResult("*"),
+                    is_replay = True,
                 ),
             ),
 
@@ -122,6 +129,7 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.action.ACCEPT_DRAW_ACTION,
                     ],
                     expected_result = chessai.core.gameparser.PGNResult("1/2-1/2"),
+                    is_replay = True,
                 ),
             ),
 
@@ -167,6 +175,7 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.action.ACCEPT_DRAW_ACTION,
                     ],
                     expected_result = chessai.core.gameparser.PGNResult("1/2-1/2"),
+                    is_replay = True,
                 ),
             ),
         ]
@@ -187,10 +196,69 @@ class GameFromPGNTest(edq.testing.unittest.BaseTest):
                 # Set the seed to the default seed to compare game info's directly.
                 expected_game.game_info.seed = DEFAULT_SEED
 
-                # Verify the game info is as expected.
+                # Verify the game is as expected.
                 self.assertEqual(game.game_info, expected_game.game_info)
-
-                # Verify the fen, initial_actions, and expected_result of the Game.
-                self.assertEqual(game.game_info.start_fen, expected_game.game_info.start_fen)
+                self.assertEqual(game._save_path, expected_game._save_path)
+                self.assertEqual(game._is_replay, expected_game._is_replay)
                 self.assertEqual(game.initial_actions, expected_game.initial_actions)
                 self.assertEqual(game.expected_result, expected_game.expected_result)
+
+    def test_load_replay(self):
+        """
+        Test a game can played from a PGN and the written result is the same.
+        Note that some information is excluded, as our PGN reader / writer does not support them.
+        """
+
+        temp_dir = edq.util.dirent.get_temp_dir(prefix = 'chessai-test-')
+        replay_path = os.path.join(temp_dir, 'test.replay')
+
+        expected_score = 0
+
+        # Run a short capture game and save the replay.
+        argv = [
+            '--seed', '2',
+            '--save-path', replay_path,
+            '--white-team', 'agent-random',
+            '--black-team', 'agent-random',
+            '--max-moves', '50',
+            '--log-level', 'CRITICAL',
+        ]
+        results = chessai.chess.bin.main(argv = argv)
+
+        self.assertEqual(expected_score, results[0].score)
+
+        # Replay the game and get the same result.
+        argv = [
+            '--replay-path', replay_path,
+        ]
+        results = chessai.chess.bin.main(argv = argv)
+
+        self.assertEqual(expected_score, results[0].score)
+
+    def test_pgn_games(self):
+        """ Test every PGN in the resources directory runs. """
+
+        game_paths = []
+        games_dir = pathlib.Path(chessai.core.gameparser.GAMES_DIR)
+        for path in games_dir.iterdir():
+            if (not path.is_file()):
+                continue
+
+            game_paths.append(str(path))
+
+        game_paths.sort()
+
+        # Ensure we find at least one game.
+        self.assertNotEqual(len(game_paths), 0)
+
+        for (i, game_path) in enumerate(game_paths):
+            with self.subTest(msg = f"Case {i}, path: {game_path}"):
+                argv = [
+                    '--log-level', 'CRITICAL',
+                    '--replay-path', str(game_path),
+                    '--max-moves', '200',
+                ]
+                results = chessai.chess.bin.main(argv = argv)
+
+                # Since we don't know the result, check the game concluded.
+                self.assertIn(results[0].score, [0, 0.5, 1])

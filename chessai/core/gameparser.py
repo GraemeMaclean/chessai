@@ -56,7 +56,7 @@ SKIP_MOVETEXT_PATTERN: re.Pattern = re.compile(r""";|\{|\}""")
 FEN_HEADER_KEY: str = 'FEN'
 SET_UP_HEADER_KEY: str = 'SetUp'
 
-MAX_SAN_MOVETEXT_LINE_LENGTH: int = 80
+MAX_PGN_LINE_LENGTH: int = 80
 
 class StandardPGNHeaders(enum.StrEnum):
     """
@@ -361,8 +361,8 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
 
     # Check if the gamestate agrees with the expected result.
     if ((result in [PGNResult.WHITE_WIN, PGNResult.BLACK_WIN]) and (not state.is_game_over())):
-        # The game is not over by checkmate when the PGN believes it should be.
-        raise ValueError(f"The PGN expects the result to be '{result.value}', but the game is not over.")
+        # The game is not over when the PGN believes it should be, so add a forfeit action.
+        initial_actions.append(chessai.core.action.FORFEIT_ACTION)
 
     if ((result == PGNResult.TIE) and (not state.is_game_over())):
         # The game must be a proposed draw, so add the draw handshake.
@@ -478,7 +478,8 @@ def to_pgn(headers: StandardHeadersDict, optional_headers: dict[str, typing.Any]
 
     # Build the move SAN tokens while replaying the game.
     state = state_class(fen = start_fen)
-    san_tokens: list[str] = []
+    pgn_tokens: list[str] = []
+    current_fullmove_number = 0
 
     for action in actions:
         # Ignore meta actions as they do not have a valid SAN representation.
@@ -489,25 +490,29 @@ def to_pgn(headers: StandardHeadersDict, optional_headers: dict[str, typing.Any]
                        chessai.core.action.NULL_ACTION]):
             continue
 
+        if (state.fullmove_number != current_fullmove_number):
+            pgn_tokens.append(f"{state.fullmove_number}.")
+            current_fullmove_number = state.fullmove_number
+
         san = _action_to_san(action, state)
-        san_tokens.append(san)
+        pgn_tokens.append(san)
 
         state.push(action)
 
     # Add the result token.
-    san_tokens.append(headers[StandardPGNHeaders.RESULT])
+    pgn_tokens.append(headers[StandardPGNHeaders.RESULT])
 
     movetext_lines: list[str] = []
     current_line = ''
 
-    for token in san_tokens:
+    for token in pgn_tokens:
         if (len(current_line) == 0):
             candidate_line = token
         else:
             candidate_line = f"{current_line} {token}"
 
         # Keep building a line until it surpasses the max line length.
-        if (len(candidate_line) <= MAX_SAN_MOVETEXT_LINE_LENGTH):
+        if (len(candidate_line) <= MAX_PGN_LINE_LENGTH):
             current_line = candidate_line
         else:
             movetext_lines.append(current_line)
