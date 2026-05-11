@@ -36,9 +36,6 @@ class GameState(edq.util.json.DictConverter):
         if (fen is None):
             fen = DEFAULT_FEN
 
-        # TODO(Lucas): Maybe we move the initial parsing from gamestate into game.
-        # This way, we can only pass the necessary information to the initial gamestate and avoid some awkwardness.
-        # It will be the same pattern for PGNs and FENs.
         self.parsed_fen: chessai.core.parser.ParsedFEN = chessai.core.parser.parse_fen(fen)
         """ The full information received from the augmented FEN. """
 
@@ -364,7 +361,6 @@ class GameState(edq.util.json.DictConverter):
                 piece_symbol = san_clean[0].lower()
 
             # Check for disambiguation.
-            # TODO(Lucas): Our disambiguation logic does not support multiple digits, so we cannot have more than 10 ranks or 26 files.
             middle = san_clean[1:-2]
             if middle:
                 if middle[0].isalpha():

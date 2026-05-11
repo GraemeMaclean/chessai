@@ -203,8 +203,6 @@ class GameResult(edq.util.json.DictConverter):
         self.score: float = score
         """ The score of the game from white's perspective. """
 
-        # TODO(Lucas): We don't just want the end_fen, we need the PGN.
-        # The PGN needs to be built throughout the game, so we will need to update the state update function.
         self.end_fen = end_fen
         """ The fen the board is in at the end of the game. """
 

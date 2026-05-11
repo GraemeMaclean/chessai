@@ -16,11 +16,10 @@ def unit_cost_function(node: chessai.core.search.SearchNode, **kwargs: typing.An
 
     return 1.0
 
-# TODO(Lucas): Do we need?
 def longitudinal_cost_function(node: chessai.core.search.SearchNode, base: float = 1.0, **kwargs: typing.Any) -> float:
     """
     If the search node has a "position" attribute,
-    use that to assign a score based on its longitudinal position (its column).
+    use that to assign a score based on its longitudinal position (its file).
     If there is no "position" attribute, just use unit cost.
 
     The cost will be `base ^ node.position.file`.
@@ -31,7 +30,6 @@ def longitudinal_cost_function(node: chessai.core.search.SearchNode, base: float
 
     return unit_cost_function(node, **kwargs)
 
-# TODO(Lucas): Do we need?
 def stay_east_cost_function(node: chessai.core.search.SearchNode, **kwargs: typing.Any) -> float:
     """
     A longitudinal_cost_function that prioritizes staying east.
@@ -39,7 +37,6 @@ def stay_east_cost_function(node: chessai.core.search.SearchNode, **kwargs: typi
 
     return longitudinal_cost_function(node, base = 0.5)
 
-# TODO(Lucas): Do we need?
 def stay_west_cost_function(node: chessai.core.search.SearchNode, **kwargs: typing.Any) -> float:
     """
     A longitudinal_cost_function that prioritizes staying west.
