@@ -557,8 +557,8 @@ class GameState(edq.util.json.DictConverter):
         new_state = copy.copy(self)
 
         new_state.castling_rights = self.castling_rights.copy()
-        new_state.move_stack      = list(self.move_stack)
-        new_state.board_stack     = list(self.board_stack)
+        new_state.move_stack      = self.move_stack.copy()
+        new_state.board_stack     = self.board_stack.copy()
         new_state.board           = self.board.copy()
 
         return new_state

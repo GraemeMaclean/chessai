@@ -378,7 +378,6 @@ def _serialize_fen_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chess
         # FEN ranks come from highest first, so we descend from (num_ranks - 1) to rank 0.
         rank = (num_ranks - 1) - rank_index
         empty_count = 0
-        rank_str: list[str] = []
 
         for file in range(num_files):
             coordinate = chessai.core.coordinate.Coordinate(file, rank)
@@ -388,21 +387,23 @@ def _serialize_fen_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chess
                 empty_count += 1
             else:
                 if (empty_count > 0):
-                    rank_str.append(str(empty_count))
+                    ranks.append(str(empty_count))
                     empty_count = 0
 
                 symbol = piece.symbol()
                 if (symbol is None):
                     raise ValueError(f"Cannot serialize piece '{piece}' at '{coordinate}'.")
 
-                rank_str.append(symbol)
+                ranks.append(symbol)
 
         if (empty_count > 0):
-            rank_str += str(empty_count)
+            ranks.append(str(empty_count))
 
-        ranks.append(''.join(rank_str))
+        # Add rank separator except after last rank.
+        if (rank_index < (num_ranks - 1)):
+            ranks.append('/')
 
-    return '/'.join(ranks)
+    return ''.join(ranks)
 
 def _parse_fen_turn(turn_field: str) -> chessai.core.types.Color:
     if (turn_field == 'w'):

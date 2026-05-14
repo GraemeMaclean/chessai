@@ -144,7 +144,11 @@ class Board(edq.util.json.DictConverter):
     def copy(self) -> 'Board':
         """ Create a deep copy of the board. """
 
-        return copy.deepcopy(self)
+        new_board = copy.copy(self)
+
+        new_board.pieces = self.pieces.copy()
+
+        return new_board
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
