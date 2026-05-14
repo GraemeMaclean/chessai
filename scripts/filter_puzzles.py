@@ -54,7 +54,7 @@ def generate_puzzle_files(
                         "move_lines": json.dumps([moves_list])
                     }
 
-                    file_path = os.path.join(output_folder, f"{puzzle_id}.board")
+                    file_path = os.path.join(output_folder, f"{puzzle_id}.puzzle")
 
                     with open(file_path, 'w', encoding='utf-8') as out_file:
                         json.dump(puzzle_data, out_file, indent=4)
@@ -76,11 +76,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Extract specific themes from Lichess puzzle CSV."
     )
-    parser.add_argument("input", help="Path to the Lichess CSV file")
-    parser.add_argument("output", help="Directory to save .board files")
-    parser.add_argument("theme", help="Puzzle theme to filter by (e.g. 'fork')")
+    parser.add_argument("--input", help="Path to the Lichess CSV file")
+    parser.add_argument("--output", help="Directory to save .board files")
+    parser.add_argument("--theme", help="Puzzle theme to filter by (e.g. 'fork')")
     parser.add_argument(
-        "count", 
+        "--count", 
         type=int,
         help="Number of puzzles to extract"
     )
