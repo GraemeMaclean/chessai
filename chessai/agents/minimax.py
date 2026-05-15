@@ -53,6 +53,9 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
         self._stats_nodes_visited: list[int] = []
         """ Track how many search nodes have been visited for each call to get_action(). """
 
+        self._move_count: int = 0
+        """ Track the number of moves taken this game. """
+
     def evaluate_state(self,
             state: chessai.core.gamestate.GameState,
             action: chessai.core.action.Action | None = None,
@@ -77,8 +80,10 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
         action = self.rng.choice(actions)
 
         logging.debug("Turn: %d, Minimax Score: %d, Chosen Action: %s, States Evaluated: %d, Nodes Visited: %d.",
-                state.get_move_count(), score, action.uci(),
+                self._move_count, score, action.uci(),
                 self._stats_states_evaluated[-1], self._stats_nodes_visited[-1])
+
+        self._move_count += 2
 
         if (action is None):
             raise ValueError("Did not get an action out of Minimax.")

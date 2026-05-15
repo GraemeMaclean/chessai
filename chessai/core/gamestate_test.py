@@ -19,9 +19,9 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         # Core Functions
         self.assertFalse(state.is_game_over())
-        self.assertEqual(state.get_move_count(), 0)
+        self.assertIsNone(state.previous_action)
 
-        # Legal moves
+        # Legal actions
         legal_actions = state.get_legal_actions()
         self.assertNotEqual(len(legal_actions), 0)
 
@@ -38,7 +38,6 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         # Push an action and observe the resulting state.
         chosen_action = legal_actions[0]
-        original_board = state.board.copy()
         state.push(chosen_action)
 
         # Check it updated the basic state.
@@ -46,46 +45,43 @@ class GameStateTest(edq.testing.unittest.BaseTest):
         self.assertNotEqual(state.get_fen(), chessai.core.gamestate.DEFAULT_FEN)
 
         # Check state history.
-        self.assertEqual(state.get_move_count(), 1)
-        self.assertEqual(state.move_stack[-1], chosen_action)
-        self.assertEqual(len(state.board_stack), 1)
-        self.assertEqual(state.board_stack[-1], original_board)
+        self.assertEqual(state.previous_action, chosen_action)
 
     def test_generate_successor_does_not_modify_original(self):
         """ Test generate successor properly deep copies the state. """
 
         state = chessai.core.gamestate.GameState()
-        moves = state.get_legal_actions()
+        actions = state.get_legal_actions()
 
-        move = moves[0]
+        action = actions[0]
 
-        successor = state.generate_successor(move)
+        successor = state.generate_successor(action)
 
         # Original should remain unchanged
-        self.assertEqual(state.get_move_count(), 0)
-        self.assertEqual(successor.get_move_count(), 1)
+        self.assertIsNone(state.previous_action)
+        self.assertEqual(successor.previous_action, action)
         self.assertNotEqual(state.turn, successor.turn)
 
     def test_get_neighbors_filters_by_start_coordinate(self):
         """ Test get neighbors returns actions only from the start coordinate. """
 
         state = chessai.core.gamestate.GameState()
-        moves = state.get_legal_actions()
+        actions = state.get_legal_actions()
 
-        move = moves[0]
-        start = move.start_coordinate
+        action = actions[0]
+        start = action.start_coordinate
 
         neighbors = state.get_neighbors(start)
 
         for (action, _) in neighbors:
             self.assertEqual(action.start_coordinate, start)
 
-    def test_push_illegal_move_raises(self):
-        """ Test illegal moves raise errors. """
+    def test_push_illegal_action_raises(self):
+        """ Test illegal actions raise errors. """
 
         state = chessai.core.gamestate.GameState()
 
-        fake_move = chessai.core.action.Action()
+        fake_action = chessai.core.action.Action()
 
         with self.assertRaises(ValueError):
-            state.push(fake_move)
+            state.push(fake_action)

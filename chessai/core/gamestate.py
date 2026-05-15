@@ -26,58 +26,46 @@ class GameState(edq.util.json.DictConverter):
     Game states should only be interacted with via their methods and not their member variables.
     """
 
-    # TODO: Can move move_stack to game, get rid of board_stack, we can check repititions later.
     def __init__(self,
                  fen: str | None = None,
-                 move_stack: list[chessai.core.action.Action] | None = None,
-                 board_stack: list[chessai.core.board.Board] | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  **kwargs: typing.Any) -> None:
         if (fen is None):
             fen = DEFAULT_FEN
 
-        # TODO(Lucas): Maybe we move the initial parsing from gamestate into game.
-        # This way, we can only pass the necessary information to the initial gamestate and avoid some awkwardness.
-        # It will be the same pattern for PGNs and FENs.
-        self.parsed_fen: chessai.core.parser.ParsedFEN = chessai.core.parser.parse_fen(fen)
-        """ The full information received from the augmented FEN. """
+        parsed_fen = chessai.core.parser.parse_fen(fen)
 
-        self.board: chessai.core.board.Board = chessai.core.board.Board(self.parsed_fen.pieces, self.parsed_fen.num_files, self.parsed_fen.num_ranks)
+        self.board: chessai.core.board.Board = chessai.core.board.Board(parsed_fen.pieces, parsed_fen.num_files, parsed_fen.num_ranks)
         """ The board responsible for holding the position of pieces. """
 
-        self.turn: chessai.core.types.Color = self.parsed_fen.turn
+        self.turn: chessai.core.types.Color = parsed_fen.turn
         """ The color of the current player. """
 
-        self.castling_rights: chessai.core.castling.CastlingRights = self.parsed_fen.castling_rights
+        self.castling_rights: chessai.core.castling.CastlingRights = parsed_fen.castling_rights
         """ The available castling moves. """
 
-        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = self.parsed_fen.en_passant_coordinate
+        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = parsed_fen.en_passant_coordinate
         """ The en-passant target coordinate, or None. """
 
-        self.halfmove_clock: int = self.parsed_fen.halfmove_clock
+        self.halfmove_clock: int = parsed_fen.halfmove_clock
         """ The number of plies since the last pawn move or capture (50-move rule). """
 
-        self.fullmove_number: int = self.parsed_fen.fullmove_number
+        self.fullmove_number: int = parsed_fen.fullmove_number
         """ Increments after every black move, starting at 1. """
 
-        if (move_stack is None):
-            move_stack = []
-
-        self.move_stack: list[chessai.core.action.Action] = move_stack
+        self.previous_action: chessai.core.action.Action | None = previous_action
         """ The ordered history of all actions taken, starting with the oldest action. """
-
-        if (board_stack is None):
-            board_stack = []
-
-        self.board_stack: list[chessai.core.board.Board] = board_stack
-        """ The ordered history of all boards, starting with the oldest board. """
 
         self.seed: int = seed
         """ A utility seed that components using the game state may use to seed their own RNGs. """
 
         self.game_over: bool = game_over
         """ Indicates that this state represents a complete game. """
+
+        self.options: dict[str, typing.Any] | None = parsed_fen.options
+        """ Any additional options provided to the game. """
 
     def get_fen(self, partial: bool = False) -> str:
         """
@@ -102,18 +90,10 @@ class GameState(edq.util.json.DictConverter):
     # Useful methods for students.
     # -----------------------------------------------
 
-    def get_move_count(self) -> int:
-        """ Returns the number of moves in the game. """
-
-        return len(self.move_stack)
-
     def get_previous_action(self) -> chessai.core.action.Action | None:
         """ Returns the most recent move taken. """
 
-        if (len(self.move_stack) == 0):
-            return None
-
-        return self.move_stack[-1]
+        return self.previous_action
 
     def get_legal_actions(self) -> list[chessai.core.action.Action]:
         """ Return the list of legal actions for the current player. """
@@ -474,8 +454,7 @@ class GameState(edq.util.json.DictConverter):
         # Advance the turn.
         self.turn = self.turn.opposite()
 
-        self.board_stack.append(board)
-        self.move_stack.append(action)
+        self.previous_action = action
 
     def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:
         """ Get all of the actions that can be taken on this gamestate, regardless if it violates pins or checks. """
@@ -558,8 +537,6 @@ class GameState(edq.util.json.DictConverter):
         new_state = copy.copy(self)
 
         new_state.castling_rights = self.castling_rights.copy()
-        new_state.move_stack      = self.move_stack.copy()
-        new_state.board_stack     = self.board_stack.copy()
         new_state.board           = self.board.copy()
 
         return new_state
@@ -659,31 +636,27 @@ class GameState(edq.util.json.DictConverter):
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
-            'fen':         self.get_fen(),
-            'move_stack':  [action.to_dict() for action in self.move_stack],
-            'board_stack': [board.to_dict() for board in self.board_stack],
-            'seed':        self.seed,
-            'game_over':   self.game_over,
+            'fen':              self.get_fen(),
+            'previous_action':  self.previous_action.to_dict() if (self.previous_action is not None) else None,
+            'seed':             self.seed,
+            'game_over':        self.game_over,
+            'options':          self.options,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
-        raw_move_stack = data.get('move_stack', [])
-        move_stack = []
-        for move in raw_move_stack:
-            move_stack.append(move.from_dict())
-
-        raw_board_stack = data.get('board_stack', [])
-        board_stack = []
-        for board in raw_board_stack:
-            board_stack.append(board.from_dict())
+        raw_previous_action = data.get('previous_action', None)
+        if (raw_previous_action is not None):
+            previous_action = raw_previous_action.from_dict()
+        else:
+            previous_action = None
 
         return cls(
-            fen         = data.get('fen', None),
-            move_stack  = move_stack,
-            board_stack = board_stack,
-            seed        = data.get('seed', -1),
-            game_over   = data.get('game_over', False),
+            fen              = data.get('fen', None),
+            previous_action  = previous_action,
+            seed             = data.get('seed', -1),
+            game_over        = data.get('game_over', False),
+            options          = data.get('options', None),
         )
 
 @typing.runtime_checkable

@@ -11,13 +11,12 @@ class GameState(chessai.core.gamestate.GameState):
 
     def __init__(self,
                  fen: str | None = None,
-                 move_stack: list[chessai.core.action.Action] | None = None,
-                 board_stack: list[chessai.core.board.Board] | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  puzzle_solved: bool = False,
                  **kwargs: typing.Any) -> None:
-        super().__init__(fen, move_stack, board_stack, seed, game_over, **kwargs)
+        super().__init__(fen, previous_action, seed, game_over, **kwargs)
 
         self.puzzle_solved: bool = puzzle_solved
         """ Set to True when the agent has successfully completed one of the move lines. """

@@ -20,18 +20,19 @@ LOSE_POINTS: int = -500
 CRASH_POINTS = -1000000
 """ Points for crashing the game. """
 
+SEARCH_TARGETS_KEY: str = 'search_targets'
+
 class GameState(chessai.core.gamestate.GameState):
     """ A game state specific to a Tour game. """
 
     def __init__(self,
                  fen: str | None = None,
-                 move_stack: list[chessai.core.action.Action] | None = None,
-                 board_stack: list[chessai.core.board.Board] | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  search_targets: list[chessai.core.coordinate.Coordinate] | dict[str, typing.Any] | None = None,
                  **kwargs: typing.Any) -> None:
-        super().__init__(fen, move_stack, board_stack, seed, game_over, **kwargs)
+        super().__init__(fen, previous_action, seed, game_over, **kwargs)
 
         self.score: int = 0
         """ The score for the Tour. """
@@ -39,8 +40,8 @@ class GameState(chessai.core.gamestate.GameState):
         if (search_targets is None):
             search_targets = []
 
-        if ((len(search_targets) == 0) and (len(self.parsed_fen.search_targets) > 0)):
-            search_targets = self.parsed_fen.search_targets
+        if ((len(search_targets) == 0) and (self.options is not None)):
+            search_targets = self.options.get(SEARCH_TARGETS_KEY, [])
 
         # Convert the string case into the dict case.
         if (isinstance(search_targets, str)):

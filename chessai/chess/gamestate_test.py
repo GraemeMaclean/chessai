@@ -20,9 +20,9 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         # Core Functions
         self.assertFalse(state.is_game_over())
-        self.assertEqual(state.get_move_count(), 0)
+        self.assertIsNone(state.previous_action)
 
-        # Legal moves
+        # Legal actions
         legal_actions = state.get_legal_actions()
         self.assertNotEqual(len(legal_actions), 0)
 
@@ -39,7 +39,6 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         # Push an action and observe the resulting state.
         chosen_action = legal_actions[0]
-        original_board = state.board.copy()
         state.push(chosen_action)
 
         # Check it updated the basic state.
@@ -47,54 +46,51 @@ class GameStateTest(edq.testing.unittest.BaseTest):
         self.assertNotEqual(state.get_fen(), chessai.core.gamestate.DEFAULT_FEN)
 
         # Check state history.
-        self.assertEqual(state.get_move_count(), 1)
-        self.assertEqual(state.move_stack[-1], chosen_action)
-        self.assertEqual(len(state.board_stack), 1)
-        self.assertEqual(state.board_stack[-1], original_board)
+        self.assertEqual(state.previous_action, chosen_action)
 
     def test_generate_successor_does_not_modify_original(self):
         """ Test generate successor properly deep copies the state. """
 
         state = chessai.chess.gamestate.GameState()
-        moves = state.get_legal_actions()
+        actions = state.get_legal_actions()
 
-        move = moves[0]
+        action = actions[0]
 
-        successor = state.generate_successor(move)
+        successor = state.generate_successor(action)
 
         # Original should remain unchanged
-        self.assertEqual(state.get_move_count(), 0)
-        self.assertEqual(successor.get_move_count(), 1)
+        self.assertIsNone(state.previous_action)
+        self.assertEqual(successor.previous_action, action)
         self.assertNotEqual(state.turn, successor.turn)
 
     def test_get_neighbors_filters_by_start_coordinate(self):
         """ Test get neighbors returns actions only from the start coordinate. """
 
         state = chessai.chess.gamestate.GameState()
-        moves = state.get_legal_actions()
+        actions = state.get_legal_actions()
 
-        move = moves[0]
-        start = move.start_coordinate
+        action = actions[0]
+        start = action.start_coordinate
 
         neighbors = state.get_neighbors(start)
 
         for (action, _) in neighbors:
             self.assertEqual(action.start_coordinate, start)
 
-    def test_push_illegal_move_raises(self):
-        """ Test illegal moves raise errors. """
+    def test_push_illegal_action_raises(self):
+        """ Test illegal actions raise errors. """
 
         state = chessai.chess.gamestate.GameState()
 
-        fake_move = chessai.core.action.NULL_ACTION
+        fake_action = chessai.core.action.NULL_ACTION
 
         with self.assertRaises(ValueError):
-            state.push(fake_move)
+            state.push(fake_action)
 
-    def test_legal_moves(self):
-        """ Test the legal move generator. """
+    def test_legal_actions(self):
+        """ Test the legal action generator. """
 
-        # [(FEN, expected_moves, is_checkmate, is_stalemate), ...]
+        # [(FEN, expected_actions, is_checkmate, is_stalemate), ...]
         test_cases: list[tuple[str | None, list[str], bool, bool]] = [
             (
                 None,
@@ -147,11 +143,11 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         for (i, test_case) in enumerate(test_cases):
             with self.subTest(msg = f"Case {i}:"):
-                (start_fen, uci_moves, checkmate, stalemate) = test_case
+                (start_fen, uci_actions, checkmate, stalemate) = test_case
 
                 expected_actions: list[chessai.core.action.Action] = []
-                for uci_move in uci_moves:
-                    expected_actions.append(chessai.core.action.Action.from_uci(uci_move))
+                for uci_action in uci_actions:
+                    expected_actions.append(chessai.core.action.Action.from_uci(uci_action))
 
                 state = chessai.chess.gamestate.GameState(fen = start_fen)
 
@@ -179,7 +175,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
 
-            # Move into checkmate.
+            # action into checkmate.
             (
                 '6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1',
                 chessai.core.action.Action.from_uci('e1e8'),
@@ -224,7 +220,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
 
-            # Knight move checkmate
+            # Knight action checkmate
             (
                 '5rkr/5ppp/8/3N4/8/8/5PRP/7K w - - 0 1',
                 chessai.core.action.Action.from_uci('d5f6'),
@@ -233,7 +229,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
 
-            # Bishop move checkmate
+            # Bishop action checkmate
             (
                 '6kr/3N2pp/8/8/8/8/5PPP/5BRK w - - 0 1',
                 chessai.core.action.Action.from_uci('f1c4'),
@@ -242,7 +238,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
 
-            # Queen move checkmate (Scholar's Mate)
+            # Queen action checkmate (Scholar's Mate)
             (
                 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
                 chessai.core.action.Action.from_uci('h5f7'),
@@ -260,7 +256,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
 
-            # Move into stalemate
+            # action into stalemate
             (
                 '8/p6k/P7/1P6/3B4/5R2/3B2PP/6K1 w - - 0 1',
                 chessai.core.action.Action.from_uci('f3g3'),
@@ -314,7 +310,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
 
-            # King move into stalemate (capturing into stalemate)
+            # King action into stalemate (capturing into stalemate)
             (
                 '4K2k/3R4/8/8/8/8/8/8 w - - 0 1',
                 chessai.core.action.Action.from_uci('e8f8'),
@@ -350,7 +346,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
 
-            # Queen move checkmate
+            # Queen action checkmate
             (
                 '7k/5Q2/6K1/8/8/8/8/8 w - - 0 1',
                 chessai.core.action.Action.from_uci('f7f8'),
@@ -393,14 +389,14 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
                 state = chessai.chess.gamestate.GameState(fen = start_fen)
 
-                # Check that it is not a checkmate or stalemate before the move.
+                # Check that it is not a checkmate or stalemate before the action.
                 self.assertFalse(state.is_checkmate())
                 self.assertFalse(state.is_stalemate())
                 self.assertFalse(state.is_insufficient_material())
 
                 state.process_turn(action)
 
-                # Check that it is a checkmate or stalemate after the move.
+                # Check that it is a checkmate or stalemate after the action.
                 self.assertEqual(state.is_checkmate(), checkmate)
                 self.assertEqual(state.is_stalemate(), stalemate)
                 self.assertEqual(state.is_insufficient_material(), material)

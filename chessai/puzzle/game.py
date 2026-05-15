@@ -52,9 +52,9 @@ class Game(chessai.core.game.Game):
         initial_state = chessai.puzzle.gamestate.GameState(fen = args.board)
 
         # If the game does not have move lines, use the move lines found in the file.
-        if (initial_state.parsed_fen.options is not None):
+        if (initial_state.options is not None):
             raw_move_lines = {
-                chessai.core.action.ACTION_KEY: initial_state.parsed_fen.options.get('move_lines', None)
+                chessai.core.action.ACTION_KEY: initial_state.options.get('move_lines', None)
             }
 
             self.move_lines = chessai.core.action.actions_list_from_dict(raw_move_lines)

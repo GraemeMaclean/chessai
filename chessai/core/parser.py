@@ -54,7 +54,6 @@ class ParsedFEN:
         'fullmove_number',
         'num_files',
         'num_ranks',
-        'search_targets',
         'options',
     )
 
@@ -67,7 +66,6 @@ class ParsedFEN:
             fullmove_number: int,
             num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
             num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS,
-            search_targets: list[chessai.core.coordinate.Coordinate] | None = None,
             options: dict[str, typing.Any] | None = None,
             ) -> None:
         self.pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = pieces
@@ -78,11 +76,6 @@ class ParsedFEN:
         self.fullmove_number: int = fullmove_number
         self.num_files: int = num_files
         self.num_ranks: int = num_ranks
-
-        if (search_targets is None):
-            search_targets = []
-
-        self.search_targets: list[chessai.core.coordinate.Coordinate] = search_targets
         self.options: dict[str, typing.Any] | None = options
 
     def __eq__(self, other: object) -> bool:
@@ -97,13 +90,10 @@ class ParsedFEN:
             self.halfmove_clock == other.halfmove_clock and
             self.fullmove_number == other.fullmove_number and
             self.num_files == other.num_files and
-            self.num_ranks == other.num_ranks and
-            self.search_targets == other.search_targets
+            self.num_ranks == other.num_ranks
         )
 
-def parse_fen(fen: str,
-          search_targets: list[chessai.core.coordinate.Coordinate] | None = None,
-          options: dict[str, typing.Any] | None = None) -> ParsedFEN:
+def parse_fen(fen: str, options: dict[str, typing.Any] | None = None) -> ParsedFEN:
     """
     Parse a FEN string into a ParsedFEN.
 
@@ -146,7 +136,6 @@ def parse_fen(fen: str,
         fullmove_number       = fullmove_number,
         num_files             = num_files,
         num_ranks             = num_ranks,
-        search_targets        = search_targets,
         options               = options,
     )
 
@@ -288,9 +277,7 @@ def load_fen_from_string(text: str, **kwargs: typing.Any) -> ParsedFEN:
     if (target_coordinates is not None):
         options['search_targets'] = target_coordinates
 
-    search_targets = options.pop('search_targets', None)
-
-    return parse_fen(board_text, search_targets, options)
+    return parse_fen(board_text, options)
 
 def _parse_fen_dimensions(dimensions_field: str) -> tuple[int, int]:
     """

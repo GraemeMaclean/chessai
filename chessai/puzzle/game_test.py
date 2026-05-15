@@ -32,7 +32,7 @@ class GameTest(edq.testing.unittest.BaseTest):
                 gamestate = chessai.puzzle.gamestate.GameState(fen = board_path)
 
                 # Puzzle boards must include the move lines, which will be parsed by the gamestate.
-                move_lines = gamestate.parsed_fen.options.get('move_lines', None)
+                move_lines = gamestate.options.get('move_lines', None)
                 agent_arg = f"{gamestate.turn.symbol()}::move_lines={move_lines}"
 
                 argv = [
