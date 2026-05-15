@@ -26,6 +26,7 @@ class GameState(edq.util.json.DictConverter):
     Game states should only be interacted with via their methods and not their member variables.
     """
 
+    # TODO: Can move move_stack to game, get rid of board_stack, we can check repititions later.
     def __init__(self,
                  fen: str | None = None,
                  move_stack: list[chessai.core.action.Action] | None = None,

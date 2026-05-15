@@ -16,6 +16,12 @@ import chessai.core.types
 ACTION_PATTERN: re.Pattern = re.compile(r'^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$')
 ACTION_KEY: str = 'actions'
 
+# TODO: Look over the design of defaulting a value to a NULL_COORDINATE instead of a None.
+# TODO: Also, think about having subclasses for meta actions, the can have MoveAction (could even have a PromotionAction under MoveAction) and (MetaAction or AdministrativeAction) and NoneAction subclasses.
+# TODO: Keep a design doc, try to have the design at a level as trying to use subclasses for semantic types (with a list of examples).
+# TODO: In the doc, we can talk about having None as a default instead of strange default types like the NULL_COORDINATE.
+# TODO: Once we have subclassing and the checks on the model solution, we can think of precomputing hashes for move actions only. Keep a note in the base action class to not change attributes because they are immutable.
+
 UCI_NULL_ACTION: str = '0000'
 UCI_PROPOSE_DRAW_ACTION: str = 'Propose Draw'
 UCI_ACCEPT_DRAW_ACTION: str = 'Accept Draw'

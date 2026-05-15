@@ -343,6 +343,7 @@ class Game(abc.ABC):
         self.expected_result: chessai.core.gameparser.PGNResult = expected_result
         """ The expected result from the PGN: '1-0', '0-1', '1/2-1/2', or '*'. """
 
+    # TODO: It would be great we could store the extra Chessai info in the PGN, including the agent reference.
     @classmethod
     def from_pgn(cls,
                  pgn: str,
@@ -385,6 +386,7 @@ class Game(abc.ABC):
             **kwargs
         )
 
+    # TODO: Write the full format, see if we can get rid of the final state.
     def to_pgn(self, final_state: chessai.core.gamestate.GameState) -> str:
         """ Returns the PGN representation of the Game. """
 
@@ -503,6 +505,7 @@ class Game(abc.ABC):
         isolator.init_agents(self.game_info.agent_infos)
 
         # Create the initial game state (and force it's seed).
+        # TODO: Double check that the suggested seed is propogated to the agent properly.
         state = self.get_initial_state(rng, self.game_info.start_fen)
         state.seed = game_id
         state.game_start()
