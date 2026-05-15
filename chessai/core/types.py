@@ -24,7 +24,6 @@ class Color(enum.IntEnum):
     def __bool__(self) -> bool:
         return bool(self.value)
 
-# TODO(Lucas): Implement the functions detailed in the attribute docstrings.
 class TerminationReason(enum.StrEnum):
     """ An enum representing the reason for a game to be over. """
 
@@ -42,15 +41,6 @@ class TerminationReason(enum.StrEnum):
 
     ACCEPTED_DRAW_PROPOSAL = 'Accepted draw proposal.'
     """ Agents agreed to draw via draw proposals. """
-
-    VARIANT_WIN = 'Variant Win'
-    """ See chessai.core.gamestate.GameState.is_variant_win()`. """
-
-    VARIANT_LOSS = 'Variant Loss'
-    """ See chessai.core.gamestate.GameState.is_variant_loss()`. """
-
-    VARIANT_DRAW = 'Variant Draw'
-    """ See chessai.core.gamestate.GameState.is_variant_draw()`. """
 
     IN_PROGRESS = 'In Progress'
     """ Indicates the game is still in progress (i.e., it has not yet terminated). """

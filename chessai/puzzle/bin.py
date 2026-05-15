@@ -59,13 +59,12 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
 
     return base_agent_infos, [], {}
 
-# TODO(Lucas): Not a huge fan of this code, can we do better?
 def _detect_solver_color(args: argparse.Namespace) -> chessai.core.types.Color:
     """
     Determine which color is the puzzle solver (i.e., the side that moves first).
     """
 
-    board_arg = getattr(args, 'board', None)
+    board_arg = args.board
     if (board_arg is None):
         board_arg = chessai.core.gamestate.DEFAULT_FEN
 
@@ -74,7 +73,7 @@ def _detect_solver_color(args: argparse.Namespace) -> chessai.core.types.Color:
     parsed_fen = chessai.core.parser.parse_fen(board_arg)
     return parsed_fen.turn
 
-def log_puzzle_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[chessai.core.types.Color], prefix: str = '') -> None:
+def log_puzzle_results(results: list[chessai.core.game.GameResult], winning_agent_teams: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
     Log the result of running several Puzzle games.
     """

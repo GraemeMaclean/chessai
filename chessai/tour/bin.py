@@ -51,7 +51,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
 
     return base_agent_infos, [], board_kwargs
 
-def log_tour_results(results: list[chessai.core.game.GameResult], winning_agent_indexes: set[chessai.core.types.Color], prefix: str = '') -> None:
+def log_tour_results(results: list[chessai.core.game.GameResult], winning_agent_teams: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
     Log the result of running several Tour games.
     """

@@ -63,7 +63,7 @@ class LogResults(typing.Protocol):
 
     def __call__(self,
             results: list[chessai.core.game.GameResult],
-            winning_agent_indexes: set[chessai.core.types.Color],
+            winning_agent_teams: set[chessai.core.types.Color],
             prefix: str = '',
             ) -> None:
         """
@@ -85,7 +85,6 @@ def base_init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.typ
 
     return base_agent_infos, [], {}
 
-# TODO(Lucas): Do we need the winning agent teams?
 def base_log_results(results: list[chessai.core.game.GameResult], winning_agent_teams: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
     Log the result of running several games.
@@ -143,7 +142,7 @@ def run_main(
         default_board: str | None = None,
         custom_set_cli_args: SetCLIArgs | None = None,
         custom_init_from_args: InitFromArgs = base_init_from_args,
-        winning_agent_indexes: set[chessai.core.types.Color] | None = None,
+        winning_agent_teams: set[chessai.core.types.Color] | None = None,
         log_results: LogResults | None = typing.cast(LogResults, base_log_results),
         argv: list[str] | None = None,
         ) -> list[chessai.core.game.GameResult]:
@@ -161,7 +160,7 @@ def run_main(
             custom_init_from_args = custom_init_from_args,
             argv = argv)
 
-    return run_games(args, winning_agent_indexes = winning_agent_indexes, log_results = log_results)
+    return run_games(args, winning_agent_teams = winning_agent_teams, log_results = log_results)
 
 def get_parser(
         description: str,
@@ -209,7 +208,7 @@ def parse_args(
 
 def run_games(
         args: argparse.Namespace,
-        winning_agent_indexes: set[chessai.core.types.Color] | None = None,
+        winning_agent_teams: set[chessai.core.types.Color] | None = None,
         log_results: LogResults | None = typing.cast(LogResults, base_log_results),
         ) -> list[chessai.core.game.GameResult]:
     """
@@ -220,8 +219,8 @@ def run_games(
     Returns the results of the games.
     """
 
-    if (winning_agent_indexes is None):
-        winning_agent_indexes = set()
+    if (winning_agent_teams is None):
+        winning_agent_teams = set()
 
     results = []
 
@@ -233,6 +232,6 @@ def run_games(
 
     if (len(results) > 0):
         if (log_results is not None):
-            log_results(results, winning_agent_indexes)
+            log_results(results, winning_agent_teams)
 
     return results

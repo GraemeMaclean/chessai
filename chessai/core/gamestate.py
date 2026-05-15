@@ -345,7 +345,6 @@ class GameState(edq.util.json.DictConverter):
                 piece_symbol = san_clean[0].lower()
 
             # Check for disambiguation.
-            # TODO(Lucas): Our disambiguation logic does not support multiple digits, so we cannot have more than 10 ranks or 26 files.
             middle = san_clean[1:-2]
             if middle:
                 if middle[0].isalpha():
