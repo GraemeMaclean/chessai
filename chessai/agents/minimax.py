@@ -83,6 +83,10 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
                 self._move_count, score, action.uci(),
                 self._stats_states_evaluated[-1], self._stats_nodes_visited[-1])
 
+        # TEST
+        logging.debug("Available actions: %s.", [action.uci() for action in actions])
+
+        # Incrememnt the move count twice to accound for the opponent moving.
         self._move_count += 2
 
         if (action is None):
@@ -134,7 +138,7 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
             # We are considering ourselves, get the max.
             return self.minimax_step_max(state, ply_count, legal_actions, alpha, beta)
 
-        # We are considering an opposing agent (like a ghost), get the min or expected min.
+        # We are considering an opposing agent, get the min or expected min.
         if (self.expectimax):
             return [], self.minimax_step_expected_min(state, ply_count, legal_actions, alpha, beta)
 

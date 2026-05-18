@@ -47,6 +47,8 @@ class AgentInfo(edq.util.json.DictConverter):
         if (name == 'name'):
             self.name = chessai.util.reflection.Reference(value)
         elif (name == 'state_eval_func'):
+            # TEST
+            print(f"Saw an agent arg for state_eval_func with {value}")
             self.state_eval_func = chessai.util.reflection.Reference(value)
         else:
             self.extra_arguments[name] = value

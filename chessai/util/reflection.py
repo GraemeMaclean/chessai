@@ -48,6 +48,9 @@ class Reference(edq.util.json.DictConverter):
         self.short_name: str = short_name
         """ The short_name component of the reflection reference (or None). """
 
+        # TEST
+        print(str(self))
+
     def __str__(self) -> str:
         return Reference.build_string(self.short_name, self.file_path, self.module_name)
 
