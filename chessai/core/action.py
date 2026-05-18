@@ -3,6 +3,7 @@ The core actions that agents are allowed to take.
 Default actions are provided, but custom actions can be easily created.
 """
 
+import abc
 import json
 import re
 import typing
@@ -22,70 +23,25 @@ ACTION_KEY: str = 'actions'
 # TODO: In the doc, we can talk about having None as a default instead of strange default types like the NULL_COORDINATE.
 # TODO: Once we have subclassing and the checks on the model solution, we can think of precomputing hashes for move actions only. Keep a note in the base action class to not change attributes because they are immutable.
 
+UCI_ACCEPT_DRAW_ACTION: str = 'Accept Draw'
+UCI_BASE_ACTION: str = 'Base Action'
+UCI_FORFEIT_ACTION: str = 'Forfeit'
 UCI_NULL_ACTION: str = '0000'
 UCI_PROPOSE_DRAW_ACTION: str = 'Propose Draw'
-UCI_ACCEPT_DRAW_ACTION: str = 'Accept Draw'
 UCI_REJECT_DRAW_ACTION: str = 'Reject Draw'
-UCI_FORFEIT_ACTION: str = 'Forfeit'
 
-class Action(edq.util.json.DictConverter):
+class Action(abc.ABC, edq.util.json.DictConverter):
     """
-    The possible actions that an agent is allowed to take.
+    The base for all actions that an agent is allowed to take.
 
     Actions are strings in the Chess UCI format
     (https://en.wikipedia.org/wiki/Universal_Chess_Interface).
     """
 
-    def __init__(self,
-                 start_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE,
-                 end_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE,
-                 promotion: chessai.core.piece.Piece | None = None,
-                 propose_draw: bool = False,
-                 accept_draw: bool | None = None,
-                 forfeit: bool = False) -> None:
-
-        self.start_coordinate: chessai.core.coordinate.Coordinate = start_coordinate
-        """ The starting coordinate for the action. """
-
-        self.end_coordinate: chessai.core.coordinate.Coordinate = end_coordinate
-        """ The ending coordinate for the action. """
-
-        self.promotion: chessai.core.piece.Piece | None = promotion
-        """ The piece to promote to, or None if this is not a promotion move. """
-
-        self.propose_draw: bool = propose_draw
-        """ Signal if the player is proposing a draw. """
-
-        self.accept_draw: bool | None = accept_draw
-        """ If present, signals acceptance or rejection a draw proposal. """
-
-        self.forfeit: bool = forfeit
-        """ Forfeit the game, which counts as a loss. """
-
     def uci(self) -> str:
         """ Represent the agent action as a chess move in UCI format. """
 
-        # The null action in UCI is encoded as '0000'.
-        if (self == NULL_ACTION):
-            return UCI_NULL_ACTION
-
-        if (self.propose_draw):
-            return UCI_PROPOSE_DRAW_ACTION
-
-        if (self.accept_draw):
-            return UCI_ACCEPT_DRAW_ACTION
-
-        if ((self.accept_draw is not None) and (not self.accept_draw)):
-            return UCI_REJECT_DRAW_ACTION
-
-        if (self.forfeit):
-            return UCI_FORFEIT_ACTION
-
-        start = self.start_coordinate.uci()
-        end = self.end_coordinate.uci()
-        promotion = self.promotion.symbol() if (self.promotion is not None) else ''
-
-        return f"{start}{end}{promotion}"
+        return UCI_BASE_ACTION
 
     @classmethod
     def from_uci(cls, uci: str) -> 'Action':
@@ -157,6 +113,86 @@ class Action(edq.util.json.DictConverter):
 
         return (self_tuple == other_tuple)
 
+class NoneAction(Action):
+    def uci(self) -> str:
+        return UCI_NULL_ACTION
+
+class MoveAction(Action):
+    def __init__(self,
+                 start_coordinate: chessai.core.coordinate.Coordinate | None = None,
+                 end_coordinate: chessai.core.coordinate.Coordinate | None = None,
+                 ) -> None:
+        super().__init__()
+
+        self.start_coordinate: chessai.core.coordinate.Coordinate = start_coordinate
+        """ The starting coordinate for the action. """
+
+        self.end_coordinate: chessai.core.coordinate.Coordinate = end_coordinate
+        """ The ending coordinate for the action. """
+
+    def uci(self) -> str:
+        start = self.start_coordinate.uci()
+        end = self.end_coordinate.uci()
+
+        return f"{start}{end}"
+
+class PromotionAction(MoveAction):
+    def __init__(self,
+                 start_coordinate: chessai.core.coordinate.Coordinate | None = None,
+                 end_coordinate: chessai.core.coordinate.Coordinate | None = None,
+                 promotion: chessai.core.piece.Piece | None = None,
+                 ) -> None:
+        super().__init__(start_coordinate, end_coordinate)
+
+        self.promotion: chessai.core.piece.Piece | None = promotion
+        """ The piece to promote to, or None if this is not a promotion move. """
+
+    def uci(self) -> str:
+        movement_uci = super().uci()
+
+        if (self.promotion is not None):
+            promotion = self.promotion.symbol()
+        else:
+            promotion = ''
+
+        return f"{movement_uci}{promotion}"
+
+class MetaAction(Action):
+    """
+    Meta actions for inter-agent communication regarding non-standard actions.
+
+    Meta actions include handling draws and forfeits.
+    """
+
+class ProposeDrawAction(MetaAction):
+    """ A meta action signaling the agent is offering a draw. """
+
+    def uci(self) -> str:
+        return UCI_PROPOSE_DRAW_ACTION
+
+class AcceptDrawAction(MetaAction):
+    """ A meta action responding to a draw proposal, which can be accepted or rejected. """
+
+    def __init__(self,
+                 accept_draw: bool = False,
+                 ) -> None:
+        super().__init__()
+
+        self.accept_draw: bool = accept_draw
+        """ Signals acceptance or rejection of a draw proposal. """
+
+    def uci(self) -> str:
+        if self.accept_draw:
+            return UCI_ACCEPT_DRAW_ACTION
+
+        return UCI_REJECT_DRAW_ACTION
+
+class ForfeitAction(MetaAction):
+    """ A meta action signaling the agent is forfeiting the game. """
+
+    def uci(self) -> str:
+        return UCI_FORFEIT_ACTION
+
 def actions_list_from_dict(data: dict[str, typing.Any]) -> list[list[Action]]:
     """
     Get a list of a list of actions from a dictionary.
@@ -178,9 +214,3 @@ def actions_list_from_dict(data: dict[str, typing.Any]) -> list[list[Action]]:
         clean_actions.append(clean_action_list)
 
     return clean_actions
-
-NULL_ACTION = Action()
-PROPOSE_DRAW_ACTION = Action(propose_draw = True)
-ACCEPT_DRAW_ACTION = Action(accept_draw = True)
-REJECT_DRAW_ACTION = Action(accept_draw = False)
-FORFEIT_ACTION = Action(forfeit = True)
