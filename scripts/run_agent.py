@@ -75,25 +75,25 @@ def play_all_games(folder: str, agent: str) -> None:
         print("No .puzzle files found in the directory.")
         return None
 
-    count = 0.0
-    score = 0.0
+    puzzle_count = 0.0
+    total_score = 0.0
 
     # play each puzzle
     for puzzle_file in puzzle_files:
 
-        score = play_game(puzzle_file, agent)
-        count += 1
-        score += score
+        puzzle_score = play_game(puzzle_file, agent)
+        puzzle_count += 1
+        total_score += puzzle_score
 
-    fails = count - score
-    pass_rate = (score / count) * 100 if count > 0 else 0
+    fails = puzzle_count - total_score
+    pass_rate = (total_score / puzzle_count) * 100 if puzzle_count > 0 else 0
 
     # Summary Output
     print("\n" + "="*40)
     print(f"FINAL SUMMARY - Agent: {agent}")
     print("-" * 40)
-    print(f"Total Puzzles: {count}")
-    print(f"Pass:          {score:.2f}")
+    print(f"Total Puzzles: {puzzle_count}")
+    print(f"Pass:          {total_score:.2f}")
     print(f"Fail:         {fails:.2f}")
     print(f"Pass Rate:     {pass_rate:.2f}%")
 
