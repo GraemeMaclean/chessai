@@ -81,6 +81,14 @@ A great place to find puzzles is through [Lichess' Puzzles](https://lichess.org/
 which are sorted by theme.
 You can also download a large number of puzzles from [Lichess' download link](https://database.lichess.org/#puzzles).
 
+Using the large .csv file from the lichess database, use script [filter_puzzles.py](/scripts/filter_puzzles.py) to select
+a number of puzzles matching a theme. A list of the themes can be found [here](https://huggingface.co/datasets/Lichess/puzzle-themes).  
+Provide the script the filepath to your .csv file, the filepath you want the puzzles output to, a single theme name (e.g., mateIn1), 
+and the maximum number of puzzles you want to be output.
+```sh
+python3 -m scripts.filter_puzzles --input <file path to .csv> --output <file path> --theme <theme name> --count <desired number>
+```
+
 #### Creating a Custom Puzzle
 
 One of the easiest ways to create a new puzzle is to use the [Lichess board editor](https://lichess.org/editor).
@@ -102,8 +110,11 @@ python3 -m chessai.puzzle --board <puzzle FEN> --move-lines <possible solution m
 A great baseline way to test your agent is to have it try to solve chess puzzles.
 Each puzzle tries to teach a specific skill that your agent should be able to solve.
 
-To test your agent against many puzzles, run the following script:
-TODO: Add puzzle documentation and explain how to have an agent play a suite of puzzles.
+To test your agent against many puzzles, run the script [run_agent.py](/scripts/run_agent.py) with the path
+to a folder of .puzzle files and your desired agent:
+```sh
+python3 -m chessai.run_agent --folder <file path> --agent <agent name or module>
+```
 
 ### Choosing an Agent
 
