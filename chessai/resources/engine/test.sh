@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# test a few basic test cases for the stockfish container
+
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -13,7 +15,7 @@ echo "Starting Chess-Analyzer Integration Tests..."
 
 # Test 1: Standard Position Analysis
 echo -n "Test 1: Validating Standard Opening... "
-OUTPUT=$(docker run --rm chess-analyzer "$START_FEN" "e4, e5" 10)
+OUTPUT=$(docker run --rm stockfish-analyzer "$START_FEN" "e4, e5" 10)
 if echo "$OUTPUT" | grep -q "\"final_rating\""; then
     echo -e "${GREEN}PASSED${NC}"
 else
@@ -24,7 +26,7 @@ fi
 
 # Test 2: Checkmate Detection (M1)
 echo -n "Test 2: Validating Checkmate Detection... "
-MATE_OUTPUT=$(docker run --rm chess-analyzer "$MATE_FEN" "Qxf7" 10)
+MATE_OUTPUT=$(docker run --rm stockfish-analyzer "$MATE_FEN" "Qxf7" 10)
 if echo "$MATE_OUTPUT" | grep -q "\"rating\": \"M0\""; then
     echo -e "${GREEN}PASSED${NC}"
 else
@@ -35,7 +37,7 @@ fi
 
 # Test 3: Invalid Move Handling
 echo -n "Test 3: Validating Error Handling... "
-ERROR_OUTPUT=$(docker run --rm chess-analyzer "$START_FEN" "NotAMove" 5)
+ERROR_OUTPUT=$(docker run --rm stockfish-analyzer "$START_FEN" "NotAMove" 5)
 if echo "$ERROR_OUTPUT" | grep -q "Invalid move"; then
     echo -e "${GREEN}PASSED${NC}"
 else

@@ -7,18 +7,18 @@ A lightweight, containerized research tool that uses Stockfish and python-chess 
 * Flexible analysis: supports FEN input, a move sequence, and adjustable search depth
 
 ### 1. Installation
-Build the image using the provided Dockefile. This will take a couple of minutes.
+Build the image using the provided Dockerfile. This will take a couple of minutes.
 
-`docker build -t chess-analyzer .`
+`docker build -t stockfish-analyzer .`
 
 ### 2. Usage
 Run the container by passing a FEN string, an optional comma-separated list of moves, and an optional search depth, the default is 15.
 
-`docker run --rm chess-analyzer "<FEN>" "<MOVES>" <DEPTH>`
+`docker run --rm stockfish-analyzer "<FEN>" "<MOVES>" <DEPTH>`
 
 #### Example:
 
-`docker run --rm chess-analyzer "startpos" "e4, e5, Nf3" 18`
+`docker run --rm stockfish-analyzer "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" "e4, e5, Nf3" 18`
 
 ### 3. Understanding Ratings
 The `rating` field provides the engine's evaluation of the position:
@@ -45,7 +45,7 @@ The container returns a JSON object to stdout, which can be redirected to a file
 
 #### Example: 
 
-`docker run --rm chess-analyzer "startpos" "e4, e5, Nf3" 18 > results.json`
+`docker run --rm chess-analyzer "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" "e4, e5, Nf3" 18 > results.json`
 
 ### 5. Testing
 An initial test suite is provided to verify the Stockfish build, and output are all functioning correctly.  
@@ -56,7 +56,7 @@ An initial test suite is provided to verify the Stockfish build, and output are 
 * 3. Execute the test: `./test.sh`
 
 #### What is being test:
-* Verifies the container can provcess a standard FEN and return numerical centipawn evaluations.
+* Verifies the container can process a standard FEN and return numerical centipawn evaluations.
 * Ensures the engine correctly identifies forced mates and returns the M# string format.
 * confirms that illegal moves or malformed FENs are caught and reported as an error field in the JSON rather than crashing.
 
