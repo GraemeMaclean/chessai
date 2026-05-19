@@ -54,9 +54,11 @@ def generate_puzzle_files(
                         "move_lines": json.dumps([moves_list])
                     }
 
-                    file_path = os.path.join(output_folder, f"{puzzle_id}.puzzle")
-
-                    with open(file_path, 'w', encoding='utf-8') as out_file:
+                    with open(
+                        os.path.join(output_folder, f"{puzzle_id}.puzzle"),
+                        'w',
+                        encoding='utf-8'
+                    ) as out_file:
                         json.dump(puzzle_data, out_file, indent=4)
                         out_file.write(f"\n---\n{fen}")
 

@@ -8,12 +8,16 @@ import re
 import json
 import pathlib
 
-def play_game(puzzle_path: str, agent:str) -> float:
+def play_game(puzzle_path: pathlib.Path, agent:str) -> float:
     """
     Output to terminal the result of an agent playing a single chess puzzle.
     """
-    with open(puzzle_path, 'r') as f:
-        content = f.read()
+    try:
+        with open(puzzle_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except OSError as e:
+        print(f"Skipping {puzzle_path}: Unable to read file. {e}")
+        return 0.0
 
     # Split the file: the header is JSON, the footer is the FEN
     try:
@@ -25,10 +29,10 @@ def play_game(puzzle_path: str, agent:str) -> float:
         # separating the fen, starting board
         fen = fen_part.strip()
         move_lines = puzzle_data.get("move_lines")
-    except Exception as e:
+    except (ValueError, json.JSONDecodeError) as e:
         print(f"Skipping {puzzle_path}: Failed to parse file format. {e}")
-        return
-    
+        return 0.0
+
     print(f"\n--- Solving Puzzle: {puzzle_path.name} ---")
     print(f"FEN: {fen}")
 
@@ -39,8 +43,8 @@ def play_game(puzzle_path: str, agent:str) -> float:
         "--move-lines", move_lines,
         "--agent", agent
     ]
-    
-    result = subprocess.run(command, capture_output=True, text=True)
+
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
 
     print(result.stdout)
     if result.stderr:
@@ -62,14 +66,14 @@ def play_all_games(folder: str, agent: str) -> None:
 
     if not puzzle_folder.is_dir():
         print(f"Error: {puzzle_folder} is not a directory.")
-        return
+        return None
 
     # Iterate through all .puzzle files
     puzzle_files = list(puzzle_folder.glob("*.puzzle"))
-    
+
     if not puzzle_files:
         print("No .puzzle files found in the directory.")
-        return
+        return None
 
     count = 0.0
     score = 0.0
@@ -92,7 +96,7 @@ def play_all_games(folder: str, agent: str) -> None:
     print(f"Pass:          {score:.2f}")
     print(f"Fail:         {fails:.2f}")
     print(f"Pass Rate:     {pass_rate:.2f}%")
-    
+
     return None
 
 def main() -> None:
@@ -102,16 +106,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run a specific agent against a set of chess puzzles."
     )
-    
+
     parser.add_argument(
         "--folder", 
-        required=True, 
+        required=True,
         help="Path to folder containing .puzzle files"
     )
 
     parser.add_argument(
         "--agent", 
-        default="agent-random", 
+        default="agent-random",
         help="Agent to play puzzles (default: agent-random)"
     )
 
