@@ -7,9 +7,9 @@ A lightweight, containerized research tool that uses Stockfish and python-chess 
 * Flexible analysis: supports FEN input, a move sequence, and adjustable search depth
 
 ### 1. Installation
-Build the image using the provided Dockerfile. This will take a couple of minutes.
+Build the image using the provided 'Makefile'. This will take a couple of minutes.
 
-`docker build -t stockfish-analyzer .`
+`make build`
 
 ### 2. Usage
 Run the container by passing a FEN string, an optional comma-separated list of moves, and an optional search depth, the default is 15.
@@ -51,16 +51,15 @@ The container returns a JSON object to stdout, which can be redirected to a file
 An initial test suite is provided to verify the Stockfish build, and output are all functioning correctly.  
 
 #### Running the tests:
-* 1. Ensure the image is built: `docker build -t chess-analyzer .`
-* 2. Make the test script executable: `chmod +x test.sh`
-* 3. Execute the test: `./test.sh`
+* 1. Ensure the image is built: `make build`
+* 2. Execute the test: `make test`
 
 #### What is being test:
 * Verifies the container can process a standard FEN and return numerical centipawn evaluations.
 * Ensures the engine correctly identifies forced mates and returns the M# string format.
 * confirms that illegal moves or malformed FENs are caught and reported as an error field in the JSON rather than crashing.
 
-### 6. Techincal Details
+### 6. Details
 * Base Image: Alpine Linux (Python 3.12 variant)
 * Engine: Stockfish (compiled from GitHub)
 * Interface: UCI (Universal Chess Interface)
