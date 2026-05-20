@@ -10,7 +10,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
     """ Test Action functionality. """
 
     def test_uci(self):
-        """ Test Action.uci(). """
+        """ Test MoveAction.uci(). """
 
         # [(start_coordinate, end_coordinate, promotion, uci), ...]
         test_cases: list[tuple[
@@ -45,14 +45,6 @@ class ActionTest(edq.testing.unittest.BaseTest):
                 'aa1ab10',
             ),
 
-            # UCI Null Actions
-            (
-                chessai.core.coordinate.NULL_COORDINATE,
-                chessai.core.coordinate.NULL_COORDINATE,
-                None,
-                '0000',
-            ),
-
             # Promotions
             (
                 chessai.core.coordinate.Coordinate(4, 6),
@@ -82,11 +74,15 @@ class ActionTest(edq.testing.unittest.BaseTest):
 
         for (i, (start_coordinate, end_coordinate, promotion, expected)) in enumerate(test_cases):
             with self.subTest(msg = f"Case {i}:"):
-                action = chessai.core.action.Action(start_coordinate, end_coordinate, promotion)
+                if (promotion is None):
+                    action = chessai.core.action.MoveAction(start_coordinate, end_coordinate)
+                else:
+                    action = chessai.core.action.PromotionAction(start_coordinate, end_coordinate, promotion)
+
                 self.assertEqual(expected, action.uci())
 
     def test_from_uci(self):
-        """ Test Action.from_uci(). """
+        """ Test from_uci(). """
 
         # [(uci, error_substring, start_coordinate, end_coordinate, promotion), ...]
         test_cases: list[tuple[
@@ -226,7 +222,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
         for (i, (uci, error_substring, expected_start, expected_end, expected_promotion)) in enumerate(test_cases):
             with self.subTest(msg = f"Case {i}:"):
                 try:
-                    action = chessai.core.action.Action.from_uci(uci)
+                    action = chessai.core.action.from_uci(uci)
                 except Exception as ex:
                     if (error_substring is None):
                         self.fail(f"Unexpected error: '{str(ex)}'.")
@@ -237,8 +233,15 @@ class ActionTest(edq.testing.unittest.BaseTest):
                 if (error_substring is not None):
                     self.fail(f"Did not get expected error: '{error_substring}'.")
 
+                if (not isinstance(action, chessai.core.action.MoveAction)):
+                    continue
+
                 self.assertEqual(expected_start, action.start_coordinate)
                 self.assertEqual(expected_end, action.end_coordinate)
+
+                if (not isinstance(action, chessai.core.action.PromotionAction)):
+                    continue
+
                 self.assertEqual(expected_promotion, action.promotion)
 
     def test_round_trip(self):
@@ -267,21 +270,8 @@ class ActionTest(edq.testing.unittest.BaseTest):
 
         for (i, uci) in enumerate(test_cases):
             with self.subTest(msg = f"Case {i}:"):
-                action = chessai.core.action.Action.from_uci(uci)
+                action = chessai.core.action.from_uci(uci)
                 self.assertEqual(uci, action.uci())
-
-    def test_null_action(self):
-        """ Test NULL_ACTION constant. """
-
-        action = chessai.core.action.NULL_ACTION
-
-        self.assertEqual(-1, action.start_coordinate.file)
-        self.assertEqual(-1, action.start_coordinate.rank)
-        self.assertEqual(-1, action.end_coordinate.file)
-        self.assertEqual(-1, action.end_coordinate.rank)
-        self.assertIsNone(action.promotion)
-
-        self.assertEqual(chessai.core.action.Action(), chessai.core.action.NULL_ACTION)
 
     def test_actions_list_from_dict(self):
         """ Test getting a list of list of actions from a dict. """
@@ -314,7 +304,7 @@ class ActionTest(edq.testing.unittest.BaseTest):
                 for raw_expected_action_list in raw_expected_actions:
                     clean_action_list = []
                     for raw_expected_action in raw_expected_action_list:
-                        clean_action_list.append(chessai.core.action.Action.from_uci(raw_expected_action))
+                        clean_action_list.append(chessai.core.action.from_uci(raw_expected_action))
 
                     expected.append(clean_action_list)
 
@@ -333,210 +323,210 @@ class ActionTest(edq.testing.unittest.BaseTest):
             # End rank.
             (
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
                 ],
             ),
             (
                 [
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1a1"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
                 ],
             ),
 
             # Start rank.
             (
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a2a1"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a2a1"),
                 ],
             ),
             (
                 [
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("a1a1"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a2a1"),
                 ],
             ),
 
             # End file.
             (
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1b1"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1b1"),
                 ],
             ),
             (
                 [
-                    chessai.core.action.Action.from_uci("a1b1"),
-                    chessai.core.action.Action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a1a1"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1b1"),
                 ],
             ),
 
             # Start file.
             (
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("b1a1"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("b1a1"),
                 ],
             ),
             (
                 [
-                    chessai.core.action.Action.from_uci("b1a1"),
-                    chessai.core.action.Action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1a1"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("b1a1"),
                 ],
             ),
 
             # All normal actions.
             (
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
-                    chessai.core.action.Action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1b1"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a1b1"),
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("b1a1"),
                 ],
             ),
             (
                 [
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1b1"),
                 ],
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a1b1"),
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("b1a1"),
                 ],
             ),
 
             # Meta actions.
             (
                 [
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.ProposeDrawAction(),
                 ],
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.ProposeDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.ForfeitAction(),
                 ],
             ),
             (
                 [
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.REJECT_DRAW_ACTION,
+                    chessai.core.action.ProposeDrawAction(),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.RejectDrawAction(),
                 ],
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.ProposeDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.ForfeitAction(),
                 ],
             ),
 
             # All together.
             (
                 [
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
-                    chessai.core.action.Action.from_uci("a1b1"),
+                    chessai.core.action.ProposeDrawAction(),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1b1"),
                 ],
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a1b1"),
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("b1a1"),
+                    chessai.core.action.ProposeDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.ForfeitAction(),
                 ],
             ),
             (
                 [
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.Action.from_uci("b1a1"),
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.Action.from_uci("a1b1"),
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.from_uci("b1a1"),
+                    chessai.core.action.ProposeDrawAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.from_uci("a1b1"),
+                    chessai.core.action.AcceptDrawAction(),
                 ],
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a1b1"),
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("b1a1"),
+                    chessai.core.action.ProposeDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.ForfeitAction(),
                 ],
             ),
         ]
@@ -555,113 +545,113 @@ class ActionTest(edq.testing.unittest.BaseTest):
         # [(input, expected_output), ...]
         test_cases: list[tuple[chessai.core.action.Action, list[chessai.core.action.Action]], bool] = [
             (
-                chessai.core.action.REJECT_DRAW_ACTION,
+                chessai.core.action.RejectDrawAction(),
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a1b1"),
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.ProposeDrawAction(),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("b1a1"),
                 ],
                 True,
             ),
 
             (
-                chessai.core.action.PROPOSE_DRAW_ACTION,
+                chessai.core.action.ProposeDrawAction(),
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.ProposeDrawAction(),
                 ],
                 True,
             ),
 
             (
-                chessai.core.action.FORFEIT_ACTION,
+                chessai.core.action.ForfeitAction(),
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.ProposeDrawAction(),
                 ],
                 True,
             ),
 
             (
-                chessai.core.action.ACCEPT_DRAW_ACTION,
+                chessai.core.action.AcceptDrawAction(),
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.ProposeDrawAction(),
                 ],
                 True,
             ),
 
             (
-                chessai.core.action.NULL_ACTION,
+                chessai.core.action.NoneAction(),
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.NULL_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.NoneAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.ProposeDrawAction(),
                 ],
                 True,
             ),
 
             (
-                chessai.core.action.REJECT_DRAW_ACTION,
+                chessai.core.action.RejectDrawAction(),
                 [
-                    chessai.core.action.Action.from_uci("a1a1"),
-                    chessai.core.action.Action.from_uci("a1a2"),
-                    chessai.core.action.Action.from_uci("a1b1"),
-                    chessai.core.action.Action.from_uci("a2a1"),
-                    chessai.core.action.Action.from_uci("b1a1"),
+                    chessai.core.action.from_uci("a1a1"),
+                    chessai.core.action.from_uci("a1a2"),
+                    chessai.core.action.from_uci("a1b1"),
+                    chessai.core.action.from_uci("a2a1"),
+                    chessai.core.action.from_uci("b1a1"),
                 ],
                 False,
             ),
 
             (
-                chessai.core.action.PROPOSE_DRAW_ACTION,
+                chessai.core.action.ProposeDrawAction(),
                 [],
                 False,
             ),
 
             (
-                chessai.core.action.FORFEIT_ACTION,
+                chessai.core.action.ForfeitAction(),
                 [
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.ProposeDrawAction(),
                 ],
                 False,
             ),
 
             (
-                chessai.core.action.ACCEPT_DRAW_ACTION,
+                chessai.core.action.AcceptDrawAction(),
                 [
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.ProposeDrawAction(),
                 ],
                 False,
             ),
 
             (
-                chessai.core.action.NULL_ACTION,
+                chessai.core.action.NoneAction(),
                 [
-                    chessai.core.action.Action.from_uci("b1a1"),
-                    chessai.core.action.REJECT_DRAW_ACTION,
-                    chessai.core.action.ACCEPT_DRAW_ACTION,
-                    chessai.core.action.FORFEIT_ACTION,
-                    chessai.core.action.PROPOSE_DRAW_ACTION,
+                    chessai.core.action.from_uci("b1a1"),
+                    chessai.core.action.RejectDrawAction(),
+                    chessai.core.action.AcceptDrawAction(),
+                    chessai.core.action.ForfeitAction(),
+                    chessai.core.action.ProposeDrawAction(),
                 ],
                 False,
             ),

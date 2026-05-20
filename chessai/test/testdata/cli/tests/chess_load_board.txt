@@ -10,5 +10,5 @@
 <LOG_PREFIX> -- Average Score: 0.00
 <LOG_PREFIX> -- Scores:        0.0
 <LOG_PREFIX> -- Record:        Loss
-<LOG_PREFIX> -- Average Moves: 39.0
-<LOG_PREFIX> -- Move Counts:   39
+<LOG_PREFIX> -- Average Moves: 31.0
+<LOG_PREFIX> -- Move Counts:   31

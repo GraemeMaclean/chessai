@@ -37,7 +37,7 @@ class TerminationReason(enum.StrEnum):
     """ See chessai.core.gamestate.GameState.is_insufficient_material(). """
 
     FORFEIT = 'Forfeit'
-    """ An agent forfeited the match via chessai.core.action.FORFEIT_ACTION. """
+    """ An agent forfeited the match via chessai.core.action.ForfeitAction(). """
 
     ACCEPTED_DRAW_PROPOSAL = 'Accepted draw proposal.'
     """ Agents agreed to draw via draw proposals. """

@@ -79,15 +79,13 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
         actions, score = self.minimax_step(state, self.ply_count + 1, -math.inf, math.inf)
         action = self.rng.choice(actions)
 
+        logging.trace("Turn: %d, Available actions: %s.", self._move_count, actions) # type: ignore[attr-defined]  # pylint: disable=no-member
+
         logging.debug("Turn: %d, Minimax Score: %d, Chosen Action: %s, States Evaluated: %d, Nodes Visited: %d.",
                 self._move_count, score, action.uci(),
                 self._stats_states_evaluated[-1], self._stats_nodes_visited[-1])
 
-        # TEST
-        logging.debug("Available actions: %s.", [action.uci() for action in actions])
-
-        # Incrememnt the move count twice to accound for the opponent moving.
-        self._move_count += 2
+        self._move_count += 1
 
         if (action is None):
             raise ValueError("Did not get an action out of Minimax.")
@@ -129,10 +127,10 @@ class MinimaxLikeAgent(chessai.core.agent.Agent):
 
         legal_actions = state.get_legal_actions()
 
-        # Don't consider stopping unless we can do nothing else.
+        # Don't consider forfeiting unless we can do nothing else.
         # This will help keep the game moving along.
-        if ((len(legal_actions) > 1) and (chessai.core.action.Action() in legal_actions)):
-            legal_actions.remove(chessai.core.action.Action())
+        if ((len(legal_actions) > 1) and (chessai.core.action.ForfeitAction() in legal_actions)):
+            legal_actions.remove(chessai.core.action.ForfeitAction())
 
         if (state.turn == self.player):
             # We are considering ourselves, get the max.

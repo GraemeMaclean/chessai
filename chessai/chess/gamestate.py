@@ -49,7 +49,7 @@ class GameState(chessai.core.gamestate.GameState):
     def _should_reset_halfmove_clock(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
         return (isinstance(piece, chessai.chess.piece.Pawn))
 
-    def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:
+    def _get_pseudo_legal_moves(self) -> list[chessai.core.action.MoveAction]:
         # Get the base movement from all pieces.
         actions = self._expand_movement_vectors()
 
@@ -67,10 +67,10 @@ class GameState(chessai.core.gamestate.GameState):
 
         return actions
 
-    def _expand_movement_vectors(self) -> list[chessai.core.action.Action]:
+    def _expand_movement_vectors(self) -> list[chessai.core.action.MoveAction]:
         """ Expand the movement vectors into the pseudo-legal moves. """
 
-        actions: list[chessai.core.action.Action] = []
+        actions: list[chessai.core.action.MoveAction] = []
 
         # Determine the rank for pawn promotions.
         if (self.turn == chessai.core.types.Color.WHITE):
@@ -114,7 +114,7 @@ class GameState(chessai.core.gamestate.GameState):
                     if ((isinstance(piece, chessai.chess.piece.Pawn)) and (current_coordinate.rank == promotion_rank)):
                         actions.extend(self._get_promotion_actions(coordinate, current_coordinate))
                     else:
-                        actions.append(chessai.core.action.Action(coordinate, current_coordinate))
+                        actions.append(chessai.core.action.MoveAction(coordinate, current_coordinate))
 
                     if (is_occupied):
                         break
@@ -130,8 +130,11 @@ class GameState(chessai.core.gamestate.GameState):
     def _process_special_move(self,
                               action: chessai.core.action.Action,
                               piece: chessai.core.piece.Piece) -> tuple[bool, chessai.core.coordinate.Coordinate | None]:
+        if (not isinstance(action, chessai.core.action.MoveAction)):
+            return False, None
+
         # Handle promoting pieces.
-        if (action.promotion is not None):
+        if isinstance(action, chessai.core.action.PromotionAction):
             self._handle_promotion(action, piece)
 
         # Detect castling by seeing if the king moved more than two files.
@@ -194,10 +197,9 @@ class GameState(chessai.core.gamestate.GameState):
             return ((not has_multiple_own_pieces) and (not opponent_has_mating_material))
 
         # Bishops are only insufficient material if:
-        # (1) We do not have any other pieces, including bishops of the
-        #     opposite color.
-        # (2) The opponent does not have bishops of the opposite color,
-        #     pawns or knights. These would allow selfmate.
+        # (1) We do not have any other pieces, including bishops of the opposite color.
+        # (2) The opponent does not have bishops of the opposite color, pawns or knights.
+        #     These would allow selfmate.
         own_bishops = [(coordinate, piece) for (coordinate, piece) in own_pieces.items() if isinstance(piece, chessai.chess.piece.Bishop)]
         if (own_bishops):
             square_parities = set()
@@ -228,7 +230,7 @@ class GameState(chessai.core.gamestate.GameState):
         # King alone.
         return True
 
-    def _handle_castling(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:
+    def _handle_castling(self, action: chessai.core.action.MoveAction, piece: chessai.core.piece.Piece) -> None:
         # Build the rook action for castling.
         rook_action: chessai.core.action.Action | None = None
         back_rank = action.start_coordinate.rank
@@ -242,7 +244,7 @@ class GameState(chessai.core.gamestate.GameState):
             rook_start = chessai.core.coordinate.Coordinate(0, back_rank)
             rook_end   = chessai.core.coordinate.Coordinate(action.end_coordinate.file + 1, back_rank)
 
-        rook_action = chessai.core.action.Action(rook_start, rook_end)
+        rook_action = chessai.core.action.MoveAction(rook_start, rook_end)
 
         # Move the rook for castling.
         self.board.push(rook_action)
@@ -250,7 +252,10 @@ class GameState(chessai.core.gamestate.GameState):
         # Update castling rights, based on the action.
         self._update_castling_rights(action, piece)
 
-    def _handle_en_passant(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> chessai.core.coordinate.Coordinate | None:
+    def _handle_en_passant(self,
+                           action: chessai.core.action.MoveAction,
+                           piece: chessai.core.piece.Piece,
+                           ) -> chessai.core.coordinate.Coordinate | None:
         # The captured pawn is on the same rank as the moving pawn, on the destination file.
         captured_piece_coordinate = chessai.core.coordinate.Coordinate(
             action.end_coordinate.file,
@@ -263,12 +268,11 @@ class GameState(chessai.core.gamestate.GameState):
         # Return the en-passant target coordinate, based on the action.
         return self._compute_en_passant(action, piece)
 
-    def _handle_promotion(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> None:
+    def _handle_promotion(self, action: chessai.core.action.PromotionAction, piece: chessai.core.piece.Piece) -> None:
         # Handle promotion by replacing the pawn with the promoted piece.
-        if (action.promotion is not None):
-            self.board.set(action.promotion, action.end_coordinate)
+        self.board.set(action.promotion, action.end_coordinate)
 
-    def _get_castling_moves(self) -> list[chessai.core.action.Action]:
+    def _get_castling_moves(self) -> list[chessai.core.action.MoveAction]:
         """ Get all pseudo-legal castling moves for the current player. """
 
         # Determine the back rank and castling rights for the current player.
@@ -298,7 +302,7 @@ class GameState(chessai.core.gamestate.GameState):
         if ((king_coord is None) or (king_coord.rank != back_rank)):
             return []
 
-        actions: list[chessai.core.action.Action] = []
+        actions: list[chessai.core.action.MoveAction] = []
 
         # Add Kingside castling.
         if (kingside_rights):
@@ -322,7 +326,7 @@ class GameState(chessai.core.gamestate.GameState):
                     and (rook_piece.color == self.turn)
                     and (all_empty)):
                 king_dest = chessai.core.coordinate.Coordinate((self.board.num_files - 2), back_rank)
-                actions.append(chessai.core.action.Action(king_coord, king_dest))
+                actions.append(chessai.core.action.MoveAction(king_coord, king_dest))
 
         # Add Queenside castling.
         if (queenside_rights):
@@ -346,11 +350,11 @@ class GameState(chessai.core.gamestate.GameState):
                     and (rook_piece.color == self.turn)
                     and (all_empty)):
                 king_dest = chessai.core.coordinate.Coordinate(2, back_rank)
-                actions.append(chessai.core.action.Action(king_coord, king_dest))
+                actions.append(chessai.core.action.MoveAction(king_coord, king_dest))
 
         return actions
 
-    def _get_pawn_double_pushes(self) -> list[chessai.core.action.Action]:
+    def _get_pawn_double_pushes(self) -> list[chessai.core.action.MoveAction]:
         """ Get all pseudo-legal pawn double push moves for the current player. """
 
         if (self.turn == chessai.core.types.Color.WHITE):
@@ -360,7 +364,7 @@ class GameState(chessai.core.gamestate.GameState):
             start_rank = self.board.num_ranks - 2
             direction  = -1
 
-        actions: list[chessai.core.action.Action] = []
+        actions: list[chessai.core.action.MoveAction] = []
 
         for (coordinate, piece) in self.board.pieces.items():
             if (not isinstance(piece, chessai.chess.piece.Pawn)):
@@ -381,14 +385,14 @@ class GameState(chessai.core.gamestate.GameState):
             if (self.board.has_piece(double_push_coord)):
                 continue
 
-            actions.append(chessai.core.action.Action(coordinate, double_push_coord))
+            actions.append(chessai.core.action.MoveAction(coordinate, double_push_coord))
 
         return actions
 
-    def _get_en_passant_captures(self) -> list[chessai.core.action.Action]:
+    def _get_en_passant_captures(self) -> list[chessai.core.action.MoveAction]:
         """ Get all pseudo-legal en-passant captures for the current player. """
 
-        actions: list[chessai.core.action.Action] = []
+        actions: list[chessai.core.action.MoveAction] = []
 
         if (self.en_passant_coordinate is None):
             return actions
@@ -420,13 +424,13 @@ class GameState(chessai.core.gamestate.GameState):
             if (piece.color != self.turn):
                 continue
 
-            actions.append(chessai.core.action.Action(candidate_capture_coord, self.en_passant_coordinate))
+            actions.append(chessai.core.action.MoveAction(candidate_capture_coord, self.en_passant_coordinate))
 
         return actions
 
     def _get_promotion_actions(self,
             start_coordinate: chessai.core.coordinate.Coordinate,
-            end_coordinate: chessai.core.coordinate.Coordinate) -> list[chessai.core.action.Action]:
+            end_coordinate: chessai.core.coordinate.Coordinate) -> list[chessai.core.action.MoveAction]:
         """
         Expand a pawn move that reaches the back rank into one action per promotable piece type.
 
@@ -435,14 +439,14 @@ class GameState(chessai.core.gamestate.GameState):
         """
 
         return [
-            chessai.core.action.Action(start_coordinate, end_coordinate, chessai.chess.piece.Queen(self.turn)),
-            chessai.core.action.Action(start_coordinate, end_coordinate, chessai.chess.piece.Rook(self.turn)),
-            chessai.core.action.Action(start_coordinate, end_coordinate, chessai.chess.piece.Bishop(self.turn)),
-            chessai.core.action.Action(start_coordinate, end_coordinate, chessai.chess.piece.Knight(self.turn)),
+            chessai.core.action.PromotionAction(start_coordinate, end_coordinate, chessai.chess.piece.Queen(self.turn)),
+            chessai.core.action.PromotionAction(start_coordinate, end_coordinate, chessai.chess.piece.Rook(self.turn)),
+            chessai.core.action.PromotionAction(start_coordinate, end_coordinate, chessai.chess.piece.Bishop(self.turn)),
+            chessai.core.action.PromotionAction(start_coordinate, end_coordinate, chessai.chess.piece.Knight(self.turn)),
         ]
 
     def _update_castling_rights(self,
-            action: chessai.core.action.Action,
+            action: chessai.core.action.MoveAction,
             piece: chessai.core.piece.Piece) -> None:
         """ Revoke castling rights that are no longer valid after the given move. """
 
@@ -487,7 +491,7 @@ class GameState(chessai.core.gamestate.GameState):
             self.castling_rights.black_queenside = False
 
     def _compute_en_passant(self,
-            action: chessai.core.action.Action,
+            action: chessai.core.action.MoveAction,
             piece: chessai.core.piece.Piece) -> chessai.core.coordinate.Coordinate | None:
         """
         Return the new en-passant target coordinate after this move, or None.

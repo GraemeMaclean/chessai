@@ -20,10 +20,10 @@ class AgentAction(edq.util.json.DictConverter):
             other_info: dict[str, typing.Any] | None = None,
             ) -> None:
         if (action is None):
-            action = chessai.core.action.NULL_ACTION
+            action = chessai.core.action.NoneAction()
 
         self.action: chessai.core.action.Action = action
-        """ The action returned by the agent (or chessai.core.action.NULL_ACTION on a crash). """
+        """ The action returned by the agent (or chessai.core.action.NoneAction() on a crash). """
 
         if (other_info is None):
             other_info = {}
@@ -82,7 +82,7 @@ class AgentActionRecord(edq.util.json.DictConverter):
         """ Get the agent's action. """
 
         if (self.agent_action is None):
-            return chessai.core.action.NULL_ACTION
+            return chessai.core.action.NoneAction()
 
         return self.agent_action.action
 

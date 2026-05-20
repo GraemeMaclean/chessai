@@ -16,11 +16,11 @@ class BoardTest(edq.testing.unittest.BaseTest):
         end_coordinate = chessai.core.coordinate.Coordinate(1, 2)
         piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
 
-        board = chessai.core.board.Board(pieces={
+        board = chessai.core.board.Board(pieces = {
             start_coordinate: piece
         })
 
-        action = chessai.core.action.Action(start_coordinate, end_coordinate)
+        action = chessai.core.action.MoveAction(start_coordinate, end_coordinate)
         was_capture = board.push(action)
 
         # Not a capture
@@ -39,12 +39,12 @@ class BoardTest(edq.testing.unittest.BaseTest):
         attacker_piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
         victim_piece = chessai.chess.piece.Knight(chessai.core.types.Color.BLACK)
 
-        board = chessai.core.board.Board(pieces={
+        board = chessai.core.board.Board(pieces = {
             start_coordinate: attacker_piece,
             end_coordinate: victim_piece,
         })
 
-        action = chessai.core.action.Action(start_coordinate, end_coordinate)
+        action = chessai.core.action.MoveAction(start_coordinate, end_coordinate)
         was_capture = board.push(action)
 
         # Was a capture
@@ -63,11 +63,11 @@ class BoardTest(edq.testing.unittest.BaseTest):
         pawn = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
         promotion_piece = chessai.chess.piece.Queen(chessai.core.types.Color.WHITE)
 
-        board = chessai.core.board.Board(pieces={
+        board = chessai.core.board.Board(pieces = {
             start_coordinate: pawn
         })
 
-        action = chessai.core.action.Action(start_coordinate, end_coordinate, promotion=promotion_piece)
+        action = chessai.core.action.PromotionAction(start_coordinate, end_coordinate, promotion_piece)
         was_capture = board.push(action)
 
         # Not a capture
@@ -120,11 +120,11 @@ class BoardTest(edq.testing.unittest.BaseTest):
         })
 
         # Not a capture
-        action_no_capture = chessai.core.action.Action(start, end_empty)
+        action_no_capture = chessai.core.action.MoveAction(start, end_empty)
         self.assertFalse(board.is_capture(action_no_capture))
 
         # Is a capture
-        action_capture = chessai.core.action.Action(start, end_occupied)
+        action_capture = chessai.core.action.MoveAction(start, end_occupied)
         self.assertTrue(board.is_capture(action_capture))
 
     def test_copy_is_deep(self):
@@ -142,7 +142,7 @@ class BoardTest(edq.testing.unittest.BaseTest):
         self.assertIsNot(board.pieces, board_copy.pieces)
 
         # Modify the copy
-        action = chessai.core.action.Action(start, end)
+        action = chessai.core.action.MoveAction(start, end)
         board_copy.push(action)
 
         # Original unchanged

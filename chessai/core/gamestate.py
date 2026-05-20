@@ -99,11 +99,11 @@ class GameState(edq.util.json.DictConverter):
         """ Return the list of legal actions for the current player. """
 
         # If the most recent move was a draw proposal, the opponent must respond.
-        if (self.get_previous_action() == chessai.core.action.PROPOSE_DRAW_ACTION):
+        if (self.get_previous_action() == chessai.core.action.ProposeDrawAction()):
             return [
-                chessai.core.action.ACCEPT_DRAW_ACTION,
-                chessai.core.action.REJECT_DRAW_ACTION,
-                chessai.core.action.FORFEIT_ACTION,
+                chessai.core.action.AcceptDrawAction(),
+                chessai.core.action.RejectDrawAction(),
+                chessai.core.action.ForfeitAction(),
             ]
 
         # Check if we have previously calculated the legal actions for this gamestate.
@@ -114,8 +114,8 @@ class GameState(edq.util.json.DictConverter):
 
         # Players can always propose a draw or forfeit.
         legal_actions: list[chessai.core.action.Action] = [
-            chessai.core.action.PROPOSE_DRAW_ACTION,
-            chessai.core.action.FORFEIT_ACTION,
+            chessai.core.action.ProposeDrawAction(),
+            chessai.core.action.ForfeitAction(),
         ]
 
         pseudo_legal_moves = self._get_pseudo_legal_moves()
@@ -150,6 +150,9 @@ class GameState(edq.util.json.DictConverter):
     def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Return whether the given action captures a piece. """
 
+        if (not isinstance(action, chessai.core.action.MoveAction)):
+            return False
+
         return self.board.is_capture(action)
 
     def get_neighbors(self,
@@ -160,11 +163,14 @@ class GameState(edq.util.json.DictConverter):
         neighbors: list[tuple[chessai.core.action.Action, chessai.core.coordinate.Coordinate]] = []
 
         for action in self.get_legal_actions():
-            # Skip the legal moves that are not from the starting coordinate.
-            if (action.start_coordinate != start_coordinate):
+            if (not isinstance(action, chessai.core.action.MoveAction)):
                 continue
 
-            neighbors.append((action, action.end_coordinate))
+            # Skip the legal moves that are not from the starting coordinate.
+            if (action.start_coordinate != start_coordinate): # pylint: disable=no-member
+                continue
+
+            neighbors.append((action, action.end_coordinate)) # pylint: disable=no-member
 
         # Sort the neighbors for consistency.
         neighbors.sort()
@@ -184,8 +190,8 @@ class GameState(edq.util.json.DictConverter):
         # Do not count draw proposals or forfeits towards the check.
         checkmate_escape_actions = [
             action for action in legal_actions if action not in [
-                chessai.core.action.PROPOSE_DRAW_ACTION,
-                chessai.core.action.FORFEIT_ACTION,
+                chessai.core.action.ProposeDrawAction(),
+                chessai.core.action.ForfeitAction(),
             ]
         ]
 
@@ -199,8 +205,8 @@ class GameState(edq.util.json.DictConverter):
         # Do not count draw proposals or forfeits towards the check.
         checkmate_escape_actions = [
             action for action in legal_actions if action not in [
-                chessai.core.action.PROPOSE_DRAW_ACTION,
-                chessai.core.action.FORFEIT_ACTION,
+                chessai.core.action.ProposeDrawAction(),
+                chessai.core.action.ForfeitAction(),
             ]
         ]
 
@@ -235,7 +241,7 @@ class GameState(edq.util.json.DictConverter):
         """
 
         # If the previous agent forfeited the game, the current agent won.
-        if (self.get_previous_action() == chessai.core.action.FORFEIT_ACTION):
+        if (self.get_previous_action() == chessai.core.action.ForfeitAction()):
             return [self.turn]
 
         # If the agent is in checkmate, the opponent won.
@@ -256,10 +262,10 @@ class GameState(edq.util.json.DictConverter):
         if (self.is_insufficient_material()):
             return chessai.core.types.TerminationReason.INSUFFICIENT_MATERIAL
 
-        if (self.get_previous_action() == chessai.core.action.FORFEIT_ACTION):
+        if (self.get_previous_action() == chessai.core.action.ForfeitAction()):
             return chessai.core.types.TerminationReason.FORFEIT
 
-        if (self.get_previous_action() == chessai.core.action.ACCEPT_DRAW_ACTION):
+        if (self.get_previous_action() == chessai.core.action.AcceptDrawAction()):
             return chessai.core.types.TerminationReason.ACCEPTED_DRAW_PROPOSAL
 
         if (not self.is_game_over()):
@@ -299,7 +305,7 @@ class GameState(edq.util.json.DictConverter):
                 king_coord = coordinate
 
             if ((king_coord is None) or (king_coord.rank != rank)):
-                return chessai.core.action.NULL_ACTION
+                return chessai.core.action.NoneAction()
 
             start_file = king_coord.file
 
@@ -310,7 +316,7 @@ class GameState(edq.util.json.DictConverter):
                 # Queenside castling.
                 end_file = 2
 
-            return chessai.core.action.Action(
+            return chessai.core.action.MoveAction(
                 chessai.core.coordinate.Coordinate(start_file, rank),
                 chessai.core.coordinate.Coordinate(end_file, rank)
             )
@@ -366,32 +372,39 @@ class GameState(edq.util.json.DictConverter):
         # Get the piece class for comparison.
         piece = chessai.core.piece.get_registered_piece(piece_symbol)
 
-        # Find matching legal action.
-        legal_actions = self.get_legal_actions()
         candidates = []
 
-        for legal_action in legal_actions:
-            if (legal_action.end_coordinate != dest_coord):
+        # Find matching legal action.
+        for legal_action in self.get_legal_actions():
+            # Skip actions that are not moves.
+            if (not isinstance(legal_action, chessai.core.action.MoveAction)):
                 continue
 
+            if (legal_action.end_coordinate != dest_coord): # pylint: disable=no-member
+                continue
+
+            # If there is a promotion, the action must be a promotion action with the matching piece type.
             if (promotion_piece is not None):
-                if ((legal_action.promotion is None) or (type(legal_action.promotion) != type(promotion_piece))):
-                    continue
-            else:
-                if (legal_action.promotion is not None):
+                if (not isinstance(legal_action, chessai.core.action.PromotionAction)):
                     continue
 
-            piece_at_start = self.board.pieces.get(legal_action.start_coordinate)
+                if (type(legal_action.promotion) != type(promotion_piece)): # pylint: disable=no-member
+                    continue
+            else:
+                if isinstance(legal_action, chessai.core.action.PromotionAction):
+                    continue
+
+            piece_at_start = self.board.pieces.get(legal_action.start_coordinate) # pylint: disable=no-member
             if (piece_at_start is None):
                 continue
 
             if (piece_at_start != piece):
                 continue
 
-            if ((disambig_file is not None) and (legal_action.start_coordinate.file != disambig_file)):
+            if ((disambig_file is not None) and (legal_action.start_coordinate.file != disambig_file)): # pylint: disable=no-member
                 continue
 
-            if ((disambig_rank is not None) and (legal_action.start_coordinate.rank != disambig_rank)):
+            if ((disambig_rank is not None) and (legal_action.start_coordinate.rank != disambig_rank)): # pylint: disable=no-member
                 continue
 
             candidates.append(legal_action)
@@ -400,7 +413,7 @@ class GameState(edq.util.json.DictConverter):
         if (len(candidates) == 1):
             return candidates[0]
 
-        return chessai.core.action.NULL_ACTION
+        return chessai.core.action.NoneAction()
 
     # -----------------------------------------------
     # State mutation
@@ -412,13 +425,17 @@ class GameState(edq.util.json.DictConverter):
         previous_board = self.board.copy()
 
         # If the agent forfeits the game or accepts a draw, end the game.
-        if action in [chessai.core.action.FORFEIT_ACTION, chessai.core.action.ACCEPT_DRAW_ACTION]:
+        if (isinstance(action, (chessai.core.action.ForfeitAction, chessai.core.action.AcceptDrawAction))):
             self._progress_state(action, previous_board, False)
             self.game_over = True
             return
 
         # If the agent proposes a draw offer or rejects a draw offer, progress the state to the opponent.
-        if action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.REJECT_DRAW_ACTION]:
+        if (isinstance(action, (chessai.core.action.ProposeDrawAction, chessai.core.action.RejectDrawAction))):
+            self._progress_state(action, previous_board, False)
+            return
+
+        if (not isinstance(action, chessai.core.action.MoveAction)):
             self._progress_state(action, previous_board, False)
             return
 
@@ -455,19 +472,19 @@ class GameState(edq.util.json.DictConverter):
 
         self.previous_action = action
 
-    def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:
+    def _get_pseudo_legal_moves(self) -> list[chessai.core.action.MoveAction]:
         """ Get all of the actions that can be taken on this gamestate, regardless if it violates pins or checks. """
 
         return self._expand_movement_vectors()
 
-    def _expand_movement_vectors(self) -> list[chessai.core.action.Action]:
+    def _expand_movement_vectors(self) -> list[chessai.core.action.MoveAction]:
         """
         Expands all movement vectors from the pieces on the board.
         Pieces will move until they can capture or reach the end of the board.
         There are no other special rules applied.
         """
 
-        actions: list[chessai.core.action.Action] = []
+        actions: list[chessai.core.action.MoveAction] = []
 
         for (coordinate, piece) in self.board.pieces.items():
             if (piece.color != self.turn):
@@ -501,7 +518,7 @@ class GameState(edq.util.json.DictConverter):
                     if ((movement_vector.kind == chessai.core.piece.MoveKind.CAPTURE) and (not is_enemy)):
                         break
 
-                    actions.append(chessai.core.action.Action(coordinate, current_coordinate))
+                    actions.append(chessai.core.action.MoveAction(coordinate, current_coordinate))
 
                     if (is_occupied):
                         break

@@ -143,7 +143,7 @@ def run_main(
         custom_set_cli_args: SetCLIArgs | None = None,
         custom_init_from_args: InitFromArgs = base_init_from_args,
         winning_agent_teams: set[chessai.core.types.Color] | None = None,
-        log_results: LogResults | None = typing.cast(LogResults, base_log_results),
+        log_results: LogResults | None = base_log_results,
         argv: list[str] | None = None,
         ) -> list[chessai.core.game.GameResult]:
     """
@@ -209,7 +209,7 @@ def parse_args(
 def run_games(
         args: argparse.Namespace,
         winning_agent_teams: set[chessai.core.types.Color] | None = None,
-        log_results: LogResults | None = typing.cast(LogResults, base_log_results),
+        log_results: LogResults | None = base_log_results,
         ) -> list[chessai.core.game.GameResult]:
     """
     Run one or more standard games using pre-parsed arguments.

@@ -41,7 +41,7 @@ class MultiScriptedAgent(chessai.core.agent.Agent):
         # Choose an action out of the available move lines.
         possible_moves = self._next_move_options()
         if (len(possible_moves) == 0):
-            return chessai.core.action.NULL_ACTION
+            return chessai.core.action.NoneAction()
 
         chosen_move_list = self.rng.sample(possible_moves, 1)
         chosen_move = chosen_move_list[0]

@@ -69,7 +69,7 @@ class GameState(chessai.core.gamestate.GameState):
         legal_actions = super().get_legal_actions()
 
         # Tour agents cannot propose a draw or forfeit the game.
-        for action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.FORFEIT_ACTION]:
+        for action in [chessai.core.action.ProposeDrawAction(), chessai.core.action.ForfeitAction()]:
             if (action in legal_actions):
                 legal_actions.remove(action)
 
@@ -105,11 +105,12 @@ class GameState(chessai.core.gamestate.GameState):
 
         self.push(action)
 
-        destination_coordinate = action.end_coordinate
-        if (destination_coordinate in self.search_targets):
-            # Get points for reaching a search target.
-            self.remove_search_target(destination_coordinate)
-            self.score += POSITION_POINTS
+        if isinstance(action, chessai.core.action.MoveAction):
+            destination_coordinate = action.end_coordinate
+            if (destination_coordinate in self.search_targets):
+                # Get points for reaching a search target.
+                self.remove_search_target(destination_coordinate)
+                self.score += POSITION_POINTS
 
         # The agent always loses a point each turn.
         self.score -= TIME_PENALTY

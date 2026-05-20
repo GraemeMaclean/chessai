@@ -353,7 +353,7 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
 
             # Otherwise, this must be a SAN move.
             action = state.get_action_from_san(token)
-            if (action == chessai.core.action.NULL_ACTION):
+            if (action == chessai.core.action.NoneAction()):
                 raise ValueError(f"Unable to find a legal action for the SAN: '{token}'.")
 
             state.process_turn_full(action, rng)
@@ -362,12 +362,12 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
     # Check if the gamestate agrees with the expected result.
     if ((result in [PGNResult.WHITE_WIN, PGNResult.BLACK_WIN]) and (not state.is_game_over())):
         # The game is not over when the PGN believes it should be, so add a forfeit action.
-        initial_actions.append(chessai.core.action.FORFEIT_ACTION)
+        initial_actions.append(chessai.core.action.ForfeitAction())
 
     if ((result == PGNResult.TIE) and (not state.is_game_over())):
         # The game must be a proposed draw, so add the draw handshake.
-        initial_actions.append(chessai.core.action.PROPOSE_DRAW_ACTION)
-        initial_actions.append(chessai.core.action.ACCEPT_DRAW_ACTION)
+        initial_actions.append(chessai.core.action.ProposeDrawAction())
+        initial_actions.append(chessai.core.action.AcceptDrawAction())
 
     return ParsedPGN(
         headers          = headers,
@@ -483,11 +483,7 @@ def to_pgn(headers: StandardHeadersDict, optional_headers: dict[str, typing.Any]
 
     for action in actions:
         # Ignore meta actions as they do not have a valid SAN representation.
-        if (action in [chessai.core.action.PROPOSE_DRAW_ACTION,
-                       chessai.core.action.ACCEPT_DRAW_ACTION,
-                       chessai.core.action.REJECT_DRAW_ACTION,
-                       chessai.core.action.FORFEIT_ACTION,
-                       chessai.core.action.NULL_ACTION]):
+        if (not isinstance(action, chessai.core.action.MoveAction)):
             continue
 
         if (state.fullmove_number != current_fullmove_number):
@@ -540,7 +536,7 @@ def _to_tag(header: str, value: str) -> str:
     escaped_value = _escape_tag_value(value)
     return f'[{header} "{escaped_value}"]'
 
-def _action_to_san(action: chessai.core.action.Action, state: chessai.core.gamestate.GameState) -> str:
+def _action_to_san(action: chessai.core.action.MoveAction, state: chessai.core.gamestate.GameState) -> str:
     """
     Convert an action to a SAN using the state before the action is applied evaluate SAN move ambiguity.
 
@@ -577,8 +573,15 @@ def _action_to_san(action: chessai.core.action.Action, state: chessai.core.games
             is_capture = True
 
         # Check if the move is ambiguous.
-        ambiguous_actions: list[chessai.core.action.Action] = []
+        ambiguous_actions: list[chessai.core.action.MoveAction] = []
         for alternate_action in state.get_legal_actions():
+            if (not isinstance(alternate_action, chessai.core.action.MoveAction)):
+                continue
+
+            # An ambiguous move must have the same action type.
+            if (type(alternate_action) != type(action)):
+                continue
+
             # An ambiguous move must end at the same coordinate.
             if (alternate_action.end_coordinate != action.end_coordinate):
                 continue
@@ -588,7 +591,9 @@ def _action_to_san(action: chessai.core.action.Action, state: chessai.core.games
                 continue
 
             # An ambiguous action must have the same promotion.
-            if (alternate_action.promotion != action.promotion):
+            if (isinstance(action, chessai.core.action.PromotionAction)
+                    and isinstance(alternate_action, chessai.core.action.PromotionAction)
+                    and (alternate_action.promotion != action.promotion)):
                 continue
 
             # An ambiguous action must have a different piece type.
@@ -648,7 +653,7 @@ def _action_to_san(action: chessai.core.action.Action, state: chessai.core.games
             move_san = f"{piece_symbol_upper}{disambiguation_str}{capture_str}{destination_str}"
 
         # Add the piece promotion suffix.
-        if (action.promotion is not None):
+        if isinstance(action, chessai.core.action.PromotionAction):
             move_san += f"={action.promotion.symbol().upper()}"
 
     # Apply the action and check for check and checkmate.

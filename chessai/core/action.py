@@ -17,14 +17,7 @@ import chessai.core.types
 ACTION_PATTERN: re.Pattern = re.compile(r'^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$')
 ACTION_KEY: str = 'actions'
 
-# TODO: Look over the design of defaulting a value to a NULL_COORDINATE instead of a None.
-# TODO: Also, think about having subclasses for meta actions, the can have MoveAction (could even have a PromotionAction under MoveAction) and (MetaAction or AdministrativeAction) and NoneAction subclasses.
-# TODO: Keep a design doc, try to have the design at a level as trying to use subclasses for semantic types (with a list of examples).
-# TODO: In the doc, we can talk about having None as a default instead of strange default types like the NULL_COORDINATE.
-# TODO: Once we have subclassing and the checks on the model solution, we can think of precomputing hashes for move actions only. Keep a note in the base action class to not change attributes because they are immutable.
-
 UCI_ACCEPT_DRAW_ACTION: str = 'Accept Draw'
-UCI_BASE_ACTION: str = 'Base Action'
 UCI_FORFEIT_ACTION: str = 'Forfeit'
 UCI_NULL_ACTION: str = '0000'
 UCI_PROPOSE_DRAW_ACTION: str = 'Propose Draw'
@@ -34,14 +27,15 @@ class Action(abc.ABC, edq.util.json.DictConverter):
     """
     The base for all actions that an agent is allowed to take.
 
+    Actions are an immutable class, so do not change attributes after construction.
+
     Actions are strings in the Chess UCI format
     (https://en.wikipedia.org/wiki/Universal_Chess_Interface).
     """
 
+    @abc.abstractmethod
     def uci(self) -> str:
         """ Represent the agent action as a chess move in UCI format. """
-
-        return UCI_BASE_ACTION
 
     def __lt__(self, other: object) -> bool:
         if (not isinstance(other, Action)):
@@ -55,16 +49,26 @@ class Action(abc.ABC, edq.util.json.DictConverter):
 
         return type(self) == type(other)
 
+    def __str__(self) -> str:
+        return self.uci()
+
+    def __repr__(self) -> str:
+        return self.uci()
+
     def _type_order(self) -> int:
         """ Returns the ordering of the type. """
 
         return _ACTION_TYPE_ORDER[type(self)]
 
 class NoneAction(Action):
+    """ An action that signifies nothing happened. """
+
     def uci(self) -> str:
         return UCI_NULL_ACTION
 
 class MoveAction(Action):
+    """ Actions that move a piece from one coordinate to another. """
+
     def __init__(self,
                  start_coordinate: chessai.core.coordinate.Coordinate,
                  end_coordinate: chessai.core.coordinate.Coordinate,
@@ -99,6 +103,8 @@ class MoveAction(Action):
         return self._type_order() < other._type_order()
 
 class PromotionAction(MoveAction):
+    """ Actions that move a piece and promote it to another piece type. """
+
     def __init__(self,
                  start_coordinate: chessai.core.coordinate.Coordinate,
                  end_coordinate: chessai.core.coordinate.Coordinate,
@@ -144,36 +150,16 @@ class ProposeDrawAction(MetaAction):
         return UCI_PROPOSE_DRAW_ACTION
 
 class AcceptDrawAction(MetaAction):
-    """ A meta action responding to a draw proposal, which can be accepted or rejected. """
-
-    def __init__(self,
-                 accept_draw: bool = False,
-                 ) -> None:
-        super().__init__()
-
-        self.accept_draw: bool = accept_draw
-        """ Signals acceptance or rejection of a draw proposal. """
+    """ A meta action responding to a draw proposal with an acceptance. """
 
     def uci(self) -> str:
-        if self.accept_draw:
-            return UCI_ACCEPT_DRAW_ACTION
+        return UCI_ACCEPT_DRAW_ACTION
 
+class RejectDrawAction(MetaAction):
+    """ A meta action responding to a draw proposal with a rejection. """
+
+    def uci(self) -> str:
         return UCI_REJECT_DRAW_ACTION
-
-    def __eq__(self, other: object) -> bool:
-        if (not isinstance(other, AcceptDrawAction)):
-            return False
-
-        return (self.accept_draw == other.accept_draw)
-
-    def __lt__(self, other: object) -> bool:
-        if (not isinstance(other, Action)):
-            raise TypeError(f"Cannot compare an action with an object of type '{type(other)}'.")
-
-        if isinstance(other, AcceptDrawAction):
-            return self.accept_draw < other.accept_draw
-
-        return self._type_order() < other._type_order()
 
 class ForfeitAction(MetaAction):
     """ A meta action signaling the agent is forfeiting the game. """
@@ -193,10 +179,10 @@ def from_uci(uci: str) -> Action:
         return ProposeDrawAction()
 
     if (uci == UCI_ACCEPT_DRAW_ACTION):
-        return AcceptDrawAction(accept_draw = True)
+        return AcceptDrawAction()
 
     if (uci == UCI_REJECT_DRAW_ACTION):
-        return AcceptDrawAction(accept_draw = False)
+        return RejectDrawAction()
 
     if (uci == UCI_FORFEIT_ACTION):
         return ForfeitAction()
@@ -247,5 +233,6 @@ _ACTION_TYPE_ORDER: dict[typing.Type[Action], int] = {
     PromotionAction: 2,
     ProposeDrawAction: 3,
     AcceptDrawAction: 4,
-    ForfeitAction: 5,
+    RejectDrawAction: 5,
+    ForfeitAction: 6,
 }

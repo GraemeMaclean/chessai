@@ -28,14 +28,10 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         # Make sure each action is well-formed.
         for legal_action in legal_actions:
-            self.assertIsNotNone(legal_action.start_coordinate)
-            self.assertIsNotNone(legal_action.end_coordinate)
-
-            # Meta actions have equivalent start and end coordinates.
-            if (legal_action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.FORFEIT_ACTION]):
+            if (not isinstance(legal_action, chessai.core.action.MoveAction)):
                 continue
 
-            self.assertNotEqual(legal_action.start_coordinate, legal_action.end_coordinate)
+            self.assertNotEqual(legal_action.start_coordinate, legal_action.end_coordinate) # pylint: disable=no-member
 
         # Push an action and observe the resulting state.
         chosen_action = legal_actions[0]
@@ -82,7 +78,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         state = chessai.chess.gamestate.GameState()
 
-        fake_action = chessai.core.action.NULL_ACTION
+        fake_action = chessai.core.action.MoveAction(chessai.core.coordinate.NULL_COORDINATE, chessai.core.coordinate.NULL_COORDINATE)
 
         with self.assertRaises(ValueError):
             state.push(fake_action)
@@ -147,7 +143,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
                 expected_actions: list[chessai.core.action.Action] = []
                 for uci_action in uci_actions:
-                    expected_actions.append(chessai.core.action.Action.from_uci(uci_action))
+                    expected_actions.append(chessai.core.action.from_uci(uci_action))
 
                 state = chessai.chess.gamestate.GameState(fen = start_fen)
 
@@ -169,7 +165,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # En-passant capture into checkmate.
             (
                 '2R5/p6k/P7/1P3Pp1/3B4/6R1/3B2PP/6K1 w - g6 0 1',
-                chessai.core.action.Action.from_uci('f5g6'),
+                chessai.core.action.from_uci('f5g6'),
                 True,
                 False,
                 False,
@@ -178,7 +174,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # action into checkmate.
             (
                 '6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1',
-                chessai.core.action.Action.from_uci('e1e8'),
+                chessai.core.action.from_uci('e1e8'),
                 True,
                 False,
                 False,
@@ -187,7 +183,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Castling into checkmate (kingside)
             (
                 '1nbqrkr1/p1ppp1pp/8/8/1b6/8/PPPPP1PP/RNBQK2R w KQ - 0 1',
-                chessai.core.action.Action.from_uci('e1g1'),
+                chessai.core.action.from_uci('e1g1'),
                 True,
                 False,
                 False,
@@ -196,7 +192,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Castling into checkmate (queenside)
             (
                 '1brkr1nn/ppp1p1pp/8/8/5B2/2N1Q3/P1P1P1PP/R3K2R w KQ - 0 1',
-                chessai.core.action.Action.from_uci('e1c1'),
+                chessai.core.action.from_uci('e1c1'),
                 True,
                 False,
                 False,
@@ -205,7 +201,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Double pawn push leading to checkmate
             (
                 'rnb2Nnr/ppppQppp/8/4pk2/8/5PP1/PPPPP2P/RNB1KB1R w KQ - 1 3',
-                chessai.core.action.Action.from_uci('e2e4'),
+                chessai.core.action.from_uci('e2e4'),
                 True,
                 False,
                 False,
@@ -214,7 +210,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Double pawn push for discovered checkmate
             (
                 '3q3r/1bp2ppp/k1n5/4p3/3B4/1N6/PPPPPPPP/R2QKB1R w KQ - 0 8',
-                chessai.core.action.Action.from_uci('e2e4'),
+                chessai.core.action.from_uci('e2e4'),
                 True,
                 False,
                 False,
@@ -223,7 +219,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Knight action checkmate
             (
                 '5rkr/5ppp/8/3N4/8/8/5PRP/7K w - - 0 1',
-                chessai.core.action.Action.from_uci('d5f6'),
+                chessai.core.action.from_uci('d5f6'),
                 True,
                 False,
                 False,
@@ -232,7 +228,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Bishop action checkmate
             (
                 '6kr/3N2pp/8/8/8/8/5PPP/5BRK w - - 0 1',
-                chessai.core.action.Action.from_uci('f1c4'),
+                chessai.core.action.from_uci('f1c4'),
                 True,
                 False,
                 False,
@@ -241,7 +237,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Queen action checkmate (Scholar's Mate)
             (
                 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
-                chessai.core.action.Action.from_uci('h5f7'),
+                chessai.core.action.from_uci('h5f7'),
                 True,
                 False,
                 False,
@@ -250,7 +246,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Pawn promotion to queen for checkmate
             (
                 '6k1/2P2p1p/7P/7K/8/8/8/8 w - - 0 1',
-                chessai.core.action.Action.from_uci('c7c8Q'),
+                chessai.core.action.from_uci('c7c8Q'),
                 True,
                 False,
                 False,
@@ -259,7 +255,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # action into stalemate
             (
                 '8/p6k/P7/1P6/3B4/5R2/3B2PP/6K1 w - - 0 1',
-                chessai.core.action.Action.from_uci('f3g3'),
+                chessai.core.action.from_uci('f3g3'),
                 False,
                 True,
                 False,
@@ -268,7 +264,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Capture leading to stalemate
             (
                 '7k/5K2/4Q1p1/8/8/8/8/8 w - - 0 1',
-                chessai.core.action.Action.from_uci('e6g6'),
+                chessai.core.action.from_uci('e6g6'),
                 False,
                 True,
                 False,
@@ -277,7 +273,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Promotion to queen causing stalemate
             (
                 '8/6P1/7k/8/6K1/8/8/8 w - - 0 1',
-                chessai.core.action.Action.from_uci('g7g8Q'),
+                chessai.core.action.from_uci('g7g8Q'),
                 False,
                 True,
                 False,
@@ -286,7 +282,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Checkmate by moving bishop
             (
                 '2r2k2/8/8/b2b4/5n2/8/8/3K4 b - - 0 1',
-                chessai.core.action.Action.from_uci('d5b3'),
+                chessai.core.action.from_uci('d5b3'),
                 True,
                 False,
                 False,
@@ -295,7 +291,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Underpromotion to knight for checkmate
             (
                 '5bnr/Q3Pnkq/5ppp/8/8/4PP2/PPPP1KP1/RNBR4 w - - 0 1',
-                chessai.core.action.Action.from_uci('e7e8N'),
+                chessai.core.action.from_uci('e7e8N'),
                 True,
                 False,
                 False,
@@ -304,7 +300,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Capture and promote to queen for checkmate
             (
                 '6k1/5ppp/8/8/8/8/2p2PPP/1N4K1 b - - 0 1',
-                chessai.core.action.Action.from_uci('c2b1q'),
+                chessai.core.action.from_uci('c2b1q'),
                 True,
                 False,
                 False,
@@ -313,7 +309,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # King action into stalemate (capturing into stalemate)
             (
                 '4K2k/3R4/8/8/8/8/8/8 w - - 0 1',
-                chessai.core.action.Action.from_uci('e8f8'),
+                chessai.core.action.from_uci('e8f8'),
                 False,
                 True,
                 False,
@@ -322,7 +318,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Smothered mate with knight
             (
                 '6rk/4N1pn/8/8/8/8/8/5K1R w - - 0 1',
-                chessai.core.action.Action.from_uci('e7g6'),
+                chessai.core.action.from_uci('e7g6'),
                 True,
                 False,
                 False,
@@ -331,7 +327,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Pawn push causing stalemate
             (
                 'k7/8/1KP5/8/8/8/8/8 w - - 0 1',
-                chessai.core.action.Action.from_uci('c6c7'),
+                chessai.core.action.from_uci('c6c7'),
                 False,
                 True,
                 False,
@@ -340,7 +336,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Two rooks checkmate (ladder mate)
             (
                 '6k1/8/6K1/8/8/8/7R/7R w - - 0 1',
-                chessai.core.action.Action.from_uci('h2h8'),
+                chessai.core.action.from_uci('h2h8'),
                 True,
                 False,
                 False,
@@ -349,7 +345,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Queen action checkmate
             (
                 '7k/5Q2/6K1/8/8/8/8/8 w - - 0 1',
-                chessai.core.action.Action.from_uci('f7f8'),
+                chessai.core.action.from_uci('f7f8'),
                 True,
                 False,
                 False,
@@ -358,7 +354,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # King only insufficient material
             (
                 '4k3/3Q4/8/8/8/8/8/4K3 b - - 0 1',
-                chessai.core.action.Action.from_uci('e8d7'),
+                chessai.core.action.from_uci('e8d7'),
                 False,
                 False,
                 True,
@@ -367,7 +363,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Insufficient material, king and bishop
             (
                 '8/8/6p1/8/4B3/8/k7/2K5 w - - 0 1',
-                chessai.core.action.Action.from_uci('e4g6'),
+                chessai.core.action.from_uci('e4g6'),
                 False,
                 False,
                 True,
@@ -376,7 +372,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             # Insufficient material, king and knight
             (
                 '8/8/5p2/8/4N3/8/k7/2K5 w - - 0 1',
-                chessai.core.action.Action.from_uci('e4f6'),
+                chessai.core.action.from_uci('e4f6'),
                 False,
                 False,
                 True,

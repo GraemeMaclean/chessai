@@ -84,7 +84,7 @@ class Board(edq.util.json.DictConverter):
 
         return list(self.pieces.keys())
 
-    def push(self, action: chessai.core.action.Action) -> bool:
+    def push(self, action: chessai.core.action.MoveAction) -> bool:
         """ Apply an action to the board. """
 
         piece = self.pieces.pop(action.start_coordinate, None)
@@ -92,7 +92,7 @@ class Board(edq.util.json.DictConverter):
             raise ValueError(f"There is no piece at the action's start coordinate: '{action.start_coordinate.uci()}'.")
 
         # Convert to the promotion piece.
-        if (action.promotion is not None):
+        if (isinstance(action, chessai.core.action.PromotionAction) and (action.promotion is not None)):
             piece = action.promotion
 
         if (not self._is_within_bounds(action.end_coordinate)):
@@ -133,7 +133,7 @@ class Board(edq.util.json.DictConverter):
 
         return True
 
-    def is_capture(self, action: chessai.core.action.Action) -> bool:
+    def is_capture(self, action: chessai.core.action.MoveAction) -> bool:
         """ Returns if the move captures a piece. """
 
         if (self.get(action.start_coordinate) is None):

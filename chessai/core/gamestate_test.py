@@ -27,14 +27,10 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         # Make sure each action is well-formed.
         for legal_action in legal_actions:
-            self.assertIsNotNone(legal_action.start_coordinate)
-            self.assertIsNotNone(legal_action.end_coordinate)
-
-            # Meta actions have equivalent start and end coordinates.
-            if (legal_action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.FORFEIT_ACTION]):
+            if (not isinstance(legal_action, chessai.core.action.MoveAction)):
                 continue
 
-            self.assertNotEqual(legal_action.start_coordinate, legal_action.end_coordinate)
+            self.assertNotEqual(legal_action.start_coordinate, legal_action.end_coordinate) # pylint: disable=no-member
 
         # Push an action and observe the resulting state.
         chosen_action = legal_actions[0]
@@ -81,7 +77,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
 
         state = chessai.core.gamestate.GameState()
 
-        fake_action = chessai.core.action.Action()
+        fake_action = chessai.core.action.MoveAction(chessai.core.coordinate.NULL_COORDINATE, chessai.core.coordinate.NULL_COORDINATE)
 
         with self.assertRaises(ValueError):
             state.push(fake_action)
