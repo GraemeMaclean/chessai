@@ -112,7 +112,6 @@ class Game(chessai.core.game.Game):
 
         # Check whether the move follows any of the remaining move lines.
         if (action not in self._next_puzzle_moves()):
-            logging.debug("Found puzzle moves: '%s'.", self._next_puzzle_moves())
             logging.info(
                 "Incorrect action for agent '%s': '%s' of type '%s'.",
                 action_record.player, action.uci(), type(action),
