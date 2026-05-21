@@ -2,48 +2,82 @@
 
 # test a few basic test cases for the stockfish container
 
-# Colors for output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+readonly THIS_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd | xargs realpath)"
+readonly ROOT_DIR="${THIS_DIR}/.."
 
-START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-# Position where White can deliver mate in 1 with Qxf7
-MATE_FEN="r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5Q2/PPPP1PPP/RNB1K2R w KQkq - 4 4"
+readonly START_FEN="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+readonly MATE_FEN="r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5Q2/PPPP1PPP/RNB1K2R w KQkq - 4 4"
+readonly MATE_MOVE="Qxf7"
 
-echo "Starting Chess-Analyzer Integration Tests..."
+function test_standard_opening() {
+    echo -n "Standard Opening ... "
+    local output
+    output=$(docker run --rm stockfish-analyzer "$START_FEN" "e4, e5" --depth 10 2>/dev/null) || true
+    
+    if echo "$output" | grep -q "\"final_rating\""; then
+        echo "ok"
+        return 0
+    else
+        echo "FAILED"
+        return 1
+    fi
+}
 
-# Test 1: Standard Position Analysis
-echo -n "Test 1: Validating Standard Opening... "
-OUTPUT=$(docker run --rm stockfish-analyzer "$START_FEN" "e4, e5" 10)
-if echo "$OUTPUT" | grep -q "\"final_rating\""; then
-    echo -e "${GREEN}PASSED${NC}"
-else
-    echo -e "${RED}FAILED${NC}"
-    echo "Output: $OUTPUT"
-    exit 1
-fi
+function test_checkmate_detection() {
+    echo -n "Checkmate Detection ... "
+    local mate_output
+    mate_output=$(docker run --rm stockfish-analyzer "$MATE_FEN" "$MATE_MOVE" --depth 10 2>/dev/null) || true
+    
+    if echo "$mate_output" | grep -q "\"rating\": \"M0\""; then
+        echo "ok"
+        return 0
+    else
+        echo "FAILED"
+        return 1
+    fi
+}
 
-# Test 2: Checkmate Detection (M1)
-echo -n "Test 2: Validating Checkmate Detection... "
-MATE_OUTPUT=$(docker run --rm stockfish-analyzer "$MATE_FEN" "Qxf7" 10)
-if echo "$MATE_OUTPUT" | grep -q "\"rating\": \"M0\""; then
-    echo -e "${GREEN}PASSED${NC}"
-else
-    echo -e "${RED}FAILED (Expected M1 rating)${NC}"
-    echo "Output: $MATE_OUTPUT"
-    exit 1
-fi
+function test_invalid_move_handling() {
+    echo -n "Invalid Move Handling ... "
+    local error_output
+    error_output=$(docker run --rm stockfish-analyzer "$START_FEN" "NotAMove" --depth 5 2>/dev/null) || true
+    
+    if echo "$error_output" | grep -q "Invalid move"; then
+        echo "ok"
+        return 0
+    else
+        echo "FAILED"
+        return 1
+    fi
+}
 
-# Test 3: Invalid Move Handling
-echo -n "Test 3: Validating Error Handling... "
-ERROR_OUTPUT=$(docker run --rm stockfish-analyzer "$START_FEN" "NotAMove" 5)
-if echo "$ERROR_OUTPUT" | grep -q "Invalid move"; then
-    echo -e "${GREEN}PASSED${NC}"
-else
-    echo -e "${RED}FAILED${NC}"
-    echo "Output: $ERROR_OUTPUT"
-    exit 1
-fi
+function main() {
+    if [[ $# -ne 0 ]]; then
+        echo "USAGE: $0"
+        exit 1
+    fi
 
-echo -e "\n${GREEN}All tests passed successfully!${NC}"
+    trap exit SIGINT
+
+    cd "${ROOT_DIR}"
+
+    echo "Starting Chess-Analyzer Integration Tests..."
+    echo "--------------------------------------------"
+
+    local error_count=0
+
+    test_standard_opening || ((error_count++))
+    test_checkmate_detection || ((error_count++))
+    test_invalid_move_handling || ((error_count++))
+
+    echo "--------------------------------------------"
+    if [[ ${error_count} -eq 0 ]]; then
+        echo "All integration tests passed successfully!"
+    else
+        echo "Completed with failures. Total tests failed: ${error_count}"
+    fi
+
+    return ${error_count}
+}
+
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"
