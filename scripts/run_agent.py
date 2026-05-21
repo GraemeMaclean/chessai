@@ -2,91 +2,66 @@
 A script to run the provided agent against a set of puzzles, outputting
 the puzzles it fails and the pass/fail rate.
 """
+
 import argparse
-import subprocess
-import re
-import json
-import pathlib
+import glob
+import os
+import sys
 
-def play_game(puzzle_path: pathlib.Path, agent:str) -> float:
-    """
-    Output to terminal the result of an agent playing a single chess puzzle.
-    """
-    try:
-        with open(puzzle_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-    except OSError as e:
-        print(f"Skipping {puzzle_path}: Unable to read file. {e}")
-        return 0.0
+import chessai.puzzle.bin
 
-    # Split the file: the header is JSON, the footer is the FEN
-    try:
-        # Getting the movelines
-        header_part, fen_part = content.strip().split('---')
-        clean_json = re.sub(r',\s*([\]}])', r'\1', header_part)
-        puzzle_data = json.loads(clean_json)
+def play_puzzle(puzzle_path: str, agent: str, agent_args: str) -> float:
+    """ Output to terminal the result of an agent playing a single chess puzzle. """
 
-        # separating the fen, starting board
-        fen = fen_part.strip()
-        move_lines = puzzle_data.get("move_lines")
-    except (ValueError, json.JSONDecodeError) as e:
-        print(f"Skipping {puzzle_path}: Failed to parse file format. {e}")
-        return 0.0
+    print(f"\n--- Solving Puzzle: {puzzle_path} ---")
+    print(puzzle_path, agent, agent_args)
 
-    print(f"\n--- Solving Puzzle: {puzzle_path.name} ---")
-    print(f"FEN: {fen}")
-
-    # Construct the command
-    command = [
-        "python3", "-m", "chessai.puzzle",
-        "--board", fen,
-        "--move-lines", move_lines,
+    argv = [
+        "--board", puzzle_path,
         "--agent", agent
     ]
 
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if (agent_args):
+        for arg in agent_args:
+            argv.extend(["--agent-arg", arg])
 
-    print(result.stdout)
-    if result.stderr:
-        print(result.stderr)
+    print(argv)
 
-    score_match = re.search(r"Average Score:\s+([\d.]+)", result.stdout)
-    score = float(score_match.group(1)) if score_match else 0.0
+    try:
+        results = chessai.puzzle.bin.main(argv = argv)
+    except ValueError as e:
+        print(f"Skipping puzzle due to an illegal move: {e}", file=sys.stderr)
+        return 0.0
 
-    if score == 0.0:
-        print(f"Puzzle failed. Expected moves were: {move_lines}")
+    return results[0].score
 
-    return score
+def play_all_puzzles(folder: str, agent: str, agent_arg: str) -> None:
+    """ Iterate the agent through a folder with chess puzzles. """
 
-def play_all_games(folder: str, agent: str) -> None:
-    """
-    Iterate the agent through a list of chess puzzles
-    """
-    puzzle_folder = pathlib.Path(folder)
-
-    if not puzzle_folder.is_dir():
-        print(f"Error: {puzzle_folder} is not a directory.")
+    if (not os.path.isdir(folder)):
+        print(f"Error: {folder} is not a directory.")
         return None
 
-    # Iterate through all .puzzle files
-    puzzle_files = list(puzzle_folder.glob("*.puzzle"))
+    # Find all .puzzle files.
+    search_pattern = os.path.join(folder, "*.puzzle")
+    puzzle_files = glob.glob(search_pattern)
 
-    if not puzzle_files:
+    if (not puzzle_files):
         print("No .puzzle files found in the directory.")
         return None
 
     puzzle_count = 0.0
     total_score = 0.0
 
-    # play each puzzle
+    # Iterate through each puzzle.
     for puzzle_file in puzzle_files:
 
-        puzzle_score = play_game(puzzle_file, agent)
+        puzzle_score = play_puzzle(puzzle_file, agent, agent_arg)
         puzzle_count += 1
         total_score += puzzle_score
 
     fails = puzzle_count - total_score
-    pass_rate = (total_score / puzzle_count) * 100 if puzzle_count > 0 else 0
+    pass_rate = (total_score / puzzle_count) * 100
 
     # Summary Output
     print("\n" + "="*40)
@@ -100,30 +75,28 @@ def play_all_games(folder: str, agent: str) -> None:
     return None
 
 def main() -> None:
-    """
-    Entry point for the CLI.
-    """
+    """ Handles command line argument parsing and script execution. """
+
     parser = argparse.ArgumentParser(
-        description="Run a specific agent against a set of chess puzzles."
-    )
+            description = "Run a specific agent against a set of chess puzzles.")
 
-    parser.add_argument(
-        "--folder", 
-        required=True,
-        help="Path to folder containing .puzzle files"
-    )
+    parser.add_argument('--folder', dest = 'folder',
+            action = 'store', type = str, default = 'chessai/resources/puzzles',
+            help = ('Path to folder containing .puzzle files (default: %(default)s).'
+                    + ' If just a filename, than the `chessai/resources/puzzles` directory will be checked'
+                    + ' (using a ".puzzle" extension).'))
 
-    parser.add_argument(
-        "--agent", 
-        default="agent-random",
-        help="Agent to play puzzles (default: agent-random)"
-    )
+    parser.add_argument('--agent', dest = 'agent',
+            action = 'store', type = str, default = 'agent-random',
+            help = 'Agent to play puzzles (default: %(default)s).')
+
+    parser.add_argument('--agent-arg', dest = 'agent_arg',
+            action = 'append', type = str, default = None,
+            help = 'Specify arguments directly to agents (may be used multiple times).')
 
     args = parser.parse_args()
 
-    # Execution flow
-    play_all_games(args.folder, args.agent)
-
+    play_all_puzzles(args.folder, args.agent, args.agent_arg)
 
 if __name__ == "__main__":
     main()
