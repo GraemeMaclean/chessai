@@ -41,8 +41,13 @@ class Board(edq.util.json.DictConverter):
         if (pieces is None):
             pieces = {}
 
-        self.pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = pieces
-        """ The pieces on the board, keyed by the coordinate they occupy. """
+        clean_pieces: dict[int, dict[int, chessai.core.piece.Piece]] = {rank: {} for rank in range(num_ranks)}
+
+        for (coordinate, piece) in pieces.items():
+            clean_pieces[coordinate.rank][coordinate.file] = piece
+
+        self.pieces: dict[int, dict[int, chessai.core.piece.Piece]] = clean_pieces
+        """ The pieces on the board, first keyed by the rank and then by the file. """
 
         self.num_files: int = num_files
         """ The number of files of the chess board. """
@@ -58,36 +63,53 @@ class Board(edq.util.json.DictConverter):
     def is_valid(self) -> bool:
         """ Checks if all of the pieces are in a valid position. """
 
-        for (coordinate, _) in self.pieces.items():
-            if (not self._is_within_bounds(coordinate)):
-                return False
+        # TODO
+        # for (coordinate, _) in self.pieces.items():
+        #     if (not self._is_within_bounds(coordinate)):
+        #         return False
 
         return True
 
     def get(self, coordinate: chessai.core.coordinate.Coordinate) -> chessai.core.piece.Piece | None:
         """ Gets the piece at the given coordinate. """
 
-        return self.pieces.get(coordinate, None)
+        return self.pieces[coordinate.rank].get(coordinate.file, None)
+
+    def get_coordinate_map(self) -> dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece]:
+        """ Gets all pieces on the board in a dictionary of coordinates to pieces. """
+
+        piece_items: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = {}
+
+        for rank in range(self.num_ranks):
+            for (file, piece) in self.pieces[rank].items():
+                piece_items[chessai.core.coordinate.Coordinate(rank, file)] = piece
+
+        return piece_items
 
     def has_piece(self, coordinate: chessai.core.coordinate.Coordinate) -> bool:
         """ Returns if the given coordinate has a piece. """
 
-        return (self.get(coordinate) is not None)
+        return (self.pieces[coordinate.rank].get(coordinate.file, None) is not None)
 
     def all_pieces(self) -> list[chessai.core.piece.Piece]:
         """ Gets all of the pieces on the board. """
 
-        return list(self.pieces.values())
+        raise ValueError("TODO")
+
+        # return list(self.pieces.values())
 
     def all_coordinates(self) -> list[chessai.core.coordinate.Coordinate]:
         """ Gets all of the coordinates with a piece on the board. """
 
-        return list(self.pieces.keys())
+        raise ValueError("TODO")
 
+        # return list(self.pieces.keys())
+
+    # TODO: Improve docstring.
     def push(self, action: chessai.core.action.MoveAction) -> bool:
         """ Apply an action to the board. """
 
-        piece = self.pieces.pop(action.start_coordinate, None)
+        piece = self.pieces[action.start_coordinate.rank].pop(action.start_coordinate.file, None)
         if (piece is None):
             raise ValueError(f"There is no piece at the action's start coordinate: '{action.start_coordinate.uci()}'.")
 
@@ -99,9 +121,9 @@ class Board(edq.util.json.DictConverter):
             raise ValueError("Cannot push an action that moves the piece off of the board of size"
                 + f" '{self.num_files}x{self.num_ranks}': '{action.end_coordinate}'.")
 
-        target_piece = self.pieces.get(action.end_coordinate, None)
+        target_piece = self.pieces[action.end_coordinate.rank].get(action.end_coordinate.file, None)
 
-        self.pieces[action.end_coordinate] = piece
+        self.pieces[action.end_coordinate.rank][action.end_coordinate.file] = piece
 
         return (target_piece is not None)
 
@@ -111,7 +133,7 @@ class Board(edq.util.json.DictConverter):
         If there is no piece at the coordinate, the board is unchanged.
         """
 
-        self.pieces.pop(coordinate, None)
+        self.pieces[coordinate.rank].pop(coordinate.file, None)
 
     def set(self, piece: chessai.core.piece.Piece, coordinate: chessai.core.coordinate.Coordinate) -> None:
         """ Adds a piece to the specified coordinate, which must be within bounds. """
@@ -120,7 +142,7 @@ class Board(edq.util.json.DictConverter):
             raise ValueError("Cannot remove a piece from an out of bounds coordinate on a board of size"
                 + f" '{self.num_files}x{self.num_ranks}': '{coordinate}'.")
 
-        self.pieces[coordinate] = piece
+        self.pieces[coordinate.rank][coordinate.file] = piece
 
     def _is_within_bounds(self, coordinate: chessai.core.coordinate.Coordinate) -> bool:
         """ Checks whether a coordinate is within the bounds of the board. """
@@ -140,6 +162,41 @@ class Board(edq.util.json.DictConverter):
             return False
 
         return (self.get(action.end_coordinate) is not None)
+
+    def to_fen_piece_field(self) -> str:
+        """ Convert the board into the piece-placement field of a FEN string. """
+
+        ranks: list[str] = []
+
+        for rank_index in range(self.num_ranks):
+            # FEN ranks come from highest first, so we descend from (num_ranks - 1) to rank 0.
+            rank = (self.num_ranks - 1) - rank_index
+            empty_count = 0
+
+            for file in range(self.num_files):
+                piece = self.pieces[rank].get(file, None)
+
+                if (piece is None):
+                    empty_count += 1
+                else:
+                    if (empty_count > 0):
+                        ranks.append(str(empty_count))
+                        empty_count = 0
+
+                    symbol = piece.symbol()
+                    if (symbol is None):
+                        raise ValueError(f"Cannot serialize piece '{piece}' at rank '{rank}' and file '{file}'.")
+
+                    ranks.append(symbol)
+
+            if (empty_count > 0):
+                ranks.append(str(empty_count))
+
+            # Add rank separator except after last rank.
+            if (rank_index < (self.num_ranks - 1)):
+                ranks.append('/')
+
+        return ''.join(ranks)
 
     def copy(self) -> 'Board':
         """ Create a deep copy of the board. """

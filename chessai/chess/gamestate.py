@@ -23,7 +23,7 @@ class GameState(chessai.core.gamestate.GameState):
     def is_check(self, color: chessai.core.types.Color) -> bool:
         # Find the king of the given color.
         king_coordinate: chessai.core.coordinate.Coordinate | None = None
-        for coordinate, piece in self.board.pieces.items():
+        for coordinate, piece in self.board.get_coordinate_map().items():
             if ((piece.color == color) and (isinstance(piece, chessai.chess.piece.King))):
                 king_coordinate = coordinate
                 break
@@ -78,7 +78,7 @@ class GameState(chessai.core.gamestate.GameState):
         else:
             promotion_rank = 0
 
-        for (coordinate, piece) in self.board.pieces.items():
+        for (coordinate, piece) in self.board.get_coordinate_map().items():
             if (piece.color != self.turn):
                 continue
 
@@ -167,7 +167,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         own_pieces = {}
         opponent_pieces = {}
-        for (coordinate, piece) in self.board.pieces.items():
+        for (coordinate, piece) in self.board.get_coordinate_map().items():
             if (piece.color == color):
                 own_pieces[coordinate] = piece
             else:
@@ -530,7 +530,7 @@ def base_eval(
 
     # The difference in pieces from white's perspective.
     board_value = 0
-    for (_, piece) in state.board.pieces.items():
+    for (_, piece) in state.board.get_coordinate_map().items():
         piece_value = piece_values.get(type(piece), 0)
         if (piece.color == chessai.core.types.Color.WHITE):
             board_value += piece_value

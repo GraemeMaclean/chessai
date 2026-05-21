@@ -73,10 +73,9 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
         """ The positions to search for. """
 
         if (start_position is None):
-            if (len(self.state.board.pieces) > 0):
-                for coordinate in self.state.board.pieces.keys():
-                    start_position = coordinate
-                    break
+            all_coordinates = self.state.board.all_coordinates()
+            if (len(all_coordinates) > 0):
+                start_position = all_coordinates[0]
 
         if (start_position is None):
             raise ValueError("Could not find starting position.")

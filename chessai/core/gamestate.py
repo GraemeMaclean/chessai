@@ -75,14 +75,12 @@ class GameState(edq.util.json.DictConverter):
         """
 
         return chessai.core.parser.serialize_fen(
-            pieces            = self.board.pieces,
+            board             = self.board,
             turn              = self.turn,
             castling_rights   = self.castling_rights,
             en_passant_coordinate = self.en_passant_coordinate,
             halfmove_clock    = self.halfmove_clock,
             fullmove_number   = self.fullmove_number,
-            num_files         = self.board.num_files,
-            num_ranks         = self.board.num_ranks,
             partial           = partial,
         )
 
@@ -295,7 +293,7 @@ class GameState(edq.util.json.DictConverter):
 
             # Find the king.
             king_coord: chessai.core.coordinate.Coordinate | None = None
-            for (coordinate, piece) in self.board.pieces.items():
+            for (coordinate, piece) in self.board.get_coordinate_map().items():
                 if (piece.symbol() not in ['k', 'K']):
                     continue
 
@@ -394,7 +392,7 @@ class GameState(edq.util.json.DictConverter):
                 if isinstance(legal_action, chessai.core.action.PromotionAction):
                     continue
 
-            piece_at_start = self.board.pieces.get(legal_action.start_coordinate) # pylint: disable=no-member
+            piece_at_start = self.board.get(legal_action.start_coordinate) # pylint: disable=no-member
             if (piece_at_start is None):
                 continue
 
@@ -477,6 +475,7 @@ class GameState(edq.util.json.DictConverter):
 
         return self._expand_movement_vectors()
 
+    # TODO: Rename to get_movement_moves
     def _expand_movement_vectors(self) -> list[chessai.core.action.MoveAction]:
         """
         Expands all movement vectors from the pieces on the board.
@@ -486,7 +485,7 @@ class GameState(edq.util.json.DictConverter):
 
         actions: list[chessai.core.action.MoveAction] = []
 
-        for (coordinate, piece) in self.board.pieces.items():
+        for (coordinate, piece) in self.board.get_coordinate_map().items():
             if (piece.color != self.turn):
                 continue
 
@@ -495,7 +494,7 @@ class GameState(edq.util.json.DictConverter):
                 current_coordinate = coordinate
 
                 num_repetitions = movement_vector.num_repetitions
-                while ((num_repetitions == -1) or (num_repetitions > 0)):
+                while (num_repetitions != 0):
                     current_coordinate = current_coordinate.offset(movement_vector.file_delta, movement_vector.rank_delta)
                     if (not self.board._is_within_bounds(current_coordinate)):
                         break
@@ -523,8 +522,7 @@ class GameState(edq.util.json.DictConverter):
                     if (is_occupied):
                         break
 
-                    if (num_repetitions != -1):
-                        num_repetitions -= 1
+                    num_repetitions -= 1
 
         # Sort the movement vectors for consistency.
         actions.sort()

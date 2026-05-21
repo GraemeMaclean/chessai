@@ -97,6 +97,7 @@ class MoveAction(Action):
         if (not isinstance(other, Action)):
             raise TypeError(f"Cannot compare an action with an object of type '{type(other)}'.")
 
+        # TODO: Break tuple comparison into if statements.
         if isinstance(other, MoveAction):
             return (self.start_coordinate, self.end_coordinate) < (other.start_coordinate, other.end_coordinate)
 

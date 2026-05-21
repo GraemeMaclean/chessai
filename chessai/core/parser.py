@@ -140,14 +140,12 @@ def parse_fen(fen: str, options: dict[str, typing.Any] | None = None) -> ParsedF
     )
 
 def serialize_fen(
-        pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece],
+        board: chessai.core.board.Board,
         turn: chessai.core.types.Color,
         castling_rights: chessai.core.castling.CastlingRights,
         en_passant_coordinate: chessai.core.coordinate.Coordinate | None,
         halfmove_clock: int,
         fullmove_number: int,
-        num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
-        num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS,
         partial: bool = False,
         ) -> str:
     """
@@ -160,57 +158,36 @@ def serialize_fen(
     Partial serializations exclude the clock and move number.
     """
 
-    piece_field = _serialize_fen_pieces(pieces, num_files, num_ranks)
-    if (piece_field is None):
-        raise ValueError("Found a None piece field.")
+    piece_field = board.to_fen_piece_field()
 
     if (turn == chessai.core.types.Color.WHITE):
         turn_field = 'w'
     else:
         turn_field = 'b'
 
-    if (turn_field is None):
-        raise ValueError("Found a None turn field.")
-
     castling_field = castling_rights.to_fen_string()
-    if (castling_field is None):
-        raise ValueError("Found a None castling field.")
 
     if (en_passant_coordinate is not None):
         ep_field = en_passant_coordinate.uci()
     else:
         ep_field = '-'
 
-    if (ep_field is None):
-        raise ValueError("Found a None ep field.")
+    if (partial):
+        # Produce an augmented FEN, which is useful for comparing pseudo-unique gamestates.
+        return f"{piece_field} {turn_field} {castling_field} {ep_field}"
 
     is_standard_size = (
-        (num_files == chessai.core.board.DEFAULT_BOARD_FILES)
-        and (num_ranks == chessai.core.board.DEFAULT_BOARD_RANKS)
+        (board.num_files == chessai.core.board.DEFAULT_BOARD_FILES)
+        and (board.num_ranks == chessai.core.board.DEFAULT_BOARD_RANKS)
     )
 
     if (not is_standard_size):
-        board_field = f"#{num_files}x{num_ranks} "
+        board_field = f"#{board.num_files}x{board.num_ranks} "
     else:
         board_field = ''
 
-    if (board_field is None):
-        raise ValueError("Found a None board field.")
-
-    if (halfmove_clock is None):
-        raise ValueError("Found a None halfmove clock.")
-
-    if (fullmove_number is None):
-        raise ValueError("Found a None fullmove number.")
-
-    if (not partial):
-        # Produce a standard FEN.
-        fen = f"{board_field}{piece_field} {turn_field} {castling_field} {ep_field} {halfmove_clock} {fullmove_number}"
-    else:
-        # Produce an augmented FEN, which is useful for comparing pseudo-unique gamestates.
-        fen = f"{piece_field} {turn_field} {castling_field} {ep_field}"
-
-    return fen
+    # Produce a standard FEN.
+    return f"{board_field}{piece_field} {turn_field} {castling_field} {ep_field} {halfmove_clock} {fullmove_number}"
 
 def load_fen_from_path(path: str, **kwargs: typing.Any) -> ParsedFEN:
     """
@@ -351,46 +328,6 @@ def _parse_fen_pieces(
             )
 
     return pieces
-
-def _serialize_fen_pieces(pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece],
-        num_files: int = chessai.core.board.DEFAULT_BOARD_FILES,
-        num_ranks: int = chessai.core.board.DEFAULT_BOARD_RANKS) -> str:
-    """
-    Serialize a piece map into the piece-placement field of a FEN string.
-    """
-
-    ranks: list[str] = []
-
-    for rank_index in range(num_ranks):
-        # FEN ranks come from highest first, so we descend from (num_ranks - 1) to rank 0.
-        rank = (num_ranks - 1) - rank_index
-        empty_count = 0
-
-        for file in range(num_files):
-            coordinate = chessai.core.coordinate.Coordinate(file, rank)
-            piece = pieces.get(coordinate)
-
-            if (piece is None):
-                empty_count += 1
-            else:
-                if (empty_count > 0):
-                    ranks.append(str(empty_count))
-                    empty_count = 0
-
-                symbol = piece.symbol()
-                if (symbol is None):
-                    raise ValueError(f"Cannot serialize piece '{piece}' at '{coordinate}'.")
-
-                ranks.append(symbol)
-
-        if (empty_count > 0):
-            ranks.append(str(empty_count))
-
-        # Add rank separator except after last rank.
-        if (rank_index < (num_ranks - 1)):
-            ranks.append('/')
-
-    return ''.join(ranks)
 
 def _parse_fen_turn(turn_field: str) -> chessai.core.types.Color:
     if (turn_field == 'w'):
