@@ -23,7 +23,7 @@ class King(chessai.core.piece.Piece):
     def unicode_symbol(self) -> str:
         return UNICODE_PIECE_SYMBOLS[self.symbol()]
 
-    def move_vectors(self, origin: chessai.core.coordinate.Coordinate) -> list[chessai.core.piece.MoveVector]:
+    def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return [
             chessai.core.piece.MoveVector( 1,  0),
             chessai.core.piece.MoveVector( 1,  1),
@@ -47,7 +47,7 @@ class Queen(chessai.core.piece.Piece):
     def unicode_symbol(self) -> str:
         return UNICODE_PIECE_SYMBOLS[self.symbol()]
 
-    def move_vectors(self, origin: chessai.core.coordinate.Coordinate) -> list[chessai.core.piece.MoveVector]:
+    def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return [
             chessai.core.piece.MoveVector( 1,  0, num_repetitions = -1),
             chessai.core.piece.MoveVector( 1,  1, num_repetitions = -1),
@@ -71,7 +71,7 @@ class Rook(chessai.core.piece.Piece):
     def unicode_symbol(self) -> str:
         return UNICODE_PIECE_SYMBOLS[self.symbol()]
 
-    def move_vectors(self, origin: chessai.core.coordinate.Coordinate) -> list[chessai.core.piece.MoveVector]:
+    def move_vectors(self)-> list[chessai.core.piece.MoveVector]:
         return [
             chessai.core.piece.MoveVector( 1,  0, num_repetitions = -1),
             chessai.core.piece.MoveVector(-1,  0, num_repetitions = -1),
@@ -91,7 +91,7 @@ class Bishop(chessai.core.piece.Piece):
     def unicode_symbol(self) -> str:
         return UNICODE_PIECE_SYMBOLS[self.symbol()]
 
-    def move_vectors(self, origin: chessai.core.coordinate.Coordinate) -> list[chessai.core.piece.MoveVector]:
+    def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return [
             chessai.core.piece.MoveVector( 1,  1, num_repetitions = -1),
             chessai.core.piece.MoveVector(-1,  1, num_repetitions = -1),
@@ -111,7 +111,7 @@ class Knight(chessai.core.piece.Piece):
     def unicode_symbol(self) -> str:
         return UNICODE_PIECE_SYMBOLS[self.symbol()]
 
-    def move_vectors(self, origin: chessai.core.coordinate.Coordinate) -> list[chessai.core.piece.MoveVector]:
+    def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return [
             chessai.core.piece.MoveVector( 2,  1),
             chessai.core.piece.MoveVector( 2, -1),
@@ -135,7 +135,7 @@ class Pawn(chessai.core.piece.Piece):
     def unicode_symbol(self) -> str:
         return UNICODE_PIECE_SYMBOLS[self.symbol()]
 
-    def move_vectors(self, origin: chessai.core.coordinate.Coordinate) -> list[chessai.core.piece.MoveVector]:
+    def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         if (self.color == chessai.core.types.Color.WHITE):
             direction = 1
         else:

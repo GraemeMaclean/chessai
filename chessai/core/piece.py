@@ -48,7 +48,7 @@ class Piece(edq.util.json.DictConverter):
         self.color: chessai.core.types.Color = color
         """ The team color that this piece belongs to. """
 
-    def move_vectors(self, origin: chessai.core.coordinate.Coordinate) -> list[MoveVector]:
+    def move_vectors(self) -> list[MoveVector]:
         """ Returns the movement vectors for this piece. """
 
         return []

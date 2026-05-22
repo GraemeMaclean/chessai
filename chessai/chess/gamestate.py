@@ -68,7 +68,12 @@ class GameState(chessai.core.gamestate.GameState):
         return actions
 
     def _expand_movement_vectors(self) -> list[chessai.core.action.MoveAction]:
-        """ Expand the movement vectors into the pseudo-legal moves. """
+        """
+        Expands all movement vectors from the pieces on the board.
+        Pieces will move until they can capture or reach the end of the board.
+
+        Detects when pawns reach the end of the board and can be promoted.
+        """
 
         actions: list[chessai.core.action.MoveAction] = []
 
@@ -78,48 +83,54 @@ class GameState(chessai.core.gamestate.GameState):
         else:
             promotion_rank = 0
 
-        for (coordinate, piece) in self.board.get_coordinate_map().items():
-            if (piece.color != self.turn):
-                continue
+        for rank in range(self.board.num_ranks):
+            for (file, piece) in self.board.pieces[rank].items():
+                if (piece.color != self.turn):
+                    continue
 
-            movement_vectors = piece.move_vectors(coordinate)
-            for movement_vector in movement_vectors:
-                current_coordinate = coordinate
+                movement_vectors = piece.move_vectors()
+                for movement_vector in movement_vectors:
+                    current_rank = rank
+                    current_file = file
 
-                num_repetitions = movement_vector.num_repetitions
-                while ((num_repetitions == -1) or (num_repetitions > 0)):
-                    current_coordinate = current_coordinate.offset(movement_vector.file_delta, movement_vector.rank_delta)
-                    if (not self.board._is_within_bounds(current_coordinate)):
-                        break
+                    coordinate = chessai.core.coordinate.Coordinate(file, rank)
 
-                    occupant = self.board.get(current_coordinate)
+                    num_repetitions = movement_vector.num_repetitions
+                    while (num_repetitions != 0):
+                        current_file += movement_vector.file_delta
+                        current_rank += movement_vector.rank_delta
+                        if (not self.board.is_within_bounds(current_file, current_rank)):
+                            break
 
-                    is_occupied = occupant is not None
-                    is_enemy    = (occupant is not None) and (occupant.color != piece.color)
-                    is_ally     = (occupant is not None) and (occupant.color == piece.color)
+                        occupant = self.board.get_file_rank(current_file, current_rank)
 
-                    # No movement type can move on top of an ally.
-                    if (is_ally):
-                        break
+                        is_occupied = occupant is not None
+                        is_enemy    = (occupant is not None) and (occupant.color != piece.color)
+                        is_ally     = (occupant is not None) and (occupant.color == piece.color)
 
-                    # Push movement types cannot capture.
-                    if ((movement_vector.kind == chessai.core.piece.MoveKind.PUSH) and is_occupied):
-                        break
+                        # No movement type can move on top of an ally.
+                        if (is_ally):
+                            break
 
-                    # Capture movement types must target an enemy.
-                    if ((movement_vector.kind == chessai.core.piece.MoveKind.CAPTURE) and (not is_enemy)):
-                        break
+                        # Push movement types cannot capture.
+                        if ((movement_vector.kind == chessai.core.piece.MoveKind.PUSH) and is_occupied):
+                            break
 
-                    # Check if this action would lead to a pawn promotion.
-                    if ((isinstance(piece, chessai.chess.piece.Pawn)) and (current_coordinate.rank == promotion_rank)):
-                        actions.extend(self._get_promotion_actions(coordinate, current_coordinate))
-                    else:
-                        actions.append(chessai.core.action.MoveAction(coordinate, current_coordinate))
+                        # Capture movement types must target an enemy.
+                        if ((movement_vector.kind == chessai.core.piece.MoveKind.CAPTURE) and (not is_enemy)):
+                            break
 
-                    if (is_occupied):
-                        break
+                        current_coordinate = chessai.core.coordinate.Coordinate(current_file, current_rank)
 
-                    if (num_repetitions != -1):
+                        # Check if this action would lead to a pawn promotion.
+                        if ((isinstance(piece, chessai.chess.piece.Pawn)) and (current_coordinate.rank == promotion_rank)):
+                            actions.extend(self._get_promotion_actions(coordinate, current_coordinate))
+                        else:
+                            actions.append(chessai.core.action.MoveAction(coordinate, current_coordinate))
+
+                        if (is_occupied):
+                            break
+
                         num_repetitions -= 1
 
         # Sort the actions for consistency.

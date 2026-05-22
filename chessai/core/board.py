@@ -75,6 +75,14 @@ class Board(edq.util.json.DictConverter):
 
         return True
 
+    def get_file_rank(self, file: int, rank: int) -> chessai.core.piece.Piece | None:
+        """ Gets the piece at the given file and rank. """
+
+        if ((rank < 0) or (rank >= self.num_ranks)):
+            return None
+
+        return self.pieces[rank].get(file, None)
+
     def get(self, coordinate: chessai.core.coordinate.Coordinate) -> chessai.core.piece.Piece | None:
         """ Gets the piece at the given coordinate. """
 
@@ -162,6 +170,17 @@ class Board(edq.util.json.DictConverter):
 
         self.pieces[coordinate.rank][coordinate.file] = piece
 
+    def is_within_bounds(self, file: int, rank: int) -> bool:
+        """ Checks whether the given file and rank are within the bounds of the board. """
+
+        if ((file < 0) or (file >= self.num_files)):
+            return False
+
+        if ((rank < 0) or (rank >= self.num_ranks)):
+            return False
+
+        return True
+
     def _is_within_bounds(self, coordinate: chessai.core.coordinate.Coordinate) -> bool:
         """ Checks whether a coordinate is within the bounds of the board. """
 
@@ -221,7 +240,7 @@ class Board(edq.util.json.DictConverter):
 
         new_board = copy.copy(self)
 
-        new_board.pieces = copy.deepcopy(self.pieces)
+        new_board.pieces = {rank: files.copy() for rank, files in self.pieces.items()}
 
         return new_board
 
