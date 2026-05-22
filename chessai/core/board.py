@@ -44,6 +44,11 @@ class Board(edq.util.json.DictConverter):
         clean_pieces: dict[int, dict[int, chessai.core.piece.Piece]] = {rank: {} for rank in range(num_ranks)}
 
         for (coordinate, piece) in pieces.items():
+            if (coordinate.rank not in clean_pieces):
+                raise ValueError('Cannot place a piece that is out of bounds:'
+                                 + f" files '{num_files}', ranks '{num_ranks}',"
+                                 + f" rank: '{coordinate.rank}'.")
+
             clean_pieces[coordinate.rank][coordinate.file] = piece
 
         self.pieces: dict[int, dict[int, chessai.core.piece.Piece]] = clean_pieces
@@ -63,15 +68,18 @@ class Board(edq.util.json.DictConverter):
     def is_valid(self) -> bool:
         """ Checks if all of the pieces are in a valid position. """
 
-        # TODO
-        # for (coordinate, _) in self.pieces.items():
-        #     if (not self._is_within_bounds(coordinate)):
-        #         return False
+        for rank in range(self.num_ranks):
+            for file in self.pieces[rank].keys():
+                if (not self._is_within_bounds(chessai.core.coordinate.Coordinate(file, rank))):
+                    return False
 
         return True
 
     def get(self, coordinate: chessai.core.coordinate.Coordinate) -> chessai.core.piece.Piece | None:
         """ Gets the piece at the given coordinate. """
+
+        if (not self._is_within_bounds(coordinate)):
+            return None
 
         return self.pieces[coordinate.rank].get(coordinate.file, None)
 
@@ -82,7 +90,7 @@ class Board(edq.util.json.DictConverter):
 
         for rank in range(self.num_ranks):
             for (file, piece) in self.pieces[rank].items():
-                piece_items[chessai.core.coordinate.Coordinate(rank, file)] = piece
+                piece_items[chessai.core.coordinate.Coordinate(file, rank)] = piece
 
         return piece_items
 
@@ -94,20 +102,30 @@ class Board(edq.util.json.DictConverter):
     def all_pieces(self) -> list[chessai.core.piece.Piece]:
         """ Gets all of the pieces on the board. """
 
-        raise ValueError("TODO")
+        pieces: list[chessai.core.piece.Piece] = []
 
-        # return list(self.pieces.values())
+        for rank in range(self.num_ranks):
+            for piece in self.pieces[rank].values():
+                pieces.append(piece)
+
+        return pieces
 
     def all_coordinates(self) -> list[chessai.core.coordinate.Coordinate]:
         """ Gets all of the coordinates with a piece on the board. """
 
-        raise ValueError("TODO")
+        coordinates: list[chessai.core.coordinate.Coordinate] = []
 
-        # return list(self.pieces.keys())
+        for rank in range(self.num_ranks):
+            for file in self.pieces[rank].keys():
+                coordinates.append(chessai.core.coordinate.Coordinate(file, rank))
 
-    # TODO: Improve docstring.
+        return coordinates
+
     def push(self, action: chessai.core.action.MoveAction) -> bool:
-        """ Apply an action to the board. """
+        """
+        Apply an action to the board.
+        Returns whether the action captured a piece.
+        """
 
         piece = self.pieces[action.start_coordinate.rank].pop(action.start_coordinate.file, None)
         if (piece is None):
@@ -203,7 +221,7 @@ class Board(edq.util.json.DictConverter):
 
         new_board = copy.copy(self)
 
-        new_board.pieces = self.pieces.copy()
+        new_board.pieces = copy.deepcopy(self.pieces)
 
         return new_board
 

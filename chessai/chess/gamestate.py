@@ -290,7 +290,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         # Find the king.
         king_coord: chessai.core.coordinate.Coordinate | None = None
-        for (coordinate, piece) in self.board.pieces.items():
+        for (coordinate, piece) in self.board.get_coordinate_map().items():
             if (not isinstance(piece, chessai.chess.piece.King)):
                 continue
 
@@ -366,7 +366,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         actions: list[chessai.core.action.MoveAction] = []
 
-        for (coordinate, piece) in self.board.pieces.items():
+        for (coordinate, piece) in self.board.get_coordinate_map().items():
             if (not isinstance(piece, chessai.chess.piece.Pawn)):
                 continue
 

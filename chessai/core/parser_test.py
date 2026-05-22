@@ -299,14 +299,12 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
 
         result = chessai.core.parser.parse_fen(STARTING_FEN)
         serialized = chessai.core.parser.serialize_fen(
-            pieces                = result.pieces,
+            board                 = chessai.core.board.Board(result.pieces),
             turn                  = result.turn,
             castling_rights       = result.castling_rights,
             en_passant_coordinate = result.en_passant_coordinate,
             halfmove_clock        = result.halfmove_clock,
             fullmove_number       = result.fullmove_number,
-            num_files             = result.num_files,
-            num_ranks             = result.num_ranks,
         )
 
         self.assertEqual(STARTING_FEN, serialized)
@@ -320,14 +318,12 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
         fen_with_dimensions = '#9x9 ppppkpppp/9/9/9/9/9/9/9/PPPPKPPPP w - - 0 1'
         result = chessai.core.parser.parse_fen(fen_with_dimensions)
         serialized = chessai.core.parser.serialize_fen(
-            pieces                = result.pieces,
+            board                 = chessai.core.board.Board(result.pieces, num_ranks = 9, num_files = 9),
             turn                  = result.turn,
             castling_rights       = result.castling_rights,
             en_passant_coordinate = result.en_passant_coordinate,
             halfmove_clock        = result.halfmove_clock,
             fullmove_number       = result.fullmove_number,
-            num_files             = result.num_files,
-            num_ranks             = result.num_ranks,
         )
 
         self.assertEqual(fen_with_dimensions, serialized)
@@ -341,7 +337,7 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
 
         result = chessai.core.parser.parse_fen(STARTING_FEN)
         serialized = chessai.core.parser.serialize_fen(
-            pieces                = result.pieces,
+            board                 = chessai.core.board.Board(result.pieces),
             turn                  = result.turn,
             castling_rights       = result.castling_rights,
             en_passant_coordinate = result.en_passant_coordinate,
@@ -400,14 +396,12 @@ class RoundTripFENTest(edq.testing.unittest.BaseTest):
             with self.subTest(msg = f"Case {i}:"):
                 result = chessai.core.parser.parse_fen(fen)
                 serialized = chessai.core.parser.serialize_fen(
-                    pieces                = result.pieces,
+                    board                 = chessai.core.board.Board(result.pieces, num_files = result.num_files, num_ranks = result.num_ranks),
                     turn                  = result.turn,
                     castling_rights       = result.castling_rights,
                     en_passant_coordinate = result.en_passant_coordinate,
                     halfmove_clock        = result.halfmove_clock,
                     fullmove_number       = result.fullmove_number,
-                    num_files             = result.num_files,
-                    num_ranks             = result.num_ranks,
                 )
 
                 self.assertEqual(fen, serialized)

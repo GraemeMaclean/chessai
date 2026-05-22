@@ -86,7 +86,7 @@ class BoardTest(edq.testing.unittest.BaseTest):
         piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
 
         with self.assertRaises(ValueError):
-            chessai.core.board.Board(pieces={
+            chessai.core.board.Board(pieces = {
                 out_of_bounds: piece
             })
 
