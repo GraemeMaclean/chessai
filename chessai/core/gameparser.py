@@ -162,11 +162,7 @@ class ParsedPGN(edq.util.json.DictConverter):
             initial_actions = []
 
         self.initial_actions: list[chessai.core.action.Action] = initial_actions
-        """
-        The moves in the game, written in Short Algebraic Notation.
-
-        See https://en.wikipedia.org/wiki/Algebraic_notation_(chess) .
-        """
+        """ The mainline moves in the game. """
 
         if (comments is None):
             comments = []
@@ -543,8 +539,7 @@ def _action_to_san(action: chessai.core.action.MoveAction, state: chessai.core.g
     This method does not understand meta actions (i.e., forfeits or draw actions).
     """
 
-    board = state.board
-    piece = board.get(action.start_coordinate)
+    piece = state.get(action.start_coordinate)
     if (piece is None):
         raise ValueError(f"The start coordinate for action '{action.uci()}' does not have a piece.")
 
@@ -566,7 +561,7 @@ def _action_to_san(action: chessai.core.action.MoveAction, state: chessai.core.g
     is_pawn = (piece_symbol_upper == 'P')
 
     if (move_san is None):
-        is_capture = board.is_capture(action)
+        is_capture = state.is_capture(action)
 
         # Detect en-passant captures.
         if (is_pawn and (action.end_coordinate == state.en_passant_coordinate)):
@@ -597,7 +592,7 @@ def _action_to_san(action: chessai.core.action.MoveAction, state: chessai.core.g
                 continue
 
             # An ambiguous action must have a different piece type.
-            alternate_action_piece = board.get(alternate_action.start_coordinate)
+            alternate_action_piece = state.get(alternate_action.start_coordinate)
             if (alternate_action_piece is None):
                 continue
 

@@ -1,4 +1,5 @@
 import copy
+import logging
 import random
 import typing
 
@@ -88,6 +89,11 @@ class GameState(edq.util.json.DictConverter):
     # Useful methods for students.
     # -----------------------------------------------
 
+    def get(self, coordinate: chessai.core.coordinate.Coordinate) -> chessai.core.piece.Piece | None:
+        """ Get the piece at the given coordinate, if it is present. """
+
+        return self.board.get(coordinate.file, coordinate.rank)
+
     def get_previous_action(self) -> chessai.core.action.Action | None:
         """ Returns the most recent move taken. """
 
@@ -119,7 +125,7 @@ class GameState(edq.util.json.DictConverter):
         pseudo_legal_moves = self._get_pseudo_legal_moves()
         for action in pseudo_legal_moves:
             # Get the piece before pushing (needed for special move processing).
-            piece = self.board.get(action.start_coordinate)
+            piece = self.get(action.start_coordinate)
             if piece is None:
                 continue
 
@@ -293,16 +299,21 @@ class GameState(edq.util.json.DictConverter):
 
             # Find the king.
             king_coord: chessai.core.coordinate.Coordinate | None = None
-            for (coordinate, piece) in self.board.get_coordinate_map().items():
-                if (piece.symbol() not in ['k', 'K']):
-                    continue
+            for current_file in self.board.pieces.keys():
+                for (current_rank, piece) in self.board.pieces[current_file].items():
+                    if (piece.symbol() not in ['k', 'K']):
+                        continue
 
-                if (piece.color != self.turn):
-                    continue
+                    if (piece.color != self.turn):
+                        continue
 
-                king_coord = coordinate
+                    king_coord = chessai.core.coordinate.Coordinate(current_file, current_rank)
+                    break
 
+            # Could not find a king for the proper color.
             if ((king_coord is None) or (king_coord.rank != rank)):
+                logging.warning("Unable to find a king on the board when parsing a SAN castling move.")
+
                 return chessai.core.action.NoneAction()
 
             start_file = king_coord.file
@@ -319,9 +330,9 @@ class GameState(edq.util.json.DictConverter):
                 chessai.core.coordinate.Coordinate(end_file, rank)
             )
 
-        # Parse promotion piece if present.
+        # Parse optional promotion piece.
         promotion_piece = None
-        if '=' in san_clean:
+        if ('=' in san_clean):
             parts = san_clean.split('=')
             san_clean = parts[0]
 
@@ -392,7 +403,7 @@ class GameState(edq.util.json.DictConverter):
                 if isinstance(legal_action, chessai.core.action.PromotionAction):
                     continue
 
-            piece_at_start = self.board.get(legal_action.start_coordinate) # pylint: disable=no-member
+            piece_at_start = self.get(legal_action.start_coordinate) # pylint: disable=no-member
             if (piece_at_start is None):
                 continue
 
@@ -437,7 +448,7 @@ class GameState(edq.util.json.DictConverter):
             self._progress_state(action, previous_board, False)
             return
 
-        piece = self.board.get(action.start_coordinate)
+        piece = self.get(action.start_coordinate)
         if (piece is None):
             raise ValueError(f"Cannot push an action from an empty coordinate: '{action.uci()}'.")
 
@@ -485,8 +496,8 @@ class GameState(edq.util.json.DictConverter):
 
         actions: list[chessai.core.action.MoveAction] = []
 
-        for rank in range(self.board.num_ranks):
-            for (file, piece) in self.board.pieces[rank].items():
+        for file in self.board.pieces.keys():
+            for (rank, piece) in self.board.pieces[file].items():
                 if (piece.color != self.turn):
                     continue
 
@@ -504,7 +515,7 @@ class GameState(edq.util.json.DictConverter):
                         if (not self.board.is_within_bounds(current_file, current_rank)):
                             break
 
-                        occupant = self.board.get_file_rank(current_file, current_rank)
+                        occupant = self.board.get(current_file, current_rank)
 
                         is_occupied = occupant is not None
                         is_enemy    = (occupant is not None) and (occupant.color != piece.color)

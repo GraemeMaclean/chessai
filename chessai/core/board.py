@@ -41,7 +41,7 @@ class Board(edq.util.json.DictConverter):
         if (pieces is None):
             pieces = {}
 
-        clean_pieces: dict[int, dict[int, chessai.core.piece.Piece]] = {rank: {} for rank in range(num_ranks)}
+        clean_pieces: dict[int, dict[int, chessai.core.piece.Piece]] = {file: {} for file in range(num_files)}
 
         for (coordinate, piece) in pieces.items():
             if (coordinate.rank not in clean_pieces):
@@ -49,10 +49,10 @@ class Board(edq.util.json.DictConverter):
                                  + f" files '{num_files}', ranks '{num_ranks}',"
                                  + f" rank: '{coordinate.rank}'.")
 
-            clean_pieces[coordinate.rank][coordinate.file] = piece
+            clean_pieces[coordinate.file][coordinate.rank] = piece
 
         self.pieces: dict[int, dict[int, chessai.core.piece.Piece]] = clean_pieces
-        """ The pieces on the board, first keyed by the rank and then by the file. """
+        """ The pieces on the board, first keyed by the file and then by the rank. """
 
         self.num_files: int = num_files
         """ The number of files of the chess board. """
@@ -68,36 +68,28 @@ class Board(edq.util.json.DictConverter):
     def is_valid(self) -> bool:
         """ Checks if all of the pieces are in a valid position. """
 
-        for rank in range(self.num_ranks):
-            for file in self.pieces[rank].keys():
-                if (not self._is_within_bounds(chessai.core.coordinate.Coordinate(file, rank))):
+        for file in range(self.num_files):
+            for rank in self.pieces[file].keys():
+                if (not self.is_within_bounds(file, rank)):
                     return False
 
         return True
 
-    def get_file_rank(self, file: int, rank: int) -> chessai.core.piece.Piece | None:
-        """ Gets the piece at the given file and rank. """
+    def get(self, file: int, rank: int) -> chessai.core.piece.Piece | None:
+        """ Gets the piece at the given file and rank pair. """
 
-        if ((rank < 0) or (rank >= self.num_ranks)):
+        if (file not in self.pieces):
             return None
 
-        return self.pieces[rank].get(file, None)
-
-    def get(self, coordinate: chessai.core.coordinate.Coordinate) -> chessai.core.piece.Piece | None:
-        """ Gets the piece at the given coordinate. """
-
-        if (not self._is_within_bounds(coordinate)):
-            return None
-
-        return self.pieces[coordinate.rank].get(coordinate.file, None)
+        return self.pieces[file].get(rank, None)
 
     def get_coordinate_map(self) -> dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece]:
         """ Gets all pieces on the board in a dictionary of coordinates to pieces. """
 
         piece_items: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = {}
 
-        for rank in range(self.num_ranks):
-            for (file, piece) in self.pieces[rank].items():
+        for file in self.pieces.keys():
+            for (rank, piece) in self.pieces[file].items():
                 piece_items[chessai.core.coordinate.Coordinate(file, rank)] = piece
 
         return piece_items
@@ -105,15 +97,15 @@ class Board(edq.util.json.DictConverter):
     def has_piece(self, coordinate: chessai.core.coordinate.Coordinate) -> bool:
         """ Returns if the given coordinate has a piece. """
 
-        return (self.pieces[coordinate.rank].get(coordinate.file, None) is not None)
+        return (self.pieces[coordinate.file].get(coordinate.rank, None) is not None)
 
     def all_pieces(self) -> list[chessai.core.piece.Piece]:
         """ Gets all of the pieces on the board. """
 
         pieces: list[chessai.core.piece.Piece] = []
 
-        for rank in range(self.num_ranks):
-            for piece in self.pieces[rank].values():
+        for file in self.pieces.keys():
+            for piece in self.pieces[file].values():
                 pieces.append(piece)
 
         return pieces
@@ -123,8 +115,8 @@ class Board(edq.util.json.DictConverter):
 
         coordinates: list[chessai.core.coordinate.Coordinate] = []
 
-        for rank in range(self.num_ranks):
-            for file in self.pieces[rank].keys():
+        for file in self.pieces.keys():
+            for rank in self.pieces[file].keys():
                 coordinates.append(chessai.core.coordinate.Coordinate(file, rank))
 
         return coordinates
@@ -135,7 +127,7 @@ class Board(edq.util.json.DictConverter):
         Returns whether the action captured a piece.
         """
 
-        piece = self.pieces[action.start_coordinate.rank].pop(action.start_coordinate.file, None)
+        piece = self.pieces[action.start_coordinate.file].pop(action.start_coordinate.rank, None)
         if (piece is None):
             raise ValueError(f"There is no piece at the action's start coordinate: '{action.start_coordinate.uci()}'.")
 
@@ -143,13 +135,13 @@ class Board(edq.util.json.DictConverter):
         if (isinstance(action, chessai.core.action.PromotionAction) and (action.promotion is not None)):
             piece = action.promotion
 
-        if (not self._is_within_bounds(action.end_coordinate)):
+        if (not self.is_within_bounds(action.end_coordinate.file, action.end_coordinate.rank)):
             raise ValueError("Cannot push an action that moves the piece off of the board of size"
                 + f" '{self.num_files}x{self.num_ranks}': '{action.end_coordinate}'.")
 
-        target_piece = self.pieces[action.end_coordinate.rank].get(action.end_coordinate.file, None)
+        target_piece = self.pieces[action.end_coordinate.file].get(action.end_coordinate.rank, None)
 
-        self.pieces[action.end_coordinate.rank][action.end_coordinate.file] = piece
+        self.pieces[action.end_coordinate.file][action.end_coordinate.rank] = piece
 
         return (target_piece is not None)
 
@@ -159,16 +151,16 @@ class Board(edq.util.json.DictConverter):
         If there is no piece at the coordinate, the board is unchanged.
         """
 
-        self.pieces[coordinate.rank].pop(coordinate.file, None)
+        self.pieces[coordinate.file].pop(coordinate.rank, None)
 
     def set(self, piece: chessai.core.piece.Piece, coordinate: chessai.core.coordinate.Coordinate) -> None:
         """ Adds a piece to the specified coordinate, which must be within bounds. """
 
-        if (not self._is_within_bounds(coordinate)):
+        if (not self.is_within_bounds(coordinate.file, coordinate.rank)):
             raise ValueError("Cannot remove a piece from an out of bounds coordinate on a board of size"
                 + f" '{self.num_files}x{self.num_ranks}': '{coordinate}'.")
 
-        self.pieces[coordinate.rank][coordinate.file] = piece
+        self.pieces[coordinate.file][coordinate.rank] = piece
 
     def is_within_bounds(self, file: int, rank: int) -> bool:
         """ Checks whether the given file and rank are within the bounds of the board. """
@@ -181,24 +173,10 @@ class Board(edq.util.json.DictConverter):
 
         return True
 
-    def _is_within_bounds(self, coordinate: chessai.core.coordinate.Coordinate) -> bool:
-        """ Checks whether a coordinate is within the bounds of the board. """
-
-        if ((coordinate.file < 0) or (coordinate.file >= self.num_files)):
-            return False
-
-        if ((coordinate.rank < 0) or (coordinate.rank >= self.num_ranks)):
-            return False
-
-        return True
-
     def is_capture(self, action: chessai.core.action.MoveAction) -> bool:
         """ Returns if the move captures a piece. """
 
-        if (self.get(action.start_coordinate) is None):
-            return False
-
-        return (self.get(action.end_coordinate) is not None)
+        return (self.get(action.end_coordinate.file, action.end_coordinate.rank) is not None)
 
     def to_fen_piece_field(self) -> str:
         """ Convert the board into the piece-placement field of a FEN string. """
@@ -211,7 +189,7 @@ class Board(edq.util.json.DictConverter):
             empty_count = 0
 
             for file in range(self.num_files):
-                piece = self.pieces[rank].get(file, None)
+                piece = self.pieces[file].get(rank, None)
 
                 if (piece is None):
                     empty_count += 1
@@ -240,7 +218,7 @@ class Board(edq.util.json.DictConverter):
 
         new_board = copy.copy(self)
 
-        new_board.pieces = {rank: files.copy() for rank, files in self.pieces.items()}
+        new_board.pieces = {file: ranks.copy() for file, ranks in self.pieces.items()}
 
         return new_board
 

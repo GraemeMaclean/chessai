@@ -83,8 +83,8 @@ class GameState(chessai.core.gamestate.GameState):
         else:
             promotion_rank = 0
 
-        for rank in range(self.board.num_ranks):
-            for (file, piece) in self.board.pieces[rank].items():
+        for file in self.board.pieces.keys():
+            for (rank, piece) in self.board.pieces[file].items():
                 if (piece.color != self.turn):
                     continue
 
@@ -102,7 +102,7 @@ class GameState(chessai.core.gamestate.GameState):
                         if (not self.board.is_within_bounds(current_file, current_rank)):
                             break
 
-                        occupant = self.board.get_file_rank(current_file, current_rank)
+                        occupant = self.board.get(current_file, current_rank)
 
                         is_occupied = occupant is not None
                         is_enemy    = (occupant is not None) and (occupant.color != piece.color)
@@ -157,7 +157,7 @@ class GameState(chessai.core.gamestate.GameState):
         # Detect en-passant by checking if a pawn moves diagonally to an empty coordinate.
         if ((isinstance(piece, chessai.chess.piece.Pawn))
                 and (action.start_coordinate.file_distance(action.end_coordinate) == 1)
-                and (self.board.get(action.end_coordinate) is None)):
+                and (self.get(action.end_coordinate) is None)):
             en_passant_coordinate = self._handle_en_passant(action, piece)
             return True, en_passant_coordinate
 
@@ -318,7 +318,7 @@ class GameState(chessai.core.gamestate.GameState):
         # Add Kingside castling.
         if (kingside_rights):
             rook_coord = chessai.core.coordinate.Coordinate((self.board.num_files - 1), back_rank)
-            rook_piece = self.board.get(rook_coord)
+            rook_piece = self.get(rook_coord)
 
             # Check that the files to the right of the king and left of the rook are empty.
             all_empty = True
@@ -342,7 +342,7 @@ class GameState(chessai.core.gamestate.GameState):
         # Add Queenside castling.
         if (queenside_rights):
             rook_coord = chessai.core.coordinate.Coordinate(0, back_rank)
-            rook_piece = self.board.get(rook_coord)
+            rook_piece = self.get(rook_coord)
 
             # Check that the files to the right of the king and left of the rook are empty.
             all_empty = True
@@ -422,10 +422,10 @@ class GameState(chessai.core.gamestate.GameState):
                 capturing_rank,
             )
 
-            if (not self.board._is_within_bounds(candidate_capture_coord)):
+            if (not self.board.is_within_bounds(candidate_capture_coord.file, candidate_capture_coord.rank)):
                 continue
 
-            piece = self.board.get(candidate_capture_coord)
+            piece = self.get(candidate_capture_coord)
             if (piece is None):
                 continue
 

@@ -27,8 +27,8 @@ class BoardTest(edq.testing.unittest.BaseTest):
         self.assertFalse(was_capture)
 
         # Piece moved correctly
-        self.assertIsNone(board.get(start_coordinate))
-        self.assertEqual(piece, board.get(end_coordinate))
+        self.assertIsNone(board.get(start_coordinate.file, start_coordinate.rank))
+        self.assertEqual(piece, board.get(end_coordinate.file, end_coordinate.rank))
 
     def test_push_with_capture(self):
         """ Test push with capture. """
@@ -51,8 +51,8 @@ class BoardTest(edq.testing.unittest.BaseTest):
         self.assertTrue(was_capture)
 
         # Capture happened
-        self.assertIsNone(board.get(start_coordinate))
-        self.assertEqual(attacker_piece, board.get(end_coordinate))
+        self.assertIsNone(board.get(start_coordinate.file, start_coordinate.rank))
+        self.assertEqual(attacker_piece, board.get(end_coordinate.file, end_coordinate.rank))
 
     def test_push_with_promotion(self):
         """ Test push with pawn promotion. """
@@ -74,8 +74,8 @@ class BoardTest(edq.testing.unittest.BaseTest):
         self.assertFalse(was_capture)
 
         # Promoted piece is on the board
-        self.assertIsNone(board.get(start_coordinate))
-        promoted = board.get(end_coordinate)
+        self.assertIsNone(board.get(start_coordinate.file, start_coordinate.rank))
+        promoted = board.get(end_coordinate.file, end_coordinate.rank)
         self.assertIsInstance(promoted, chessai.chess.piece.Queen)
         self.assertEqual(chessai.core.types.Color.WHITE, promoted.color)
 
@@ -146,12 +146,12 @@ class BoardTest(edq.testing.unittest.BaseTest):
         board_copy.push(action)
 
         # Original unchanged
-        self.assertIsNotNone(board.get(start))
-        self.assertIsNone(board.get(end))
+        self.assertIsNotNone(board.get(start.file, start.rank))
+        self.assertIsNone(board.get(end.file, end.rank))
 
         # Copy changed
-        self.assertIsNone(board_copy.get(start))
-        self.assertIsNotNone(board_copy.get(end))
+        self.assertIsNone(board_copy.get(start.file, start.rank))
+        self.assertIsNotNone(board_copy.get(end.file, end.rank))
 
     def test_all_pieces_and_coordinates(self):
         """ Test iteration helpers. """
@@ -187,15 +187,15 @@ class BoardTest(edq.testing.unittest.BaseTest):
 
         # Set a piece
         board.set(piece, coord)
-        self.assertEqual(piece, board.get(coord))
+        self.assertEqual(piece, board.get(coord.file, coord.rank))
 
         # Remove the piece
         board.remove(coord)
-        self.assertIsNone(board.get(coord))
+        self.assertIsNone(board.get(coord.file, coord.rank))
 
         # Remove from empty coordinate (should not raise)
         board.remove(coord)
-        self.assertIsNone(board.get(coord))
+        self.assertIsNone(board.get(coord.file, coord.rank))
 
     def test_set_out_of_bounds_raises(self):
         """ Test that setting a piece out of bounds raises an error. """
