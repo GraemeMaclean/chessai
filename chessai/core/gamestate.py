@@ -565,7 +565,6 @@ class GameState(edq.util.json.DictConverter):
         # Then, the constructor can just take the essential fields and not need to worry about fen parsing on init.
         new_state = copy.copy(self)
 
-        new_state.castling_rights = self.castling_rights.copy()
         new_state.board           = self.board.copy()
 
         return new_state

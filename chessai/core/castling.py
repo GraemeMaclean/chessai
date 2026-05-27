@@ -1,37 +1,55 @@
-import typing
-
-import edq.util.json
-
-# TODO: Maybe convert to an int.
-# Could do a bitwise mask.
-class CastlingRights(edq.util.json.DictConverter):
+class CastlingRights(int):
     """
-    Tracks which castling moves are still available.
+    Tracks which castling moves are still available, encoded as a 4-bit integer.
 
-    In standard chess, each side starts with both kingside and queenside
-    castling available, and rights are lost permanently when the king or
-    the relevant rook moves (or is captured).
+    In standard chess, each side starts with both kingside and queenside castling available,
+    and rights are lost permanently when the king or the relevant rook moves (or is captured).
     """
 
-    def __init__(self,
-            white_kingside: bool = True,
-            white_queenside: bool = True,
-            black_kingside: bool = True,
-            black_queenside: bool = True,
-            ) -> None:
-        self.white_kingside: bool = white_kingside
-        self.white_queenside: bool = white_queenside
-        self.black_kingside: bool = black_kingside
-        self.black_queenside: bool = black_queenside
+    WHITE_KINGSIDE  = 0b0001
+    WHITE_QUEENSIDE = 0b0010
+    BLACK_KINGSIDE  = 0b0100
+    BLACK_QUEENSIDE = 0b1000
 
-    def none(self) -> bool:
-        """ Return True if no castling rights remain. """
-        return not (
-            self.white_kingside
-            or self.white_queenside
-            or self.black_kingside
-            or self.black_queenside
-        )
+    ALL  = 0b1111
+    NONE = 0b0000
+
+    def __new__(cls, value: int = 0b1111) -> 'CastlingRights':
+        return super().__new__(cls, value & cls.ALL)
+
+    @property
+    def white_kingside(self) -> bool:
+        """ Returns if white can castle on kingside. """
+
+        return bool(self & self.WHITE_KINGSIDE)
+
+    @property
+    def white_queenside(self) -> bool:
+        """ Returns if white can castle on queenside. """
+
+        return bool(self & self.WHITE_QUEENSIDE)
+
+    @property
+    def black_kingside(self) -> bool:
+        """ Returns if black can castle on kingside. """
+
+        return bool(self & self.BLACK_KINGSIDE)
+
+    @property
+    def black_queenside(self) -> bool:
+        """ Returns if black can castle on queenside. """
+
+        return bool(self & self.BLACK_QUEENSIDE)
+
+    def revoke_rights(self, other: 'CastlingRights') -> 'CastlingRights':
+        """ Return a new CastlingRights with the given right(s) revoked. """
+
+        return CastlingRights(self & ~other)
+
+    def grant_rights(self, other: 'CastlingRights') -> 'CastlingRights':
+        """ Return a new CastlingRights with the given right(s) granted. """
+
+        return CastlingRights(self | other)
 
     def to_fen_string(self) -> str:
         """
@@ -64,51 +82,44 @@ class CastlingRights(edq.util.json.DictConverter):
         """
 
         if (fen_field == '-'):
-            return cls(False, False, False, False)
+            return cls(value = cls.NONE)
 
-        return cls(
-            white_kingside  = ('K' in fen_field),
-            white_queenside = ('Q' in fen_field),
-            black_kingside  = ('k' in fen_field),
-            black_queenside = ('q' in fen_field),
+        value = (
+              (cls.WHITE_KINGSIDE  if ('K' in fen_field) else 0)
+            | (cls.WHITE_QUEENSIDE if ('Q' in fen_field) else 0)
+            | (cls.BLACK_KINGSIDE  if ('k' in fen_field) else 0)
+            | (cls.BLACK_QUEENSIDE if ('q' in fen_field) else 0)
         )
 
-    def copy(self) -> 'CastlingRights':
-        """ Get a deep copy of these castline rights. """
+        return cls(value)
 
-        return CastlingRights(
-            self.white_kingside,
-            self.white_queenside,
-            self.black_kingside,
-            self.black_queenside,
+    @classmethod
+    def from_bools(cls,
+            white_kingside:  bool = True,
+            white_queenside: bool = True,
+            black_kingside:  bool = True,
+            black_queenside: bool = True,
+            ) -> 'CastlingRights':
+        """ Create castling rights from the given flags. """
+
+        value = (
+              (cls.WHITE_KINGSIDE  if white_kingside  else 0)
+            | (cls.WHITE_QUEENSIDE if white_queenside else 0)
+            | (cls.BLACK_KINGSIDE  if black_kingside  else 0)
+            | (cls.BLACK_QUEENSIDE if black_queenside else 0)
         )
 
-    def __eq__(self, other: object) -> bool:
-        if (not isinstance(other, CastlingRights)):
-            return False
-        return (
-            self.white_kingside  == other.white_kingside
-            and self.white_queenside == other.white_queenside
-            and self.black_kingside  == other.black_kingside
-            and self.black_queenside == other.black_queenside
-        )
+        return cls(value)
+
+    def __str__(self) -> str:
+        return self.to_fen_string()
 
     def __repr__(self) -> str:
         return f"CastlingRights({self.to_fen_string()}.)"
 
-    def to_dict(self) -> dict[str, typing.Any]:
-        return {
-            'white_kingside':  self.white_kingside,
-            'white_queenside': self.white_queenside,
-            'black_kingside':  self.black_kingside,
-            'black_queenside': self.black_queenside,
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict[str, typing.Any]) -> 'CastlingRights':
-        return cls(
-            white_kingside  = data.get('white_kingside',  True),
-            white_queenside = data.get('white_queenside', True),
-            black_kingside  = data.get('black_kingside',  True),
-            black_queenside = data.get('black_queenside', True),
-        )
+WHITE_KINGSIDE_RIGHTS  = CastlingRights(CastlingRights.WHITE_KINGSIDE)
+WHITE_QUEENSIDE_RIGHTS = CastlingRights(CastlingRights.WHITE_QUEENSIDE)
+BLACK_KINGSIDE_RIGHTS  = CastlingRights(CastlingRights.BLACK_KINGSIDE)
+BLACK_QUEENSIDE_RIGHTS = CastlingRights(CastlingRights.BLACK_QUEENSIDE)
+ALL_WHITE_RIGHTS       = CastlingRights(CastlingRights.WHITE_KINGSIDE | CastlingRights.WHITE_QUEENSIDE)
+ALL_BLACK_RIGHTS       = CastlingRights(CastlingRights.BLACK_KINGSIDE | CastlingRights.BLACK_QUEENSIDE)

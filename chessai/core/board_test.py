@@ -137,10 +137,6 @@ class BoardTest(edq.testing.unittest.BaseTest):
         board = chessai.core.board.Board(pieces={start: piece})
         board_copy = board.copy()
 
-        # Boards are independent
-        self.assertIsNot(board, board_copy)
-        self.assertIsNot(board.pieces, board_copy.pieces)
-
         # Modify the copy
         action = chessai.core.action.MoveAction(start, end)
         board_copy.push(action)

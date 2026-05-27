@@ -473,37 +473,35 @@ class GameState(chessai.core.gamestate.GameState):
         # King moves, which forfeits both rights for that color.
         if (isinstance(piece, chessai.chess.piece.King)):
             if (piece.color == chessai.core.types.Color.WHITE):
-                self.castling_rights.white_kingside  = False
-                self.castling_rights.white_queenside = False
+                self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.ALL_WHITE_RIGHTS)
             else:
-                self.castling_rights.black_kingside  = False
-                self.castling_rights.black_queenside = False
+                self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.ALL_BLACK_RIGHTS)
 
         # Rook moves from its starting coordinate.
         if (action.start_coordinate == white_kingside_rook):
-            self.castling_rights.white_kingside = False
+            self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.WHITE_KINGSIDE_RIGHTS)
 
         if (action.start_coordinate == white_queenside_rook):
-            self.castling_rights.white_queenside = False
+            self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.WHITE_QUEENSIDE_RIGHTS)
 
         if (action.start_coordinate == black_kingside_rook):
-            self.castling_rights.black_kingside = False
+            self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.BLACK_KINGSIDE_RIGHTS)
 
         if (action.start_coordinate == black_queenside_rook):
-            self.castling_rights.black_queenside = False
+            self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.BLACK_QUEENSIDE_RIGHTS)
 
         # Rook captured on its starting coordinate.
         if (action.end_coordinate == white_kingside_rook):
-            self.castling_rights.white_kingside = False
+            self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.WHITE_KINGSIDE_RIGHTS)
 
         if (action.end_coordinate == white_queenside_rook):
-            self.castling_rights.white_queenside = False
+            self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.WHITE_QUEENSIDE_RIGHTS)
 
         if (action.end_coordinate == black_kingside_rook):
-            self.castling_rights.black_kingside = False
+            self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.BLACK_KINGSIDE_RIGHTS)
 
         if (action.end_coordinate == black_queenside_rook):
-            self.castling_rights.black_queenside = False
+            self.castling_rights = self.castling_rights.revoke_rights(chessai.core.castling.BLACK_QUEENSIDE_RIGHTS)
 
     def _compute_en_passant(self,
             action: chessai.core.action.MoveAction,

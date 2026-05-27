@@ -32,7 +32,7 @@ class Action(edq.util.json.DictConverter):
     (https://en.wikipedia.org/wiki/Universal_Chess_Interface).
     """
 
-    _type_order: int
+    _type_order: typing.ClassVar[int]
     """
     The ordering of this action type.
     Child classes must choose a unique type number for their game.
@@ -47,7 +47,7 @@ class Action(edq.util.json.DictConverter):
 
     # Comparing actions with non-action objects raises an error.
     def __lt__(self, other: object) -> bool:
-        return self._type_order < other._type_order # type: ignore[attr-defined]  # pylint: disable=no-member
+        return bool(self._type_order < other._type_order)  # type: ignore[attr-defined]  # pylint: disable=no-member
 
     # Comparing actions with non-action objects may raise an error.
     def __eq__(self, other: object) -> bool:
@@ -98,7 +98,7 @@ class MoveAction(Action):
         if isinstance(other, MoveAction):
             return (self.start_coordinate, self.end_coordinate) < (other.start_coordinate, other.end_coordinate)
 
-        return self._type_order < other._type_order # type: ignore[attr-defined]  # pylint: disable=no-member
+        return bool(self._type_order < other._type_order)  # type: ignore[attr-defined]  # pylint: disable=no-member
 
 class PromotionAction(MoveAction):
     """ Actions that move a piece and promote it to another piece type. """
@@ -131,7 +131,7 @@ class PromotionAction(MoveAction):
         if isinstance(other, PromotionAction):
             return (self.start_coordinate, self.end_coordinate, self.promotion) < (other.start_coordinate, other.end_coordinate, other.promotion)
 
-        return self._type_order < other._type_order # type: ignore[attr-defined]  # pylint: disable=no-member
+        return bool(self._type_order < other._type_order)  # type: ignore[attr-defined]  # pylint: disable=no-member
 
 class MetaAction(Action):
     """

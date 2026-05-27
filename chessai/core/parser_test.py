@@ -146,15 +146,15 @@ class ParseFENTest(edq.testing.unittest.BaseTest):
         test_cases: list[tuple[str, chessai.core.castling.CastlingRights]] = [
             (
                 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-                chessai.core.castling.CastlingRights(True, True, True, True),
+                chessai.core.castling.CastlingRights.from_bools(True, True, True, True),
             ),
             (
                 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w Kq - 0 1',
-                chessai.core.castling.CastlingRights(True, False, False, True),
+                chessai.core.castling.CastlingRights.from_bools(True, False, False, True),
             ),
             (
                 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1',
-                chessai.core.castling.CastlingRights(False, False, False, False),
+                chessai.core.castling.CastlingRights.from_bools(False, False, False, False),
             ),
         ]
 
