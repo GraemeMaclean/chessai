@@ -12,7 +12,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_default_state(self):
         """ Test default gamestate for some basic properties. """
 
-        state = chessai.chess.gamestate.GameState()
+        state = chessai.chess.gamestate.GameState.from_fen()
 
         # Basic State
         self.assertEqual(state.get_fen(), chessai.core.gamestate.DEFAULT_FEN)
@@ -47,7 +47,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_generate_successor_does_not_modify_original(self):
         """ Test generate successor properly deep copies the state. """
 
-        state = chessai.chess.gamestate.GameState()
+        state = chessai.chess.gamestate.GameState.from_fen()
         actions = state.get_legal_actions()
 
         action = actions[0]
@@ -62,7 +62,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_get_neighbors_filters_by_start_coordinate(self):
         """ Test get neighbors returns actions only from the start coordinate. """
 
-        state = chessai.chess.gamestate.GameState()
+        state = chessai.chess.gamestate.GameState.from_fen()
         actions = state.get_legal_actions()
 
         action = actions[0]
@@ -76,7 +76,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_push_illegal_action_raises(self):
         """ Test illegal actions raise errors. """
 
-        state = chessai.chess.gamestate.GameState()
+        state = chessai.chess.gamestate.GameState.from_fen()
 
         fake_action = chessai.core.action.MoveAction(chessai.core.coordinate.NULL_COORDINATE, chessai.core.coordinate.NULL_COORDINATE)
 
@@ -145,7 +145,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 for uci_action in uci_actions:
                     expected_actions.append(chessai.core.action.from_uci(uci_action))
 
-                state = chessai.chess.gamestate.GameState(fen = start_fen)
+                state = chessai.chess.gamestate.GameState.from_fen(fen = start_fen)
 
                 self.assertEqual(state.is_checkmate(), checkmate)
                 self.assertEqual(state.is_stalemate(), stalemate)
@@ -383,7 +383,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
             with self.subTest(msg = f"Case {i}:"):
                 (start_fen, action, checkmate, stalemate, material) = test_case
 
-                state = chessai.chess.gamestate.GameState(fen = start_fen)
+                state = chessai.chess.gamestate.GameState.from_fen(fen = start_fen)
 
                 # Check that it is not a checkmate or stalemate before the action.
                 self.assertFalse(state.is_checkmate())

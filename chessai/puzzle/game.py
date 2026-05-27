@@ -49,25 +49,23 @@ class Game(chessai.core.game.Game):
 
     def process_args(self, args: argparse.Namespace) -> None:
         # Let the gamestate parse the FEN and determine the puzzle agent.
-        initial_state = chessai.puzzle.gamestate.GameState(fen = args.board)
+        initial_state = chessai.puzzle.gamestate.GameState.from_fen(fen = args.board, _capture_move_lines = True)
 
-        # If the game does not have move lines, use the move lines found in the file.
-        if (initial_state.options is not None):
-            raw_move_lines = {
-                chessai.core.action.ACTION_KEY: initial_state.options.get('move_lines', None)
-            }
-
-            self.move_lines = chessai.core.action.actions_list_from_dict(raw_move_lines)
-            self.start_move_lines = self.move_lines.copy()
-
-        # Override the move lines from the file if there are move lines from the CLI.
         if (args.move_lines is not None):
-            move_lines = {
+            # Override the move lines from the file if there are move lines from the CLI.
+            raw_move_lines = {
                 chessai.core.action.ACTION_KEY: args.move_lines
             }
+        elif (initial_state._move_lines is not None):
+            # If the game does not have move lines, use the move lines found in the file.
+            raw_move_lines = {
+                chessai.core.action.ACTION_KEY: initial_state._move_lines
+            }
+        else:
+            raw_move_lines = {}
 
-            self.move_lines = chessai.core.action.actions_list_from_dict(move_lines)
-            self.start_move_lines = self.move_lines.copy()
+        self.move_lines = chessai.core.action.actions_list_from_dict(raw_move_lines)
+        self.start_move_lines = self.move_lines.copy()
 
         # Override the dummy player with a scripted agent that follows the move lines.
         self.game_info.agent_infos[initial_state.dummy_player].extra_arguments['move_lines'] = self.start_move_lines.copy()
@@ -75,7 +73,7 @@ class Game(chessai.core.game.Game):
     def get_initial_state(self,
             rng: random.Random,
             fen: str | None = None) -> chessai.core.gamestate.GameState:
-        return chessai.puzzle.gamestate.GameState(fen = fen)
+        return chessai.puzzle.gamestate.GameState.from_fen(fen = fen)
 
     def process_turn(self,
             state: chessai.core.gamestate.GameState,

@@ -1,4 +1,3 @@
-import copy
 import logging
 import random
 import typing
@@ -28,33 +27,32 @@ class GameState(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-                 fen: str | None = None,
+                 board: chessai.core.board.Board,
+                 turn: chessai.core.types.Color,
+                 castling_rights: chessai.core.castling.CastlingRights,
+                 en_passant_coordinate: chessai.core.coordinate.Coordinate | None = None,
+                 halfmove_clock: int = 0,
+                 fullmove_number: int = 1,
                  previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  **kwargs: typing.Any) -> None:
-        if (fen is None):
-            fen = DEFAULT_FEN
-
-        parsed_fen = chessai.core.parser.parse_fen(fen)
-
-        self.board: chessai.core.board.Board = chessai.core.board.Board(
-                pieces = parsed_fen.pieces, num_files = parsed_fen.num_files, num_ranks = parsed_fen.num_ranks)
+        self.board: chessai.core.board.Board = board
         """ The board responsible for holding the position of pieces. """
 
-        self.turn: chessai.core.types.Color = parsed_fen.turn
+        self.turn: chessai.core.types.Color = turn
         """ The color of the current player. """
 
-        self.castling_rights: chessai.core.castling.CastlingRights = parsed_fen.castling_rights
+        self.castling_rights: chessai.core.castling.CastlingRights = castling_rights
         """ The available castling moves. """
 
-        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = parsed_fen.en_passant_coordinate
+        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = en_passant_coordinate
         """ The en-passant target coordinate, or None. """
 
-        self.halfmove_clock: int = parsed_fen.halfmove_clock
+        self.halfmove_clock: int = halfmove_clock
         """ The number of plies since the last pawn move or capture (50-move rule). """
 
-        self.fullmove_number: int = parsed_fen.fullmove_number
+        self.fullmove_number: int = fullmove_number
         """ Increments after every black move, starting at 1. """
 
         self.previous_action: chessai.core.action.Action | None = previous_action
@@ -65,10 +63,6 @@ class GameState(edq.util.json.DictConverter):
 
         self.game_over: bool = game_over
         """ Indicates that this state represents a complete game. """
-
-        # TODO: We can get rid of this when we do the class method and just pass the fen options as kwargs.
-        self.options: dict[str, typing.Any] | None = parsed_fen.options
-        """ Any additional options provided to the game. """
 
     def get_fen(self, partial: bool = False) -> str:
         """
@@ -560,12 +554,17 @@ class GameState(edq.util.json.DictConverter):
         Child classes are responsible for making any deep copies they need to.
         """
 
-        # TODO: Instead of doing a full copy, do each field manually.
-        # Instead of passing a FEN, we should have a from_fen() class method.
-        # Then, the constructor can just take the essential fields and not need to worry about fen parsing on init.
-        new_state = copy.copy(self)
+        new_state = GameState(board           = self.board,
+                              turn            = self.turn,
+                              castling_rights = self.castling_rights,
+                              en_passant_coordinate = self.en_passant_coordinate,
+                              halfmove_clock  = self.halfmove_clock,
+                              fullmove_number = self.fullmove_number,
+                              previous_action = self.previous_action,
+                              seed            = self.seed,
+                              game_over       = self.game_over)
 
-        new_state.board           = self.board.copy()
+        new_state.board = self.board.copy()
 
         return new_state
 
@@ -664,15 +663,25 @@ class GameState(edq.util.json.DictConverter):
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
-            'fen':              self.get_fen(),
+            'board':            self.board.to_dict(),
+            'turn':             self.turn,
+            'castling_rights':  self.castling_rights,
+            'en_passant_coordinate': self.en_passant_coordinate.to_dict() if (self.en_passant_coordinate is not None) else None,
+            'halfmove_clock':   self.halfmove_clock,
+            'fullmove_number':  self.fullmove_number,
             'previous_action':  self.previous_action.to_dict() if (self.previous_action is not None) else None,
             'seed':             self.seed,
             'game_over':        self.game_over,
-            'options':          self.options,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
+        raw_en_passant_coordinate = data.get('en_passant_coordinate', None)
+        if (raw_en_passant_coordinate is not None):
+            en_passant_coordinate = raw_en_passant_coordinate.from_dict()
+        else:
+            en_passant_coordinate = None
+
         raw_previous_action = data.get('previous_action', None)
         if (raw_previous_action is not None):
             previous_action = raw_previous_action.from_dict()
@@ -680,11 +689,50 @@ class GameState(edq.util.json.DictConverter):
             previous_action = None
 
         return cls(
-            fen              = data.get('fen', None),
+            board            = data['board'].from_dict(),
+            turn             = data['turn'],
+            castling_rights  = data['castling_rights'],
+            en_passant_coordinate = en_passant_coordinate,
+            halfmove_clock   = data.get('halfmove_clock', 0),
+            fullmove_number  = data.get('fullmove_number', 1),
             previous_action  = previous_action,
             seed             = data.get('seed', -1),
             game_over        = data.get('game_over', False),
-            options          = data.get('options', None),
+        )
+
+    @classmethod
+    def from_fen(cls,
+                 fen: str | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
+                 seed: int = -1,
+                 game_over: bool = False,
+                 **kwargs: typing.Any) -> 'GameState':
+        """ Create a gamestate from a starting FEN. """
+
+        if (fen is None):
+            fen = DEFAULT_FEN
+
+        parsed_fen = chessai.core.parser.parse_fen(fen)
+
+        board = chessai.core.board.Board(pieces = parsed_fen.pieces,
+                                         num_files = parsed_fen.num_files,
+                                         num_ranks = parsed_fen.num_ranks)
+
+        if (kwargs is not None):
+            kwargs.update(parsed_fen.options)
+        else:
+            kwargs = parsed_fen.options
+
+        return cls(board                 = board,
+            turn                  = parsed_fen.turn,
+            castling_rights       = parsed_fen.castling_rights,
+            en_passant_coordinate = parsed_fen.en_passant_coordinate,
+            halfmove_clock        = parsed_fen.halfmove_clock,
+            fullmove_number       = parsed_fen.fullmove_number,
+            previous_action       = previous_action,
+            seed                  = seed,
+            game_over             = game_over,
+            kwargs                = kwargs,
         )
 
 @typing.runtime_checkable

@@ -11,7 +11,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_default_state(self):
         """ Test default gamestate for some basic properties. """
 
-        state = chessai.core.gamestate.GameState()
+        state = chessai.core.gamestate.GameState.from_fen()
 
         # Basic State
         self.assertEqual(state.get_fen(), chessai.core.gamestate.DEFAULT_FEN)
@@ -46,7 +46,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_generate_successor_does_not_modify_original(self):
         """ Test generate successor properly deep copies the state. """
 
-        state = chessai.core.gamestate.GameState()
+        state = chessai.core.gamestate.GameState.from_fen()
         actions = state.get_legal_actions()
 
         action = actions[0]
@@ -61,7 +61,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_get_neighbors_filters_by_start_coordinate(self):
         """ Test get neighbors returns actions only from the start coordinate. """
 
-        state = chessai.core.gamestate.GameState()
+        state = chessai.core.gamestate.GameState.from_fen()
         actions = state.get_legal_actions()
 
         action = actions[0]
@@ -75,7 +75,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
     def test_push_illegal_action_raises(self):
         """ Test illegal actions raise errors. """
 
-        state = chessai.core.gamestate.GameState()
+        state = chessai.core.gamestate.GameState.from_fen()
 
         fake_action = chessai.core.action.MoveAction(chessai.core.coordinate.NULL_COORDINATE, chessai.core.coordinate.NULL_COORDINATE)
 

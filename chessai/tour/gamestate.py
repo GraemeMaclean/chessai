@@ -26,22 +26,27 @@ class GameState(chessai.core.gamestate.GameState):
     """ A game state specific to a Tour game. """
 
     def __init__(self,
-                 fen: str | None = None,
+                 board: chessai.core.board.Board,
+                 turn: chessai.core.types.Color,
+                 castling_rights: chessai.core.castling.CastlingRights,
+                 en_passant_coordinate: chessai.core.coordinate.Coordinate | None = None,
+                 halfmove_clock: int = 0,
+                 fullmove_number: int = 1,
                  previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  search_targets: list[chessai.core.coordinate.Coordinate] | dict[str, typing.Any] | None = None,
+                 _validate_search_targets: bool = True,
                  **kwargs: typing.Any) -> None:
-        super().__init__(fen, previous_action, seed, game_over, **kwargs)
+        super().__init__(board, turn, castling_rights, en_passant_coordinate,
+                         halfmove_clock, fullmove_number, previous_action,
+                         seed, game_over, **kwargs)
 
         self.score: int = 0
         """ The score for the Tour. """
 
         if (search_targets is None):
             search_targets = []
-
-        if ((len(search_targets) == 0) and (self.options is not None)):
-            search_targets = self.options.get(SEARCH_TARGETS_KEY, [])
 
         # Convert the string case into the dict case.
         if (isinstance(search_targets, str)):
@@ -56,7 +61,7 @@ class GameState(chessai.core.gamestate.GameState):
         """ The targets of the piece tour search. """
 
         # A Tour problem must have at least one search target.
-        if (len(self.search_targets) == 0):
+        if (_validate_search_targets and (len(self.search_targets) == 0)):
             raise ValueError("Cannot create a Tour game state without at least one search target.")
 
     def is_game_over(self) -> bool:
@@ -137,3 +142,20 @@ class GameState(chessai.core.gamestate.GameState):
             return ([chessai.core.types.Color.WHITE], self.score)
 
         return ([chessai.core.types.Color.BLACK], self.score)
+
+    def copy(self) -> 'GameState':
+        new_state = GameState(board           = self.board,
+                              turn            = self.turn,
+                              castling_rights = self.castling_rights,
+                              en_passant_coordinate = self.en_passant_coordinate,
+                              halfmove_clock  = self.halfmove_clock,
+                              fullmove_number = self.fullmove_number,
+                              previous_action = self.previous_action,
+                              seed            = self.seed,
+                              game_over       = self.game_over,
+                              search_targets  = self.search_targets.copy(),
+                              _validate_search_targets = False)
+
+        new_state.score = self.score
+
+        return new_state

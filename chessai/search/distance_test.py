@@ -10,7 +10,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     def test_manhattan_base(self):
         """ Test Manhattan distance and heuristic. """
 
-        test_state = chessai.core.gamestate.GameState(fen = 'tour-base', seed = 4)
+        test_state = chessai.core.gamestate.GameState.from_fen(fen = 'tour-base', seed = 4)
 
         # [(a, b, expected), ...]
         test_cases = [
@@ -49,7 +49,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     def test_euclidean_base(self):
         """ Test Euclidean distance and heuristic. """
 
-        test_state = chessai.core.gamestate.GameState(fen = 'tour-base', seed = 4)
+        test_state = chessai.core.gamestate.GameState.from_fen(fen = 'tour-base', seed = 4)
 
         # [(a, b, expected), ...]
         test_cases = [
@@ -88,7 +88,7 @@ class DistanceTest(edq.testing.unittest.BaseTest):
     # def test_maze_base(self):
     #     """ Test maze distance. """
 
-    #     test_state = chessai.core.gamestate.GameState(fen = 'tour-base', seed = 4)
+    #     test_state = chessai.core.gamestate.GameState.from_fen(fen = 'tour-base', seed = 4)
 
     #     # Note that the distances will be random because we are using random search.
 

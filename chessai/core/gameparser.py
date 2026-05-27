@@ -248,7 +248,7 @@ def parse_pgn(pgn: str, state_class: typing.Type[chessai.core.gamestate.GameStat
 
     # Set up a gamestate to follow along and parse SANs.
     fen = optional_headers.get(FEN_HEADER_KEY, None)
-    state = state_class(fen = fen)
+    state = state_class.from_fen(fen = fen)
     rng = random.Random(1)
 
     initial_actions: list[chessai.core.action.Action] = []
@@ -473,7 +473,7 @@ def to_pgn(headers: StandardHeadersDict, optional_headers: dict[str, typing.Any]
     lines.append('')
 
     # Build the move SAN tokens while replaying the game.
-    state = state_class(fen = start_fen)
+    state = state_class.from_fen(fen = start_fen)
     pgn_tokens: list[str] = []
     current_fullmove_number = 0
 

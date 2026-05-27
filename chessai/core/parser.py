@@ -69,14 +69,34 @@ class ParsedFEN:
             options: dict[str, typing.Any] | None = None,
             ) -> None:
         self.pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = pieces
+        """ The position of the pieces on the board. """
+
         self.turn: chessai.core.types.Color = turn
+        """ The current turn of the game. """
+
         self.castling_rights: chessai.core.castling.CastlingRights = castling_rights
+        """ The available castling rights in the game. """
+
         self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = en_passant_coordinate
+        """ The game's en-passant coordinate. """
+
         self.halfmove_clock: int = halfmove_clock
+        """ The game's halfmove clock. """
+
         self.fullmove_number: int = fullmove_number
+        """ The game's fullmove number. """
+
         self.num_files: int = num_files
+        """ The number of files in the FEN. """
+
         self.num_ranks: int = num_ranks
-        self.options: dict[str, typing.Any] | None = options
+        """ The number of ranks found in the FEN. """
+
+        if (options is None):
+            options = {}
+
+        self.options: dict[str, typing.Any] = options
+        """ Any additional options found in the FEN. """
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ParsedFEN):
