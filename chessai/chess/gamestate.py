@@ -52,7 +52,7 @@ class GameState(chessai.core.gamestate.GameState):
 
     def _get_pseudo_legal_moves(self) -> list[chessai.core.action.MoveAction]:
         # Get the base movement from all pieces.
-        actions = self._expand_movement_vectors()
+        actions = self._get_base_move_actions()
 
         # Add any castling moves.
         actions.extend(self._get_castling_moves())
@@ -68,7 +68,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         return actions
 
-    def _expand_movement_vectors(self) -> list[chessai.core.action.MoveAction]:
+    def _get_base_move_actions(self) -> list[chessai.core.action.MoveAction]:
         """
         Expands all movement vectors from the pieces on the board.
         Pieces will move until they can capture or reach the end of the board.

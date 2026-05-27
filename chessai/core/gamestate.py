@@ -482,10 +482,9 @@ class GameState(edq.util.json.DictConverter):
     def _get_pseudo_legal_moves(self) -> list[chessai.core.action.MoveAction]:
         """ Get all of the actions that can be taken on this gamestate, regardless if it violates pins or checks. """
 
-        return self._expand_movement_vectors()
+        return self._get_base_move_actions()
 
-    # TODO: Rename to get_movement_moves
-    def _expand_movement_vectors(self) -> list[chessai.core.action.MoveAction]:
+    def _get_base_move_actions(self) -> list[chessai.core.action.MoveAction]:
         """
         Expands all movement vectors from the pieces on the board.
         Pieces will move until they can capture or reach the end of the board.
