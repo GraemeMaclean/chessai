@@ -2,6 +2,8 @@ import typing
 
 import edq.util.json
 
+# TODO: Maybe convert to an int.
+# Could do a bitwise mask.
 class CastlingRights(edq.util.json.DictConverter):
     """
     Tracks which castling moves are still available.
@@ -59,9 +61,6 @@ class CastlingRights(edq.util.json.DictConverter):
     def from_fen_string(cls, fen_field: str) -> 'CastlingRights':
         """
         Parse the castling field of a FEN string.
-
-        Args:
-            fen_field: The castling portion of a FEN string, e.g. 'KQkq' or '-'.
         """
 
         if (fen_field == '-'):

@@ -3,7 +3,6 @@ The core actions that agents are allowed to take.
 Default actions are provided, but custom actions can be easily created.
 """
 
-import abc
 import json
 import re
 import typing
@@ -23,7 +22,7 @@ UCI_NULL_ACTION: str = '0000'
 UCI_PROPOSE_DRAW_ACTION: str = 'Propose Draw'
 UCI_REJECT_DRAW_ACTION: str = 'Reject Draw'
 
-class Action(abc.ABC, edq.util.json.DictConverter):
+class Action(edq.util.json.DictConverter):
     """
     The base for all actions that an agent is allowed to take.
 
@@ -33,20 +32,25 @@ class Action(abc.ABC, edq.util.json.DictConverter):
     (https://en.wikipedia.org/wiki/Universal_Chess_Interface).
     """
 
-    @abc.abstractmethod
+    _type_order: int
+    """
+    The ordering of this action type.
+    Child classes must choose a unique type number for their game.
+    """
+
+    # This function is meant to be an abc.abstractmethod,
+    # but for performance reasons it raises an error.
     def uci(self) -> str:
         """ Represent the agent action as a chess move in UCI format. """
 
+        raise NotImplementedError("Action.uci()")
+
+    # Comparing actions with non-action objects raises an error.
     def __lt__(self, other: object) -> bool:
-        if (not isinstance(other, Action)):
-            raise TypeError(f"Cannot compare an action with an object of type '{type(other)}'.")
+        return self._type_order < other._type_order # type: ignore[attr-defined]  # pylint: disable=no-member
 
-        return self._type_order() < other._type_order()
-
+    # Comparing actions with non-action objects may raise an error.
     def __eq__(self, other: object) -> bool:
-        if (not isinstance(other, Action)):
-            return False
-
         return type(self) == type(other)
 
     def __str__(self) -> str:
@@ -55,13 +59,10 @@ class Action(abc.ABC, edq.util.json.DictConverter):
     def __repr__(self) -> str:
         return self.uci()
 
-    def _type_order(self) -> int:
-        """ Returns the ordering of the type. """
-
-        return _ACTION_TYPE_ORDER[type(self)]
-
 class NoneAction(Action):
     """ An action that signifies nothing happened. """
+
+    _type_order = 0
 
     def uci(self) -> str:
         return UCI_NULL_ACTION
@@ -69,12 +70,12 @@ class NoneAction(Action):
 class MoveAction(Action):
     """ Actions that move a piece from one coordinate to another. """
 
+    _type_order = 1
+
     def __init__(self,
                  start_coordinate: chessai.core.coordinate.Coordinate,
                  end_coordinate: chessai.core.coordinate.Coordinate,
                  ) -> None:
-        super().__init__()
-
         self.start_coordinate: chessai.core.coordinate.Coordinate = start_coordinate
         """ The starting coordinate for the action. """
 
@@ -88,22 +89,21 @@ class MoveAction(Action):
         return f"{start}{end}"
 
     def __eq__(self, other: object) -> bool:
-        if (not isinstance(other, MoveAction)):
+        if (type(self) != type(other)):
             return False
 
-        return (self.start_coordinate, self.end_coordinate) == (other.start_coordinate, other.end_coordinate)
+        return (self.start_coordinate, self.end_coordinate) == (other.start_coordinate, other.end_coordinate) # type: ignore[attr-defined]  # pylint: disable=no-member
 
     def __lt__(self, other: object) -> bool:
-        if (not isinstance(other, Action)):
-            raise TypeError(f"Cannot compare an action with an object of type '{type(other)}'.")
-
         if isinstance(other, MoveAction):
             return (self.start_coordinate, self.end_coordinate) < (other.start_coordinate, other.end_coordinate)
 
-        return self._type_order() < other._type_order()
+        return self._type_order < other._type_order # type: ignore[attr-defined]  # pylint: disable=no-member
 
 class PromotionAction(MoveAction):
     """ Actions that move a piece and promote it to another piece type. """
+
+    _type_order = 2
 
     def __init__(self,
                  start_coordinate: chessai.core.coordinate.Coordinate,
@@ -128,13 +128,10 @@ class PromotionAction(MoveAction):
         return (self.start_coordinate, self.end_coordinate, self.promotion) == (other.start_coordinate, other.end_coordinate, other.promotion)
 
     def __lt__(self, other: object) -> bool:
-        if (not isinstance(other, Action)):
-            raise TypeError(f"Cannot compare an action with an object of type '{type(other)}'.")
-
         if isinstance(other, PromotionAction):
             return (self.start_coordinate, self.end_coordinate, self.promotion) < (other.start_coordinate, other.end_coordinate, other.promotion)
 
-        return self._type_order() < other._type_order()
+        return self._type_order < other._type_order # type: ignore[attr-defined]  # pylint: disable=no-member
 
 class MetaAction(Action):
     """
@@ -143,8 +140,13 @@ class MetaAction(Action):
     Meta actions include handling draws and forfeits.
     """
 
+    def uci(self) -> str:
+        raise NotImplementedError("MetaAction.uci()")
+
 class ProposeDrawAction(MetaAction):
     """ A meta action signaling the agent is offering a draw. """
+
+    _type_order = 3
 
     def uci(self) -> str:
         return UCI_PROPOSE_DRAW_ACTION
@@ -152,17 +154,23 @@ class ProposeDrawAction(MetaAction):
 class AcceptDrawAction(MetaAction):
     """ A meta action responding to a draw proposal with an acceptance. """
 
+    _type_order = 4
+
     def uci(self) -> str:
         return UCI_ACCEPT_DRAW_ACTION
 
 class RejectDrawAction(MetaAction):
     """ A meta action responding to a draw proposal with a rejection. """
 
+    _type_order = 5
+
     def uci(self) -> str:
         return UCI_REJECT_DRAW_ACTION
 
 class ForfeitAction(MetaAction):
     """ A meta action signaling the agent is forfeiting the game. """
+
+    _type_order = 6
 
     def uci(self) -> str:
         return UCI_FORFEIT_ACTION

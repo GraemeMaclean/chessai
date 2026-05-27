@@ -1,4 +1,3 @@
-import copy
 import os
 import re
 import typing
@@ -31,6 +30,7 @@ class Board(edq.util.json.DictConverter):
 
     def __init__(self,
             pieces: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] | None = None,
+            _pieces: dict[int, dict[int, chessai.core.piece.Piece]] | None = None,
             num_files: int = DEFAULT_BOARD_FILES,
             num_ranks: int = DEFAULT_BOARD_RANKS,
             **kwargs: typing.Any) -> None:
@@ -38,18 +38,24 @@ class Board(edq.util.json.DictConverter):
         Construct a board with the given dimensions and pieces.
         """
 
-        if (pieces is None):
-            pieces = {}
+        check_valid = True
 
-        clean_pieces: dict[int, dict[int, chessai.core.piece.Piece]] = {file: {} for file in range(num_files)}
+        if (_pieces is not None):
+            clean_pieces = _pieces
+            check_valid = False
+        else:
+            if (pieces is None):
+                pieces = {}
 
-        for (coordinate, piece) in pieces.items():
-            if (coordinate.rank not in clean_pieces):
-                raise ValueError('Cannot place a piece that is out of bounds:'
-                                 + f" files '{num_files}', ranks '{num_ranks}',"
-                                 + f" rank: '{coordinate.rank}'.")
+            clean_pieces = {file: {} for file in range(num_files)}
 
-            clean_pieces[coordinate.file][coordinate.rank] = piece
+            for (coordinate, piece) in pieces.items():
+                if (coordinate.rank not in clean_pieces):
+                    raise ValueError('Cannot place a piece that is out of bounds:'
+                                    + f" files '{num_files}', ranks '{num_ranks}',"
+                                    + f" rank: '{coordinate.rank}'.")
+
+                clean_pieces[coordinate.file][coordinate.rank] = piece
 
         self.pieces: dict[int, dict[int, chessai.core.piece.Piece]] = clean_pieces
         """ The pieces on the board, first keyed by the file and then by the rank. """
@@ -60,7 +66,10 @@ class Board(edq.util.json.DictConverter):
         self.num_ranks: int = num_ranks
         """ The number of ranks of the chess board. """
 
-        if (not self.is_valid()):
+        self._needs_copy: bool = False
+        """ Flags if the board needs to make a copy of itself before mutating state. """
+
+        if (check_valid and (not self.is_valid())):
             raise ValueError('Cannot construct an invalid board:'
                 + f" files '{self.num_files}', ranks '{self.num_ranks}',"
                 + f" pieces '{self.pieces}'.")
@@ -127,6 +136,8 @@ class Board(edq.util.json.DictConverter):
         Returns whether the action captured a piece.
         """
 
+        self._copy_for_write()
+
         piece = self.pieces[action.start_coordinate.file].pop(action.start_coordinate.rank, None)
         if (piece is None):
             raise ValueError(f"There is no piece at the action's start coordinate: '{action.start_coordinate.uci()}'.")
@@ -151,10 +162,14 @@ class Board(edq.util.json.DictConverter):
         If there is no piece at the coordinate, the board is unchanged.
         """
 
+        self._copy_for_write()
+
         self.pieces[coordinate.file].pop(coordinate.rank, None)
 
     def set(self, piece: chessai.core.piece.Piece, coordinate: chessai.core.coordinate.Coordinate) -> None:
         """ Adds a piece to the specified coordinate, which must be within bounds. """
+
+        self._copy_for_write()
 
         if (not self.is_within_bounds(coordinate.file, coordinate.rank)):
             raise ValueError("Cannot remove a piece from an out of bounds coordinate on a board of size"
@@ -216,11 +231,18 @@ class Board(edq.util.json.DictConverter):
     def copy(self) -> 'Board':
         """ Create a deep copy of the board. """
 
-        new_board = copy.copy(self)
+        new_board = Board(None, self.pieces, self.num_files, self.num_ranks)
 
-        new_board.pieces = {file: ranks.copy() for file, ranks in self.pieces.items()}
+        new_board._needs_copy = True
 
         return new_board
+
+    def _copy_for_write(self) -> None:
+        if (not self._needs_copy):
+            return
+
+        self.pieces = {file: rank.copy() for (file, rank) in self.pieces.items()}
+        self._needs_copy = False
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {

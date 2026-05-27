@@ -63,9 +63,6 @@ class GameState(chessai.core.gamestate.GameState):
         # Add any en-passant captures.
         actions.extend(self._get_en_passant_captures())
 
-        # Sort the actions for consistency.
-        actions.sort()
-
         return actions
 
     def _get_base_move_actions(self) -> list[chessai.core.action.MoveAction]:
@@ -133,9 +130,6 @@ class GameState(chessai.core.gamestate.GameState):
                             break
 
                         num_repetitions -= 1
-
-        # Sort the actions for consistency.
-        actions.sort()
 
         return actions
 

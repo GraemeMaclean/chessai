@@ -38,7 +38,8 @@ class GameState(edq.util.json.DictConverter):
 
         parsed_fen = chessai.core.parser.parse_fen(fen)
 
-        self.board: chessai.core.board.Board = chessai.core.board.Board(parsed_fen.pieces, parsed_fen.num_files, parsed_fen.num_ranks)
+        self.board: chessai.core.board.Board = chessai.core.board.Board(
+                pieces = parsed_fen.pieces, num_files = parsed_fen.num_files, num_ranks = parsed_fen.num_ranks)
         """ The board responsible for holding the position of pieces. """
 
         self.turn: chessai.core.types.Color = parsed_fen.turn
@@ -65,6 +66,7 @@ class GameState(edq.util.json.DictConverter):
         self.game_over: bool = game_over
         """ Indicates that this state represents a complete game. """
 
+        # TODO: We can get rid of this when we do the class method and just pass the fen options as kwargs.
         self.options: dict[str, typing.Any] | None = parsed_fen.options
         """ Any additional options provided to the game. """
 
@@ -175,9 +177,6 @@ class GameState(edq.util.json.DictConverter):
                 continue
 
             neighbors.append((action, action.end_coordinate)) # pylint: disable=no-member
-
-        # Sort the neighbors for consistency.
-        neighbors.sort()
 
         return neighbors
 
@@ -297,8 +296,8 @@ class GameState(edq.util.json.DictConverter):
 
             # Find the king.
             king_coord: chessai.core.coordinate.Coordinate | None = None
-            for current_file in self.board.pieces.keys():
-                for (current_rank, piece) in self.board.pieces[current_file].items():
+            for (current_file, rank_dict) in self.board.pieces.items():
+                for (current_rank, piece) in rank_dict.items():
                     if (piece.symbol() not in ['k', 'K']):
                         continue
 
@@ -493,13 +492,13 @@ class GameState(edq.util.json.DictConverter):
 
         actions: list[chessai.core.action.MoveAction] = []
 
-        for file in self.board.pieces.keys():
-            for (rank, piece) in self.board.pieces[file].items():
+        for (file, rank_dict) in self.board.pieces.items():
+            for (rank, piece) in rank_dict.items():
                 if (piece.color != self.turn):
                     continue
 
-                movement_vectors = piece.move_vectors()
-                for movement_vector in movement_vectors:
+                # movement_vectors = piece.move_vectors()
+                for movement_vector in piece.move_vectors():
                     current_rank = rank
                     current_file = file
 
@@ -514,7 +513,8 @@ class GameState(edq.util.json.DictConverter):
 
                         occupant = self.board.get(current_file, current_rank)
 
-                        is_occupied = occupant is not None
+                        # TODO: rewrite these as if-else branches later to hold a bool
+                        is_occupied = (occupant is not None)
                         is_enemy    = (occupant is not None) and (occupant.color != piece.color)
                         is_ally     = (occupant is not None) and (occupant.color == piece.color)
 
@@ -539,9 +539,6 @@ class GameState(edq.util.json.DictConverter):
 
                         num_repetitions -= 1
 
-        # Sort the movement vectors for consistency.
-        actions.sort()
-
         return actions
 
     def _should_reset_halfmove_clock(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
@@ -563,6 +560,9 @@ class GameState(edq.util.json.DictConverter):
         Child classes are responsible for making any deep copies they need to.
         """
 
+        # TODO: Instead of doing a full copy, do each field manually.
+        # Instead of passing a FEN, we should have a from_fen() class method.
+        # Then, the constructor can just take the essential fields and not need to worry about fen parsing on init.
         new_state = copy.copy(self)
 
         new_state.castling_rights = self.castling_rights.copy()
