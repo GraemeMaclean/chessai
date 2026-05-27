@@ -103,7 +103,7 @@ class GameState(edq.util.json.DictConverter):
         """ Return the list of legal actions for the current player. """
 
         # If the most recent move was a draw proposal, the opponent must respond.
-        if (self.get_previous_action() == chessai.core.action.ProposeDrawAction()):
+        if (isinstance(self.get_previous_action(), chessai.core.action.ProposeDrawAction)):
             return [
                 chessai.core.action.AcceptDrawAction(),
                 chessai.core.action.RejectDrawAction(),
@@ -312,7 +312,7 @@ class GameState(edq.util.json.DictConverter):
 
             # Could not find a king for the proper color.
             if ((king_coord is None) or (king_coord.rank != rank)):
-                logging.warning("Unable to find a king on the board when parsing a SAN castling move.")
+                logging.warning("Unable to find a king on the board when parsing a SAN castling move: '%s'.", san)
 
                 return chessai.core.action.NoneAction()
 

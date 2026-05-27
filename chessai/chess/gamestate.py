@@ -23,10 +23,11 @@ class GameState(chessai.core.gamestate.GameState):
     def is_check(self, color: chessai.core.types.Color) -> bool:
         # Find the king of the given color.
         king_coordinate: chessai.core.coordinate.Coordinate | None = None
-        for coordinate, piece in self.board.get_coordinate_map().items():
-            if ((piece.color == color) and (isinstance(piece, chessai.chess.piece.King))):
-                king_coordinate = coordinate
-                break
+        for file in self.board.pieces.keys():
+            for (rank, piece) in self.board.pieces[file].items():
+                if ((piece.color == color) and (isinstance(piece, chessai.chess.piece.King))):
+                    king_coordinate = chessai.core.coordinate.Coordinate(file, rank)
+                    break
 
         # If there's no king, the position is invalid, which should never happen.
         if (king_coordinate is None):
@@ -301,14 +302,16 @@ class GameState(chessai.core.gamestate.GameState):
 
         # Find the king.
         king_coord: chessai.core.coordinate.Coordinate | None = None
-        for (coordinate, piece) in self.board.get_coordinate_map().items():
-            if (not isinstance(piece, chessai.chess.piece.King)):
-                continue
+        for file in self.board.pieces.keys():
+            for (rank, piece) in self.board.pieces[file].items():
+                if (not isinstance(piece, chessai.chess.piece.King)):
+                    continue
 
-            if (piece.color != self.turn):
-                continue
+                if (piece.color != self.turn):
+                    continue
 
-            king_coord = coordinate
+                king_coord = chessai.core.coordinate.Coordinate(file, rank)
+                break
 
         if ((king_coord is None) or (king_coord.rank != back_rank)):
             return []
@@ -377,26 +380,29 @@ class GameState(chessai.core.gamestate.GameState):
 
         actions: list[chessai.core.action.MoveAction] = []
 
-        for (coordinate, piece) in self.board.get_coordinate_map().items():
-            if (not isinstance(piece, chessai.chess.piece.Pawn)):
-                continue
+        for file in self.board.pieces.keys():
+            for (rank, piece) in self.board.pieces[file].items():
+                if (not isinstance(piece, chessai.chess.piece.Pawn)):
+                    continue
 
-            if (piece.color != self.turn):
-                continue
+                if (piece.color != self.turn):
+                    continue
 
-            if (coordinate.rank != start_rank):
-                continue
+                if (rank != start_rank):
+                    continue
 
-            # Both the single and double push coordinates must be empty.
-            single_push_coord = coordinate.offset(0, direction)
-            if (self.board.has_piece(single_push_coord)):
-                continue
+                coordinate = chessai.core.coordinate.Coordinate(file, rank)
 
-            double_push_coord = coordinate.offset(0, direction * 2)
-            if (self.board.has_piece(double_push_coord)):
-                continue
+                # Both the single and double push coordinates must be empty.
+                single_push_coord = coordinate.offset(0, direction)
+                if (self.board.has_piece(single_push_coord)):
+                    continue
 
-            actions.append(chessai.core.action.MoveAction(coordinate, double_push_coord))
+                double_push_coord = coordinate.offset(0, direction * 2)
+                if (self.board.has_piece(double_push_coord)):
+                    continue
+
+                actions.append(chessai.core.action.MoveAction(coordinate, double_push_coord))
 
         return actions
 
@@ -541,7 +547,7 @@ def base_eval(
 
     # The difference in pieces from white's perspective.
     board_value = 0
-    for (_, piece) in state.board.get_coordinate_map().items():
+    for piece in state.board.all_pieces():
         piece_value = piece_values.get(type(piece), 0)
         if (piece.color == chessai.core.types.Color.WHITE):
             board_value += piece_value
