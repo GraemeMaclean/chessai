@@ -165,6 +165,10 @@ class GameState(chessai.core.gamestate.GameState):
         return False, None
 
     def is_insufficient_material(self) -> bool:
+        # Meta actions cannot cause a game to become in an insufficient material state.
+        if (not isinstance(self.get_previous_action(), chessai.core.action.MoveAction)):
+            return False
+
         return all(self._is_insufficient_material(color) for color in chessai.core.types.Color)
 
     def _is_insufficient_material(self, color: chessai.core.types.Color) -> bool:

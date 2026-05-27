@@ -189,30 +189,28 @@ class GameState(edq.util.json.DictConverter):
     def is_checkmate(self) -> bool:
         """ Determines if the current player is in checkmate. """
 
+        # A draw proposal can never cause a checkmate.
+        if (isinstance(self.get_previous_action(), chessai.core.action.ProposeDrawAction)):
+            return False
+
         legal_actions = self.get_legal_actions()
 
-        # Do not count draw proposals or forfeits towards the check.
-        checkmate_escape_actions = [
-            action for action in legal_actions if action not in [
-                chessai.core.action.ProposeDrawAction(),
-                chessai.core.action.ForfeitAction(),
-            ]
-        ]
+        # Only count move actions when checking checkmate.
+        checkmate_escape_actions = [action for action in legal_actions if isinstance(action, chessai.core.action.MoveAction)]
 
         return ((len(checkmate_escape_actions) == 0) and self.is_check(self.turn))
 
     def is_stalemate(self) -> bool:
         """ Determines if the current player is in stalemate. """
 
+        # A draw proposal can never cause a stalemate.
+        if (isinstance(self.get_previous_action(), chessai.core.action.ProposeDrawAction)):
+            return False
+
         legal_actions = self.get_legal_actions()
 
-        # Do not count draw proposals or forfeits towards the check.
-        checkmate_escape_actions = [
-            action for action in legal_actions if action not in [
-                chessai.core.action.ProposeDrawAction(),
-                chessai.core.action.ForfeitAction(),
-            ]
-        ]
+        # Only count move actions when checking stalemate.
+        checkmate_escape_actions = [action for action in legal_actions if isinstance(action, chessai.core.action.MoveAction)]
 
         return ((len(checkmate_escape_actions) == 0) and (not self.is_check(self.turn)))
 
@@ -245,7 +243,7 @@ class GameState(edq.util.json.DictConverter):
         """
 
         # If the previous agent forfeited the game, the current agent won.
-        if (self.get_previous_action() == chessai.core.action.ForfeitAction()):
+        if (isinstance(self.get_previous_action(), chessai.core.action.ForfeitAction)):
             return [self.turn]
 
         # If the agent is in checkmate, the opponent won.
@@ -266,10 +264,10 @@ class GameState(edq.util.json.DictConverter):
         if (self.is_insufficient_material()):
             return chessai.core.types.TerminationReason.INSUFFICIENT_MATERIAL
 
-        if (self.get_previous_action() == chessai.core.action.ForfeitAction()):
+        if (isinstance(self.get_previous_action(), chessai.core.action.ForfeitAction)):
             return chessai.core.types.TerminationReason.FORFEIT
 
-        if (self.get_previous_action() == chessai.core.action.AcceptDrawAction()):
+        if (isinstance(self.get_previous_action(), chessai.core.action.AcceptDrawAction)):
             return chessai.core.types.TerminationReason.ACCEPTED_DRAW_PROPOSAL
 
         if (not self.is_game_over()):
