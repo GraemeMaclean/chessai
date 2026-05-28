@@ -81,13 +81,12 @@ class GameState(chessai.core.gamestate.GameState):
         else:
             promotion_rank = 0
 
-        for file in self.board.pieces.keys():
-            for (rank, piece) in self.board.pieces[file].items():
+        for (file, rank_dict) in self.board.pieces.items():
+            for (rank, piece) in rank_dict.items():
                 if (piece.color != self.turn):
                     continue
 
-                movement_vectors = piece.move_vectors()
-                for movement_vector in movement_vectors:
+                for movement_vector in piece.move_vectors():
                     current_rank = rank
                     current_file = file
 
@@ -102,7 +101,7 @@ class GameState(chessai.core.gamestate.GameState):
 
                         occupant = self.board.get(current_file, current_rank)
 
-                        is_occupied = occupant is not None
+                        is_occupied = (occupant is not None)
                         is_enemy    = (occupant is not None) and (occupant.color != piece.color)
                         is_ally     = (occupant is not None) and (occupant.color == piece.color)
 
@@ -522,6 +521,21 @@ class GameState(chessai.core.gamestate.GameState):
         # The en-passant target is the coordinate the pawn skipped over.
         passed_rank = (action.start_coordinate.rank + action.end_coordinate.rank) // 2
         return chessai.core.coordinate.Coordinate(action.start_coordinate.file, passed_rank)
+
+    def copy(self) -> 'GameState':
+        new_state = GameState(board           = self.board,
+                              turn            = self.turn,
+                              castling_rights = self.castling_rights,
+                              en_passant_coordinate = self.en_passant_coordinate,
+                              halfmove_clock  = self.halfmove_clock,
+                              fullmove_number = self.fullmove_number,
+                              previous_action = self.previous_action,
+                              seed            = self.seed,
+                              game_over       = self.game_over)
+
+        new_state.board = self.board.copy()
+
+        return new_state
 
 def base_eval(
         state: chessai.core.gamestate.GameState,

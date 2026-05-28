@@ -159,3 +159,12 @@ class GameState(chessai.core.gamestate.GameState):
         new_state.score = self.score
 
         return new_state
+
+    @classmethod
+    def from_fen(cls,
+                 fen: str | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
+                 seed: int = -1,
+                 game_over: bool = False,
+                 **kwargs: typing.Any) -> 'GameState':
+        return typing.cast('GameState', super().from_fen(fen, previous_action, seed, game_over, **kwargs))

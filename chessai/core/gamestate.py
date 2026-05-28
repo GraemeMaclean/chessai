@@ -491,7 +491,6 @@ class GameState(edq.util.json.DictConverter):
                 if (piece.color != self.turn):
                     continue
 
-                # movement_vectors = piece.move_vectors()
                 for movement_vector in piece.move_vectors():
                     current_rank = rank
                     current_file = file
@@ -732,7 +731,7 @@ class GameState(edq.util.json.DictConverter):
             previous_action       = previous_action,
             seed                  = seed,
             game_over             = game_over,
-            kwargs                = kwargs,
+            **kwargs,
         )
 
 @typing.runtime_checkable

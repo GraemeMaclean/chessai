@@ -4,13 +4,14 @@ import random
 import typing
 
 import chessai.agents.multiscripted
+import chessai.chess.game
 import chessai.core.agentinfo
 import chessai.core.board
 import chessai.core.game
 import chessai.core.gamestate
 import chessai.puzzle.gamestate
 
-class Game(chessai.core.game.Game):
+class Game(chessai.chess.game.Game):
     """
     A game following the rules of a chess puzzle.
 
@@ -130,8 +131,6 @@ class Game(chessai.core.game.Game):
         if state.game_over:
             return True
 
-        state = typing.cast(chessai.puzzle.gamestate.GameState, state)
-
         return (len(self.move_lines) == 0)
 
     def _next_puzzle_moves(self) -> list[chessai.core.action.Action]:
@@ -176,7 +175,7 @@ class Game(chessai.core.game.Game):
         self.move_lines = new_move_lines
 
         # If the action matched a move line and there are no remaining move lines, the puzzle is solved.
-        if matched_move_line and len(self.move_lines) == 0:
+        if (matched_move_line and (len(self.move_lines) == 0)):
             state.puzzle_solved = True
 
         return matched_move_line

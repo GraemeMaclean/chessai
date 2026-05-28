@@ -1,12 +1,13 @@
 import typing
 
 import chessai.chess.piece
+import chessai.chess.gamestate
 import chessai.core.action
 import chessai.core.board
 import chessai.core.gamestate
 import chessai.core.types
 
-class GameState(chessai.core.gamestate.GameState):
+class GameState(chessai.chess.gamestate.GameState):
     """ A game state specific to a Puzzle game. """
 
     def __init__(self,
@@ -70,3 +71,12 @@ class GameState(chessai.core.gamestate.GameState):
         new_state._move_lines   = self._move_lines
 
         return new_state
+
+    @classmethod
+    def from_fen(cls,
+                 fen: str | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
+                 seed: int = -1,
+                 game_over: bool = False,
+                 **kwargs: typing.Any) -> 'GameState':
+        return typing.cast('GameState', super().from_fen(fen, previous_action, seed, game_over, **kwargs))
