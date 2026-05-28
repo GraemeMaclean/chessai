@@ -17,6 +17,8 @@ DEFAULT_FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 _KNOWN_LEGAL_ACTIONS: dict[str, list[chessai.core.action.Action]] = {}
 
+T = typing.TypeVar('T', bound = 'GameState')
+
 class GameState(edq.util.json.DictConverter):
     """
     The base for all game states in chessai.
@@ -120,20 +122,11 @@ class GameState(edq.util.json.DictConverter):
 
         pseudo_legal_moves = self._get_pseudo_legal_moves()
         for action in pseudo_legal_moves:
-            # Get the piece before pushing (needed for special move processing).
-            piece = self.get(action.start_coordinate)
-            if piece is None:
-                continue
-
             # Generate a successor state to test if this move is legal.
             successor: 'GameState' = self.copy()
 
             # Apply the move to the test state.
-            _, successor.en_passant_coordinate = successor._process_special_move(action, piece)
-            successor.board.push(action)
-
-            # Advance the turn for checking for check.
-            successor.turn = self.turn.opposite()
+            successor.push(action)
 
             # Check if this move leaves our king in check (making it illegal).
             if (not successor.is_check(self.turn)):
@@ -454,7 +447,6 @@ class GameState(edq.util.json.DictConverter):
 
         # Update the clocks.
         self._progress_state(action, previous_board, (reset_clock or is_capture or is_special_capture))
-        return
 
     def _progress_state(self, action: chessai.core.action.Action, board: chessai.core.board.Board, reset_clock: bool) -> None:
         """ A helper function to update the basic state of the game. """
@@ -700,12 +692,12 @@ class GameState(edq.util.json.DictConverter):
         )
 
     @classmethod
-    def from_fen(cls,
+    def from_fen(cls: type[T],
                  fen: str | None = None,
                  previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
-                 **kwargs: typing.Any) -> 'GameState':
+                 **kwargs: typing.Any) -> T:
         """ Create a gamestate from a starting FEN. """
 
         if (fen is None):
@@ -722,7 +714,7 @@ class GameState(edq.util.json.DictConverter):
         else:
             kwargs = parsed_fen.options
 
-        return cls(board                 = board,
+        return cls(board          = board,
             turn                  = parsed_fen.turn,
             castling_rights       = parsed_fen.castling_rights,
             en_passant_coordinate = parsed_fen.en_passant_coordinate,

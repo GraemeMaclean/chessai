@@ -100,6 +100,21 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
             (
+                "1rr5/p1p2Rpp/2Qpk3/4n1q1/4P3/8/PPP3PP/R6K w - - 0 1",
+                [
+                    'a2a3', 'a2a4', 'b2b3', 'b2b4', 'c2c3', 'c2c4',
+                    'g2g3', 'g2g4', 'h2h3', 'h2h4', 'a1b1', 'a1c1',
+                    'a1d1', 'a1e1', 'a1f1', 'a1g1', 'f7c7', 'f7f1',
+                    'f7f2', 'f7f3', 'f7f4', 'f7f5', 'f7f6', 'f7f8',
+                    'f7d7', 'f7e7', 'f7g7', 'h1g1', 'c6a4', 'c6a6',
+                    'c6a8', 'c6b5', 'c6b6', 'c6b7', 'c6c3', 'c6c4',
+                    'c6c5', 'c6c7', 'c6d5', 'c6d6', 'c6d7', 'c6e8',
+                    'Propose Draw', 'Forfeit',
+                ],
+                False,
+                False,
+            ),
+            (
                 'rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3',
                 ['Propose Draw', 'Forfeit'],
                 True,
@@ -151,6 +166,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 self.assertEqual(state.is_stalemate(), stalemate)
 
                 actual_actions = state.get_legal_actions()
+
                 self.assertEqual(len(actual_actions), len(expected_actions))
 
                 for expected_action in expected_actions:

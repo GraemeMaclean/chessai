@@ -3,7 +3,7 @@
     "arguments": [
         "--seed", "4",
         "--board", "tour-base",
-        "--target-square", "g7",
+        "--search-targets", "g7",
         "--max-moves", "450"
     ]
 }

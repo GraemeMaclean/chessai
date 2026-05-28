@@ -23,8 +23,8 @@ class GameState(chessai.core.gamestate.GameState):
     def is_check(self, color: chessai.core.types.Color) -> bool:
         # Find the king of the given color.
         king_coordinate: chessai.core.coordinate.Coordinate | None = None
-        for file in self.board.pieces.keys():
-            for (rank, piece) in self.board.pieces[file].items():
+        for (file, rank_dict) in self.board.pieces.items():
+            for (rank, piece) in rank_dict.items():
                 if ((piece.color == color) and (isinstance(piece, chessai.chess.piece.King))):
                     king_coordinate = chessai.core.coordinate.Coordinate(file, rank)
                     break
