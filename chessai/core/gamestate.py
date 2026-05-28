@@ -122,11 +122,21 @@ class GameState(edq.util.json.DictConverter):
 
         pseudo_legal_moves = self._get_pseudo_legal_moves()
         for action in pseudo_legal_moves:
+            # Get the piece before pushing (needed for special move processing).
+            piece = self.get(action.start_coordinate)
+            if piece is None:
+                logging.warning("Found a pseduo legal action without a piece at its start coordinate: %s", action)
+                continue
+
             # Generate a successor state to test if this move is legal.
             successor: 'GameState' = self.copy()
 
             # Apply the move to the test state.
-            successor.push(action)
+            _, successor.en_passant_coordinate = successor._process_special_move(action, piece)
+            successor.board.push(action)
+
+            # Advance the turn for checking for check.
+            successor.turn = self.turn.opposite()
 
             # Check if this move leaves our king in check (making it illegal).
             if (not successor.is_check(self.turn)):
