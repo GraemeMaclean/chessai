@@ -120,6 +120,9 @@ class GameState(edq.util.json.DictConverter):
             chessai.core.action.ForfeitAction(),
         ]
 
+        # Check if the player is currently in check, so we cannot short-circuit work in is_check().
+        started_in_check = self.is_check(self.turn)
+
         pseudo_legal_moves = self._get_pseudo_legal_moves()
         for action in pseudo_legal_moves:
             # Get the piece before pushing (needed for special move processing).
@@ -139,7 +142,7 @@ class GameState(edq.util.json.DictConverter):
             successor.turn = self.turn.opposite()
 
             # Check if this move leaves our king in check (making it illegal).
-            if (not successor.is_check(self.turn)):
+            if (not successor.is_check(self.turn, started_in_check = started_in_check)):
                 legal_actions.append(action)
 
         # Sort the legal actions for consistency.
@@ -177,7 +180,7 @@ class GameState(edq.util.json.DictConverter):
 
         return neighbors
 
-    def is_check(self, color: chessai.core.types.Color) -> bool:
+    def is_check(self, color: chessai.core.types.Color, started_in_check: bool = True) -> bool:
         """ Determines if the given color, not the state's color, is in check. """
 
         return False

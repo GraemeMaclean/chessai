@@ -20,7 +20,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         return (winners, score)
 
-    def is_check(self, color: chessai.core.types.Color) -> bool:
+    def is_check(self, color: chessai.core.types.Color, started_in_check: bool = True) -> bool:
         # Find the king of the given color.
         king_coordinate: chessai.core.coordinate.Coordinate | None = None
         for (file, rank_dict) in self.board.pieces.items():
@@ -31,6 +31,17 @@ class GameState(chessai.core.gamestate.GameState):
 
         # If there's no king, the position is invalid, which should never happen.
         if (king_coordinate is None):
+            return False
+
+        # Get the most recent action to try to avoid work when not doing a full check.
+        previous_action = self.get_previous_action()
+        if ((not started_in_check) and isinstance(previous_action, chessai.core.action.MoveAction)):
+            check_potential = self._has_check_potential(king_coordinate, previous_action)
+        else:
+            check_potential = True
+
+        # Skip checking moves that could not have opened us to check.
+        if (not check_potential):
             return False
 
         # Check if any opponent piece can attack the king's coordinate.
@@ -46,6 +57,30 @@ class GameState(chessai.core.gamestate.GameState):
             return False
         finally:
             self.turn = old_turn
+
+    def _has_check_potential(self, king_coordinate: chessai.core.coordinate.Coordinate, previous_action: chessai.core.action.MoveAction) -> bool:
+        """
+        Returns whether the player who played the most recent move could be in check.
+
+        Assumes the player was not in check before playing their most recent move.
+        """
+
+        # Check if the king just moved, which means it could have moved into check.
+        if (previous_action.end_coordinate == king_coordinate):
+            return True
+
+        # Check if a piece moved on the king's file, rank, or diagonal.
+        # This move would allow for discovery checks.
+        if ((previous_action.start_coordinate.file == king_coordinate.file) or (previous_action.start_coordinate.rank == king_coordinate.rank)):
+            # A piece moved on the king's rank or file, so the king could be under attack from a rook or queen.
+            return True
+
+        # Check the diagonal.
+        file_delta = abs(king_coordinate.file - previous_action.start_coordinate.file)
+        rank_delta = abs(king_coordinate.rank - previous_action.start_coordinate.rank)
+
+        # If a piece moved away from the king's diagonal, the king could be under attack from a bishop or queen.
+        return file_delta == rank_delta
 
     def _should_reset_halfmove_clock(self, action: chessai.core.action.Action, piece: chessai.core.piece.Piece) -> bool:
         return (isinstance(piece, chessai.chess.piece.Pawn))
