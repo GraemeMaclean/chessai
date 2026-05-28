@@ -76,6 +76,7 @@ class Game(chessai.chess.game.Game):
             fen: str | None = None) -> chessai.core.gamestate.GameState:
         return chessai.puzzle.gamestate.GameState.from_fen(fen = fen)
 
+    # TODO: Maybe think of removing the duplicate logic and only keeping the special portion in self._call_state_process_turn_full()
     def process_turn(self,
             state: chessai.core.gamestate.GameState,
             action_record: chessai.core.agentaction.AgentActionRecord,

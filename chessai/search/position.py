@@ -105,15 +105,13 @@ class PositionSearchProblem(chessai.core.search.SearchProblem[PositionSearchNode
     def get_successor_nodes(self, node: PositionSearchNode) -> list[chessai.core.search.SuccessorInfo]:
         successors = []
 
-        previous_board = node.state.board.copy()
-
         # Check all the neighbors.
         for (action, position) in node.state.get_neighbors(node.position):
             next_state = node.state.copy()
             next_state.push(action)
 
             # Push a null move for black.
-            next_state._progress_state(chessai.core.action.NoneAction(), previous_board.copy(), False)
+            next_state._progress_state(chessai.core.action.NoneAction(), False)
 
             next_node = PositionSearchNode(position, next_state)
             cost = self._cost_function(next_node)

@@ -157,12 +157,18 @@ class GameState(chessai.core.gamestate.GameState):
 
         return False, None
 
+    # TODO: May want to leave this code for students only and not in the main game loop.
+    # Maybe greatly simplify the code, can have the students write a short-circuiting logic to prune bad search states.
     def is_insufficient_material(self) -> bool:
         # Meta actions cannot cause a game to become in an insufficient material state.
         if (not isinstance(self.get_previous_action(), chessai.core.action.MoveAction)):
             return False
 
-        return all(self._is_insufficient_material(color) for color in chessai.core.types.Color)
+        for color in chessai.core.types.Color:
+            if (not self._is_insufficient_material(color)):
+                return False
+
+        return True
 
     def _is_insufficient_material(self, color: chessai.core.types.Color) -> bool:
         """
@@ -176,55 +182,62 @@ class GameState(chessai.core.gamestate.GameState):
 
         own_pieces = {}
         opponent_pieces = {}
-        for (coordinate, piece) in self.board.get_coordinate_map().items():
-            if (piece.color == color):
-                own_pieces[coordinate] = piece
-            else:
-                opponent_pieces[coordinate] = piece
 
-        # Pawns, rooks, or queens are always sufficient material.
-        for piece in own_pieces.values():
-            if (isinstance(piece, (chessai.chess.piece.Pawn, chessai.chess.piece.Rook, chessai.chess.piece.Queen))):
-                return False
+        own_knights = False
+        own_bishops: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = {}
+
+        for (file, rank_dict) in self.board.pieces.items():
+            for (rank, piece) in rank_dict.items():
+                coordinate = chessai.core.coordinate.Coordinate(file, rank)
+
+                if (piece.color == color):
+                    own_pieces[coordinate] = piece
+
+                    # Pawns, rooks, or queens are always sufficient material.
+                    if (isinstance(piece, (chessai.chess.piece.Pawn, chessai.chess.piece.Rook, chessai.chess.piece.Queen))):
+                        return False
+
+                    if (isinstance(piece, chessai.chess.piece.Knight)):
+                        own_knights = True
+                    elif (isinstance(piece, chessai.chess.piece.Bishop)):
+                        own_bishops[coordinate] = piece
+                else:
+                    opponent_pieces[coordinate] = piece
 
         # Knights are only insufficient material if:
         # (1) We do not have any other pieces, including more than one knight.
         # (2) The opponent does not have pawns, knights, bishops or rooks.
         #     These would allow selfmate.
-        own_knights = [piece for piece in own_pieces.values() if isinstance(piece, chessai.chess.piece.Knight)]
         if (own_knights):
-            has_multiple_own_pieces = False
+            # Sufficient material via case 1.
             if (len(own_pieces) > 2):
-                has_multiple_own_pieces = True
+                return False
 
-            opponent_has_mating_material = False
             for piece in opponent_pieces.values():
                 if isinstance(piece, (chessai.chess.piece.Knight, chessai.chess.piece.Bishop, chessai.chess.piece.Rook, chessai.chess.piece.Pawn)):
-                    opponent_has_mating_material = True
-                    break
+                    # Sufficient material via case 2.
+                    return False
 
-            return ((not has_multiple_own_pieces) and (not opponent_has_mating_material))
+            return True
 
         # Bishops are only insufficient material if:
         # (1) We do not have any other pieces, including bishops of the opposite color.
         # (2) The opponent does not have bishops of the opposite color, pawns or knights.
         #     These would allow selfmate.
-        own_bishops = [(coordinate, piece) for (coordinate, piece) in own_pieces.items() if isinstance(piece, chessai.chess.piece.Bishop)]
-        if (own_bishops):
+        if (len(own_bishops) > 0):
             square_parities = set()
-            for (coordinate, _) in own_bishops:
+            for (coordinate, _) in own_bishops.items():
                 square_parity = (coordinate.file + coordinate.rank) % 2
                 square_parities.add(square_parity)
 
-            same_color = False
-            if (len(square_parities) == 1):
-                same_color = True
+            # Sufficient material via case 1.
+            if (len(square_parities) > 1):
+                return False
 
-            opponent_has_mating_material = False
             for piece in opponent_pieces.values():
+                # Sufficient material via case 2 (using pawns or knights).
                 if (isinstance(piece, (chessai.chess.piece.Pawn, chessai.chess.piece.Knight))):
-                    opponent_has_mating_material = True
-                    break
+                    return False
 
             opponent_bishop_parities = set()
             for (coordinate, piece) in opponent_pieces.items():
@@ -234,7 +247,8 @@ class GameState(chessai.core.gamestate.GameState):
 
             opponent_has_opposite_bishops = bool(opponent_bishop_parities - square_parities)
 
-            return (same_color and (not opponent_has_mating_material) and (not opponent_has_opposite_bishops))
+            # Determine sufficient material via case 2 when the opponent has bishops of the opposite color.
+            return (not opponent_has_opposite_bishops)
 
         # King alone.
         return True
@@ -523,7 +537,7 @@ class GameState(chessai.core.gamestate.GameState):
         return chessai.core.coordinate.Coordinate(action.start_coordinate.file, passed_rank)
 
     def copy(self) -> 'GameState':
-        new_state = GameState(board           = self.board,
+        new_state = GameState(board           = self.board.copy(),
                               turn            = self.turn,
                               castling_rights = self.castling_rights,
                               en_passant_coordinate = self.en_passant_coordinate,
@@ -532,8 +546,6 @@ class GameState(chessai.core.gamestate.GameState):
                               previous_action = self.previous_action,
                               seed            = self.seed,
                               game_over       = self.game_over)
-
-        new_state.board = self.board.copy()
 
         return new_state
 

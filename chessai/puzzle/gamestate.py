@@ -7,6 +7,8 @@ import chessai.core.board
 import chessai.core.gamestate
 import chessai.core.types
 
+# TODO: Try to get rid of the constructor and copy method.
+# We can see if we can get rid of the entire class and track puzzle solved in the game.
 class GameState(chessai.chess.gamestate.GameState):
     """ A game state specific to a Puzzle game. """
 
@@ -57,7 +59,7 @@ class GameState(chessai.chess.gamestate.GameState):
         return ([self.dummy_player], 0.0)
 
     def copy(self) -> 'GameState':
-        new_state = GameState(board           = self.board,
+        new_state = GameState(board           = self.board.copy(),
                               turn            = self.turn,
                               castling_rights = self.castling_rights,
                               en_passant_coordinate = self.en_passant_coordinate,
@@ -69,6 +71,5 @@ class GameState(chessai.chess.gamestate.GameState):
                               puzzle_solved   = self.puzzle_solved)
 
         new_state._move_lines = self._move_lines
-        new_state.board       = self.board.copy()
 
         return new_state

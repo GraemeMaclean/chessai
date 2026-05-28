@@ -425,21 +425,19 @@ class GameState(edq.util.json.DictConverter):
     def push(self, action: chessai.core.action.Action) -> None:
         """ Apply action to the game state and update all metadata. """
 
-        previous_board = self.board.copy()
-
         # If the agent forfeits the game or accepts a draw, end the game.
         if (isinstance(action, (chessai.core.action.ForfeitAction, chessai.core.action.AcceptDrawAction))):
-            self._progress_state(action, previous_board, False)
+            self._progress_state(action, False)
             self.game_over = True
             return
 
         # If the agent proposes a draw offer or rejects a draw offer, progress the state to the opponent.
         if (isinstance(action, (chessai.core.action.ProposeDrawAction, chessai.core.action.RejectDrawAction))):
-            self._progress_state(action, previous_board, False)
+            self._progress_state(action, False)
             return
 
         if (not isinstance(action, chessai.core.action.MoveAction)):
-            self._progress_state(action, previous_board, False)
+            self._progress_state(action, False)
             return
 
         piece = self.get(action.start_coordinate)
@@ -456,9 +454,9 @@ class GameState(edq.util.json.DictConverter):
         reset_clock = self._should_reset_halfmove_clock(action, piece)
 
         # Update the clocks.
-        self._progress_state(action, previous_board, (reset_clock or is_capture or is_special_capture))
+        self._progress_state(action, (reset_clock or is_capture or is_special_capture))
 
-    def _progress_state(self, action: chessai.core.action.Action, board: chessai.core.board.Board, reset_clock: bool) -> None:
+    def _progress_state(self, action: chessai.core.action.Action, reset_clock: bool) -> None:
         """ A helper function to update the basic state of the game. """
 
         if (reset_clock):
@@ -555,7 +553,7 @@ class GameState(edq.util.json.DictConverter):
         Child classes are responsible for making any deep copies they need to.
         """
 
-        new_state = GameState(board           = self.board,
+        new_state = GameState(board           = self.board.copy(),
                               turn            = self.turn,
                               castling_rights = self.castling_rights,
                               en_passant_coordinate = self.en_passant_coordinate,
@@ -564,8 +562,6 @@ class GameState(edq.util.json.DictConverter):
                               previous_action = self.previous_action,
                               seed            = self.seed,
                               game_over       = self.game_over)
-
-        new_state.board = self.board.copy()
 
         return new_state
 

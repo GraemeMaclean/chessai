@@ -101,11 +101,9 @@ class GameState(chessai.core.gamestate.GameState):
         To get a copy of a potential successor state, use generate_successor().
         """
 
-        previous_board = self.board.copy()
-
         # Simply progress the turn with the null action.
         if (self.turn == chessai.core.types.Color.BLACK):
-            self._progress_state(action, previous_board, False)
+            self._progress_state(action, False)
             return
 
         self.push(action)
