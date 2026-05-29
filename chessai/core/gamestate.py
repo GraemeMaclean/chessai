@@ -512,16 +512,13 @@ class GameState(edq.util.json.DictConverter):
 
                         occupant = self.board.get(current_file, current_rank)
 
-                        is_occupied = False
-                        is_enemy = False
-                        if (occupant is not None):
-                            is_occupied = True
+                        is_occupied = occupant is not None
+                        is_enemy    = (occupant is not None) and (occupant.color != piece.color)
+                        is_ally     = (occupant is not None) and (occupant.color == piece.color)
 
-                            # No movement type can move on top of an ally.
-                            if (occupant.color == piece.color):
-                                break
-
-                            is_enemy = True
+                        # No movement type can move on top of an ally.
+                        if (is_ally):
+                            break
 
                         # Push movement types cannot capture.
                         if ((movement_vector.kind == chessai.core.piece.MoveKind.PUSH) and is_occupied):
@@ -724,9 +721,9 @@ class GameState(edq.util.json.DictConverter):
                                          num_ranks = parsed_fen.num_ranks)
 
         if (kwargs is not None):
-            kwargs.update(parsed_fen.options)
+            parsed_fen.options.update(kwargs)
         else:
-            kwargs = parsed_fen.options
+            parsed_fen.options = kwargs
 
         return cls(board          = board,
             turn                  = parsed_fen.turn,
@@ -737,7 +734,7 @@ class GameState(edq.util.json.DictConverter):
             previous_action       = previous_action,
             seed                  = seed,
             game_over             = game_over,
-            **kwargs,
+            **parsed_fen.options,
         )
 
 @typing.runtime_checkable

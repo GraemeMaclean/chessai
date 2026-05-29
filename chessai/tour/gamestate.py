@@ -129,13 +129,13 @@ class GameState(chessai.core.gamestate.GameState):
             self.score += CRASH_POINTS
 
     def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
-        search_targets = self.search_targets
-
         # The agent wins if they reach all of the search targets.
-        if (len(search_targets) == 0):
+        if (len(self.search_targets) == 0):
             self.score += BOARD_CLEAR_POINTS
 
             return ([chessai.core.types.Color.WHITE], self.score)
+
+        self.score += LOSE_POINTS
 
         return ([chessai.core.types.Color.BLACK], self.score)
 

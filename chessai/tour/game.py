@@ -36,24 +36,22 @@ class Game(chessai.core.game.Game):
         """ The search targets of this game. """
 
     def process_args(self, args: argparse.Namespace) -> None:
-        # TEST
-        print(args.search_targets)
         if (args.search_targets is not None):
             search_targets = {
                 chessai.core.coordinate.COORDINATES_KEY: args.search_targets
             }
 
             self.search_targets = chessai.core.coordinate.coordinates_from_dict(search_targets)
-            print(self.search_targets)
 
     def get_initial_state(self,
             rng: random.Random,
             fen: str | None = None) -> chessai.core.gamestate.GameState:
-        # Let the gamestate parse the FEN so we can look for search targets from a file.
-        initial_state = chessai.tour.gamestate.GameState.from_fen(fen = fen, search_targets = self.search_targets)
-
         if (len(self.search_targets) == 0):
+            # Let the gamestate parse the FEN so we can look for search targets from a file.
+            initial_state = chessai.tour.gamestate.GameState.from_fen(fen = fen)
             self.search_targets = initial_state.search_targets # pylint: disable=no-member
+        else:
+            initial_state = chessai.tour.gamestate.GameState.from_fen(fen = fen, search_targets = self.search_targets)
 
         return initial_state
 

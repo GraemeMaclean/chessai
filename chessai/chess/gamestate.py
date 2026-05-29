@@ -137,16 +137,13 @@ class GameState(chessai.core.gamestate.GameState):
 
                         occupant = self.board.get(current_file, current_rank)
 
-                        is_occupied = False
-                        is_enemy = False
-                        if (occupant is not None):
-                            is_occupied = True
+                        is_occupied = occupant is not None
+                        is_enemy    = (occupant is not None) and (occupant.color != piece.color)
+                        is_ally     = (occupant is not None) and (occupant.color == piece.color)
 
-                            # No movement type can move on top of an ally.
-                            if (occupant.color == piece.color):
-                                break
-
-                            is_enemy = True
+                        # No movement type can move on top of an ally.
+                        if (is_ally):
+                            break
 
                         # Push movement types cannot capture.
                         if ((movement_vector.kind == chessai.core.piece.MoveKind.PUSH) and is_occupied):
