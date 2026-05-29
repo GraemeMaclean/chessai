@@ -35,6 +35,7 @@ class GameState(chessai.core.gamestate.GameState):
 
         # Get the most recent action to try to avoid work when not doing a full check.
         previous_action = self.get_previous_action()
+
         if ((not started_in_check) and isinstance(previous_action, chessai.core.action.MoveAction)):
             check_potential = self._has_check_potential(king_coordinate, previous_action)
         else:

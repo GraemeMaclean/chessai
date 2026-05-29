@@ -268,7 +268,7 @@ class GameStateTest(edq.testing.unittest.BaseTest):
                 False,
             ),
 
-            # action into stalemate
+            # Action into stalemate
             (
                 '8/p6k/P7/1P6/3B4/5R2/3B2PP/6K1 w - - 0 1',
                 chessai.core.action.from_uci('f3g3'),

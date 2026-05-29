@@ -141,6 +141,9 @@ class GameState(edq.util.json.DictConverter):
             # Advance the turn for checking for check.
             successor.turn = self.turn.opposite()
 
+            # Record the action to be able to short-circuit if it is in check.
+            successor.previous_action = action
+
             # Check if this move leaves our king in check (making it illegal).
             if (not successor.is_check(self.turn, started_in_check = started_in_check)):
                 legal_actions.append(action)
