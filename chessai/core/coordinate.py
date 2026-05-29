@@ -5,7 +5,7 @@ COORDINATES_KEY: str = 'coordinates'
 
 COORDINATE_PATTERN: re.Pattern = re.compile(r'([a-z]+)(\d+)')
 
-class Coordinate(typing.NamedTuple):
+class Coordinate:
     """
     An immutable chess coordinate on a board.
 
@@ -13,11 +13,35 @@ class Coordinate(typing.NamedTuple):
     Rank increases bottom-to-top (1=0, 8=7).
     """
 
-    file: int
-    """ The file of the coordinate. """
+    __slots__ = ('file', 'rank')
 
-    rank: int
-    """ The rank of the coordinate. """
+    def __init__(self, file: int, rank: int) -> None:
+        self.file: int = file
+        """ The file of the coordinate. """
+
+        self.rank: int = rank
+        """ The rank of the coordinate. """
+
+    def __eq__(self, other: object) -> bool:
+        if (not isinstance(other, Coordinate)):
+            return False
+
+        return (self.file == other.file) and (self.rank == other.rank)
+
+    def __lt__(self, other: object) -> bool:
+        if (not isinstance(other, Coordinate)):
+            return False
+
+        if (self.file < other.file):
+            return True
+
+        if (self.file == other.file):
+            return self.rank < other.rank
+
+        return False
+
+    def __hash__(self) -> int:
+        return hash((self.file, self.rank))
 
     @classmethod
     def from_uci(cls, uci: str) -> 'Coordinate':
