@@ -36,12 +36,15 @@ class Game(chessai.core.game.Game):
         """ The search targets of this game. """
 
     def process_args(self, args: argparse.Namespace) -> None:
+        # TEST
+        print(args.search_targets)
         if (args.search_targets is not None):
             search_targets = {
                 chessai.core.coordinate.COORDINATES_KEY: args.search_targets
             }
 
             self.search_targets = chessai.core.coordinate.coordinates_from_dict(search_targets)
+            print(self.search_targets)
 
     def get_initial_state(self,
             rng: random.Random,

@@ -137,13 +137,16 @@ class GameState(chessai.core.gamestate.GameState):
 
                         occupant = self.board.get(current_file, current_rank)
 
-                        is_occupied = (occupant is not None)
-                        is_enemy    = (occupant is not None) and (occupant.color != piece.color)
-                        is_ally     = (occupant is not None) and (occupant.color == piece.color)
+                        is_occupied = False
+                        is_enemy = False
+                        if (occupant is not None):
+                            is_occupied = True
 
-                        # No movement type can move on top of an ally.
-                        if (is_ally):
-                            break
+                            # No movement type can move on top of an ally.
+                            if (occupant.color == piece.color):
+                                break
+
+                            is_enemy = True
 
                         # Push movement types cannot capture.
                         if ((movement_vector.kind == chessai.core.piece.MoveKind.PUSH) and is_occupied):
@@ -193,8 +196,6 @@ class GameState(chessai.core.gamestate.GameState):
 
         return False, None
 
-    # TODO: May want to leave this code for students only and not in the main game loop.
-    # Maybe greatly simplify the code, can have the students write a short-circuiting logic to prune bad search states.
     def is_insufficient_material(self) -> bool:
         # Meta actions cannot cause a game to become in an insufficient material state.
         if (not isinstance(self.get_previous_action(), chessai.core.action.MoveAction)):

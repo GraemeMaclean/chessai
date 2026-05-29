@@ -117,7 +117,6 @@ class GameState(chessai.core.gamestate.GameState):
 
         # The agent always loses a point each turn.
         self.score -= TIME_PENALTY
-        return
 
     def process_agent_timeout(self, player: chessai.core.types.Color) -> None:
         # Treat timeouts like crashes.
@@ -134,7 +133,6 @@ class GameState(chessai.core.gamestate.GameState):
 
         # The agent wins if they reach all of the search targets.
         if (len(search_targets) == 0):
-
             self.score += BOARD_CLEAR_POINTS
 
             return ([chessai.core.types.Color.WHITE], self.score)
@@ -142,7 +140,7 @@ class GameState(chessai.core.gamestate.GameState):
         return ([chessai.core.types.Color.BLACK], self.score)
 
     def copy(self) -> 'GameState':
-        new_state = GameState(board           = self.board,
+        new_state = GameState(board           = self.board.copy(),
                               turn            = self.turn,
                               castling_rights = self.castling_rights,
                               en_passant_coordinate = self.en_passant_coordinate,
@@ -155,6 +153,5 @@ class GameState(chessai.core.gamestate.GameState):
                               _validate_search_targets = False)
 
         new_state.score = self.score
-        new_state.board = self.board.copy()
 
         return new_state
