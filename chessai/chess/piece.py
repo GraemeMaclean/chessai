@@ -11,7 +11,7 @@ UNICODE_PIECE_SYMBOLS: dict[str, str] = {
     "p": "♙", "P": "♟",
 }
 
-class King(chessai.core.piece.Piece):
+class King(chessai.core.piece.Piece, symbols = ('K', 'k')):
     """ The King in chess. """
 
     _move_vectors: list[chessai.core.piece.MoveVector] = [
@@ -37,7 +37,7 @@ class King(chessai.core.piece.Piece):
     def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return self._move_vectors
 
-class Queen(chessai.core.piece.Piece):
+class Queen(chessai.core.piece.Piece, symbols = ('Q', 'q')):
     """ The Queen in chess. """
 
     _move_vectors: list[chessai.core.piece.MoveVector] = [
@@ -63,7 +63,7 @@ class Queen(chessai.core.piece.Piece):
     def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return self._move_vectors
 
-class Rook(chessai.core.piece.Piece):
+class Rook(chessai.core.piece.Piece, symbols = ('R', 'r')):
     """ The Rook in chess. """
 
     _move_vectors: list[chessai.core.piece.MoveVector] = [
@@ -85,7 +85,7 @@ class Rook(chessai.core.piece.Piece):
     def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return self._move_vectors
 
-class Bishop(chessai.core.piece.Piece):
+class Bishop(chessai.core.piece.Piece, symbols = ('B', 'b')):
     """ The Bishop in chess. """
 
     _move_vectors: list[chessai.core.piece.MoveVector] = [
@@ -107,7 +107,7 @@ class Bishop(chessai.core.piece.Piece):
     def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return self._move_vectors
 
-class Knight(chessai.core.piece.Piece):
+class Knight(chessai.core.piece.Piece, symbols = ('N', 'n')):
     """ The Knight in chess. """
 
     _move_vectors: list[chessai.core.piece.MoveVector] = [
@@ -133,7 +133,7 @@ class Knight(chessai.core.piece.Piece):
     def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return self._move_vectors
 
-class Pawn(chessai.core.piece.Piece):
+class Pawn(chessai.core.piece.Piece, symbols = ('P', 'p')):
     """ The Pawn in chess. """
 
     _move_vectors: dict[chessai.core.types.Color, list[chessai.core.piece.MoveVector]] = {
@@ -160,21 +160,3 @@ class Pawn(chessai.core.piece.Piece):
 
     def move_vectors(self) -> list[chessai.core.piece.MoveVector]:
         return self._move_vectors[self.color]
-
-# Register pieces whenever imported.
-def _register_pieces() -> None:
-    """Register all chess piece types with the core registry."""
-    chessai.core.piece.register_piece('K', King)
-    chessai.core.piece.register_piece('k', King)
-    chessai.core.piece.register_piece('Q', Queen)
-    chessai.core.piece.register_piece('q', Queen)
-    chessai.core.piece.register_piece('R', Rook)
-    chessai.core.piece.register_piece('r', Rook)
-    chessai.core.piece.register_piece('B', Bishop)
-    chessai.core.piece.register_piece('b', Bishop)
-    chessai.core.piece.register_piece('N', Knight)
-    chessai.core.piece.register_piece('n', Knight)
-    chessai.core.piece.register_piece('P', Pawn)
-    chessai.core.piece.register_piece('p', Pawn)
-
-_register_pieces()

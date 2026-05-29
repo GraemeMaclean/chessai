@@ -43,6 +43,13 @@ class MoveVector:
 class Piece(edq.util.json.DictConverter):
     """ A piece with a team color and movement rules. """
 
+    def __init_subclass__(cls, symbols: tuple[str, ...] = (), **kwargs):
+        """ Register piece subclasses so core functions can find them. """
+
+        super().__init_subclass__(**kwargs)
+        for symbol in symbols:
+            register_piece(symbol, cls)
+
     def __init__(self,
              color: chessai.core.types.Color) -> None:
         self.color: chessai.core.types.Color = color
