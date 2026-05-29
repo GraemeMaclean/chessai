@@ -80,12 +80,12 @@ Note that puzzles do not have to end in a mate, they will end once the agent fin
 A great place to find puzzles is through [Lichess' Puzzles](https://lichess.org/training/themes),
 which are sorted by theme.
 You can also download a large number of puzzles from [Lichess' download link](https://database.lichess.org/#puzzles).
-`
+
 Using the large .csv file from the lichess database, use the following command with the path to the .csv file:
 For a complete list of valid puzzle themes, refer to the official Lichess source configuration in the
 [Lila](https://github.com/lichess-org/lila/blob/master/modules/puzzle/src/main/PuzzleTheme.scala).
 ```sh
-python3 -m scripts.filter_puzzles --input <file path to .csv> --output <file path> --theme <theme name> --count <desired number>
+python3 -m scripts.filter_puzzles <file path to .csv> --output <file path> --theme <theme name> --count <desired number>
 ```
 
 #### Creating a Custom Puzzle
@@ -109,10 +109,8 @@ python3 -m chessai.puzzle --board <puzzle FEN> --move-lines <possible solution m
 A great baseline way to test your agent is to have it try to solve chess puzzles.
 Each puzzle tries to teach a specific skill that your agent should be able to solve.
 
-To test your agent against a set of puzzles, run the following command with a path to your puzzle directory and the name of the agent you want to evaluate:
-```sh
-python3 -m scripts.run_agent --folder <file path> --agent <agent name or module>
-```
+To test your agent against many puzzles, run the following script:
+TODO: Add puzzle documentation and explain how to have an agent play a suite of puzzles.
 
 ### Choosing an Agent
 
