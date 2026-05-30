@@ -63,10 +63,12 @@ def generate_puzzle_files(
 
                 count += 1
 
-        if (limit is not None and not limit_reached):
-            print(f"Ran out of puzzles, only found {count} puzzles out of the requested {limit} for theme '{target_theme}'")
-        else:
-            print(f"Successfully generated {count} puzzles for theme '{target_theme}'.")
+    if (limit_reached):
+        print(f"Reached requested limit of {limit} puzzles for theme '{target_theme}'. Stopping search.")
+    elif (limit is not None):
+        print(f"Ran out of puzzles, only found {count} puzzles out of the requested {limit} for theme '{target_theme}'.")
+    else:
+        print(f"Successfully processed entire file. Generated {count} total puzzles for theme '{target_theme}'.")
 
 def main(args) -> int:
     """ Handles command line argument parsing and script execution. """
