@@ -14,8 +14,8 @@ import edq.util.dirent
 import edq.util.json
 
 DEFAULT_COUNT: typing.Optional[int] = None
-DEFAULT_THEME: str = 'mateIn1'
 DEFAULT_OUTPUT_DIR: str = os.path.join('chessai', 'resources', 'puzzles')
+DEFAULT_THEME: str = 'mateIn1'
 
 def generate_puzzle_files(
         input_csv: str,
@@ -41,11 +41,11 @@ def generate_puzzle_files(
             themes = str(row.get('Themes', '')).split()
 
             if (target_theme in themes):
-                puzzle_id = str(row.get('PuzzleId', ''))
-                fen = str(row.get('FEN', ''))
-                raw_moves = str(row.get('Moves', ''))
+                puzzle_id = str(row.get('PuzzleId', None))
+                fen = str(row.get('FEN', None))
+                raw_moves = str(row.get('Moves', None))
 
-                if (not puzzle_id or not fen):
+                if (puzzle_id is None or fen is None or raw_moves is None):
                     continue
 
                 moves_list: typing.List[str] = raw_moves.split()
