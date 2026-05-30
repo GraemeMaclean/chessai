@@ -57,8 +57,8 @@ def generate_puzzle_files(
 
                 puzzle_path = os.path.join(output_folder, f"{puzzle_id}.puzzle")
 
-                with open(puzzle_path, 'w', encoding='utf-8') as out_file:
-                    edq.util.json.dump(puzzle_data, out_file, indent=4)
+                with open(puzzle_path, 'w', encoding = 'utf-8') as out_file:
+                    edq.util.json.dump(puzzle_data, out_file, indent = 4)
                     out_file.write(f"\n---\n{fen}")
 
                 count += 1
