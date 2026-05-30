@@ -80,12 +80,16 @@ Note that puzzles do not have to end in a mate, they will end once the agent fin
 A great place to find puzzles is through [Lichess' Puzzles](https://lichess.org/training/themes),
 which are sorted by theme.
 You can also download a large number of puzzles from [Lichess' download link](https://database.lichess.org/#puzzles).
+For a complete list of valid puzzle themes,
+see the [PuzzleTheme.scala](https://github.com/lichess-org/lila/blob/master/modules/puzzle/src/main/PuzzleTheme.scala) file in the official Lila repository.
 
-Using the large .csv file from the lichess database, use the following command with the path to the .csv file:
-For a complete list of valid puzzle themes, refer to the official Lichess source configuration in the
-[Lila](https://github.com/lichess-org/lila/blob/master/modules/puzzle/src/main/PuzzleTheme.scala).
+Using a .csv file from the lichess database, use the following command with the path to the .csv file:
 ```sh
-python3 -m scripts.filter_puzzles <file path to .csv> --output <file path> --theme <theme name> --count <desired number>
+# Make the script executable.
+chmod +x scripts/filter_puzzles.py
+
+# Run the script.
+./scripts/filter_puzzles.py <INPUT_CSV> --output <OUTPUT_DIR> --theme <THEME>
 ```
 
 #### Creating a Custom Puzzle

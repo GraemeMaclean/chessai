@@ -1,33 +1,40 @@
+#!/usr/bin/env python3
 """
-A script to extract a specific number of puzzles of a certain theme from the 
-Lichess database. Outputs individual .board files for each match.
+A script to extract a specific number of puzzles of a certain theme from the Lichess database. 
+Outputs individual .board files for each match.
 """
 
 import argparse
 import csv
-import json
 import os
+import sys
 import typing
 
 import edq.util.dirent
+import edq.util.json
+
+DEFAULT_COUNT: typing.Optional[int] = None
+DEFAULT_THEME: str = 'mateIn1'
+DEFAULT_OUTPUT_DIR: str = os.path.join('chessai', 'resources', 'puzzles')
 
 def generate_puzzle_files(
         input_csv: str,
-        output_folder: str,
-        target_theme: str,
-        limit: int
+        output_folder: str = DEFAULT_OUTPUT_DIR,
+        target_theme: str = DEFAULT_THEME,
+        limit: typing.Optional[int] = DEFAULT_COUNT
         ) -> None:
     """ Filters Lichess CSV for a specific theme and outputs a set number of files. """
 
     edq.util.dirent.mkdir(output_folder)
 
     count = 0
-
-    with open(input_csv, mode='r', encoding='utf-8') as csv_file:
+    limit_reached = False
+    with open(input_csv, mode = 'r', encoding = 'utf-8') as csv_file:
         reader = csv.DictReader(csv_file)
 
         for row in reader:
-            if (count >= limit):
+            if (limit is not None and count >= limit):
+                limit_reached = True
                 break
 
             # Lichess themes are space-separated in the 'Themes' column.
@@ -45,22 +52,30 @@ def generate_puzzle_files(
 
                 puzzle_data = {
                     "class": "chessai.puzzle.board.Board",
-                    "move_lines": json.dumps([moves_list])
+                    "move_lines": edq.util.json.dumps([moves_list])
                 }
 
                 puzzle_path = os.path.join(output_folder, f"{puzzle_id}.puzzle")
 
                 with open(puzzle_path, 'w', encoding='utf-8') as out_file:
-                    json.dump(puzzle_data, out_file, indent=4)
+                    edq.util.json.dump(puzzle_data, out_file, indent=4)
                     out_file.write(f"\n---\n{fen}")
 
                 count += 1
 
-        print(f"Successfully generated {count} puzzles for theme '{target_theme}'.")
+        if (limit is not None and not limit_reached):
+            print(f"Ran out of puzzles, only found {count} puzzles out of the requested {limit} for theme '{target_theme}'")
+        else:
+            print(f"Successfully generated {count} puzzles for theme '{target_theme}'.")
 
-def main() -> None:
+def main(args) -> int:
     """ Handles command line argument parsing and script execution. """
 
+    generate_puzzle_files(args.input, args.output, args.theme, args.count)
+
+    return 0
+
+def _load_args():
     parser = argparse.ArgumentParser(
             description = 'Extract specific themes from Lichess puzzle CSV.')
 
@@ -68,20 +83,19 @@ def main() -> None:
             help = 'Path to the Lichess CSV file.')
 
     parser.add_argument('--output', dest = 'output',
-            action = 'store', type = str, default = 'chessai/resources/puzzles',
+            action = 'store', type = str, default = DEFAULT_OUTPUT_DIR,
             help = 'Directory to save .board files (default: %(default)s).')
 
     parser.add_argument('--theme', dest = 'theme',
-            action = 'store', type = str, default = 'mateIn1',
-            help = "Puzzle theme to filter by (e.g. 'mateIn1') (default: %(default)s).")
+            action = 'store', type = str, default = DEFAULT_THEME,
+            help = "Puzzle theme to filter by (default: %(default)s)," \
+            "refer to https://github.com/lichess-org/lila/blob/master/modules/puzzle/src/main/PuzzleTheme.scala for puzzle themes.")
 
-    parser.add_argument('--count', dest = 'count',
-            action = 'store', type = int, default = 10,
-            help = 'Number of puzzles to extract (default: %(default)s).')
+    parser.add_argument('--limit', dest = 'count',
+            action = 'store', type = int, default = DEFAULT_COUNT,
+            help = 'Limit the number of puzzles to extract (default: %(default)s).')
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    generate_puzzle_files(args.input, args.output, args.theme, args.count)
-
-if __name__ == "__main__":
-    main()
+if (__name__ == "__main__"):
+    sys.exit(main(_load_args()))
