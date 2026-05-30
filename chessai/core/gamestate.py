@@ -722,8 +722,6 @@ class GameState(edq.util.json.DictConverter):
 
         if (kwargs is not None):
             parsed_fen.options.update(kwargs)
-        else:
-            parsed_fen.options = kwargs
 
         return cls(board          = board,
             turn                  = parsed_fen.turn,

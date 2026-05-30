@@ -22,14 +22,10 @@ class GameState(chessai.core.gamestate.GameState):
 
     def is_check(self, color: chessai.core.types.Color, started_in_check: bool = True) -> bool:
         # Find the king of the given color.
-        king_coordinate: chessai.core.coordinate.Coordinate | None = None
-        for (file, rank_dict) in self.board.pieces.items():
-            for (rank, piece) in rank_dict.items():
-                if ((piece.color == color) and (isinstance(piece, chessai.chess.piece.King))):
-                    king_coordinate = chessai.core.coordinate.Coordinate(file, rank)
-                    break
+        king_coordinate = self.get_king_coordinate(color)
 
-        # If there's no king, the position is invalid, which should never happen.
+        # If there is no King, they cannot be in check.
+        # This should never happen in standard chess games with valid positions.
         if (king_coordinate is None):
             return False
 
@@ -58,6 +54,17 @@ class GameState(chessai.core.gamestate.GameState):
             return False
         finally:
             self.turn = old_turn
+
+    def get_king_coordinate(self, color: chessai.core.types.Color) -> chessai.core.coordinate.Coordinate | None:
+        """ Get the coordinate of the king for the given color. """
+
+        for (file, rank_dict) in self.board.pieces.items():
+            for (rank, piece) in rank_dict.items():
+                if ((piece.color == color) and (isinstance(piece, chessai.chess.piece.King))):
+                    return chessai.core.coordinate.Coordinate(file, rank)
+
+        # If there's no king, the position is invalid, which should never happen.
+        return None
 
     def _has_check_potential(self, king_coordinate: chessai.core.coordinate.Coordinate, previous_action: chessai.core.action.MoveAction) -> bool:
         """
@@ -346,32 +353,23 @@ class GameState(chessai.core.gamestate.GameState):
             return []
 
         # Find the king.
-        king_coord: chessai.core.coordinate.Coordinate | None = None
-        for file in self.board.pieces.keys():
-            for (rank, piece) in self.board.pieces[file].items():
-                if (not isinstance(piece, chessai.chess.piece.King)):
-                    continue
+        king_coordinate = self.get_king_coordinate(self.turn)
 
-                if (piece.color != self.turn):
-                    continue
-
-                king_coord = chessai.core.coordinate.Coordinate(file, rank)
-                break
-
-        if ((king_coord is None) or (king_coord.rank != back_rank)):
+        # The king must be on the back rank to castle.
+        if ((king_coordinate is None) or (king_coordinate.rank != back_rank)):
             return []
 
         actions: list[chessai.core.action.MoveAction] = []
 
         # Add Kingside castling.
         if (kingside_rights):
-            rook_coord = chessai.core.coordinate.Coordinate((self.board.num_files - 1), back_rank)
-            rook_piece = self.get(rook_coord)
+            rook_cordinate = chessai.core.coordinate.Coordinate((self.board.num_files - 1), back_rank)
+            rook_piece = self.get(rook_cordinate)
 
             # Check that the files to the right of the king and left of the rook are empty.
             all_empty = True
-            file = king_coord.file + 1
-            while (file < rook_coord.file):
+            file = king_coordinate.file + 1
+            while (file < rook_cordinate.file):
                 empty_coord = chessai.core.coordinate.Coordinate(file, back_rank)
 
                 if (self.board.has_piece(empty_coord)):
@@ -385,16 +383,16 @@ class GameState(chessai.core.gamestate.GameState):
                     and (rook_piece.color == self.turn)
                     and (all_empty)):
                 king_dest = chessai.core.coordinate.Coordinate((self.board.num_files - 2), back_rank)
-                actions.append(chessai.core.action.MoveAction(king_coord, king_dest))
+                actions.append(chessai.core.action.MoveAction(king_coordinate, king_dest))
 
         # Add Queenside castling.
         if (queenside_rights):
-            rook_coord = chessai.core.coordinate.Coordinate(0, back_rank)
-            rook_piece = self.get(rook_coord)
+            rook_cordinate = chessai.core.coordinate.Coordinate(0, back_rank)
+            rook_piece = self.get(rook_cordinate)
 
             # Check that the files to the right of the king and left of the rook are empty.
             all_empty = True
-            file = king_coord.file - 1
+            file = king_coordinate.file - 1
             while (file > 0):
                 empty_coord = chessai.core.coordinate.Coordinate(file, back_rank)
 
@@ -409,7 +407,7 @@ class GameState(chessai.core.gamestate.GameState):
                     and (rook_piece.color == self.turn)
                     and (all_empty)):
                 king_dest = chessai.core.coordinate.Coordinate(2, back_rank)
-                actions.append(chessai.core.action.MoveAction(king_coord, king_dest))
+                actions.append(chessai.core.action.MoveAction(king_coordinate, king_dest))
 
         return actions
 
@@ -425,29 +423,29 @@ class GameState(chessai.core.gamestate.GameState):
 
         actions: list[chessai.core.action.MoveAction] = []
 
-        for file in self.board.pieces.keys():
-            for (rank, piece) in self.board.pieces[file].items():
-                if (not isinstance(piece, chessai.chess.piece.Pawn)):
-                    continue
+        for (file, rank_dict) in self.board.pieces.items():
+            if (start_rank not in rank_dict):
+                continue
 
-                if (piece.color != self.turn):
-                    continue
+            piece = rank_dict[start_rank]
+            if (piece.color != self.turn):
+                continue
 
-                if (rank != start_rank):
-                    continue
+            if (not isinstance(piece, chessai.chess.piece.Pawn)):
+                continue
 
-                coordinate = chessai.core.coordinate.Coordinate(file, rank)
+            coordinate = chessai.core.coordinate.Coordinate(file, start_rank)
 
-                # Both the single and double push coordinates must be empty.
-                single_push_coord = coordinate.offset(0, direction)
-                if (self.board.has_piece(single_push_coord)):
-                    continue
+            # Both the single and double push coordinates must be empty.
+            single_push_coord = coordinate.offset(0, direction)
+            if (self.board.has_piece(single_push_coord)):
+                continue
 
-                double_push_coord = coordinate.offset(0, direction * 2)
-                if (self.board.has_piece(double_push_coord)):
-                    continue
+            double_push_coord = coordinate.offset(0, direction * 2)
+            if (self.board.has_piece(double_push_coord)):
+                continue
 
-                actions.append(chessai.core.action.MoveAction(coordinate, double_push_coord))
+            actions.append(chessai.core.action.MoveAction(coordinate, double_push_coord))
 
         return actions
 

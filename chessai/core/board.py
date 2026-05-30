@@ -50,10 +50,10 @@ class Board(edq.util.json.DictConverter):
             clean_pieces = {file: {} for file in range(num_files)}
 
             for (coordinate, piece) in pieces.items():
-                if (coordinate.rank not in clean_pieces):
+                if (coordinate.file not in clean_pieces):
                     raise ValueError('Cannot place a piece that is out of bounds:'
                                     + f" files '{num_files}', ranks '{num_ranks}',"
-                                    + f" rank: '{coordinate.rank}'.")
+                                    + f" file: '{coordinate.file}'.")
 
                 clean_pieces[coordinate.file][coordinate.rank] = piece
 
@@ -77,8 +77,8 @@ class Board(edq.util.json.DictConverter):
     def is_valid(self) -> bool:
         """ Checks if all of the pieces are in a valid position. """
 
-        for file in range(self.num_files):
-            for rank in self.pieces[file].keys():
+        for (file, rank_dict) in self.pieces.items():
+            for (rank, _) in rank_dict.items():
                 if (not self.is_within_bounds(file, rank)):
                     return False
 
@@ -97,14 +97,17 @@ class Board(edq.util.json.DictConverter):
 
         piece_items: dict[chessai.core.coordinate.Coordinate, chessai.core.piece.Piece] = {}
 
-        for file in self.pieces.keys():
-            for (rank, piece) in self.pieces[file].items():
+        for (file, rank_dict) in self.pieces.items():
+            for (rank, piece) in rank_dict.items():
                 piece_items[chessai.core.coordinate.Coordinate(file, rank)] = piece
 
         return piece_items
 
     def has_piece(self, coordinate: chessai.core.coordinate.Coordinate) -> bool:
         """ Returns if the given coordinate has a piece. """
+
+        if (coordinate.file not in self.pieces):
+            return False
 
         return (self.pieces[coordinate.file].get(coordinate.rank, None) is not None)
 
@@ -113,8 +116,8 @@ class Board(edq.util.json.DictConverter):
 
         pieces: list[chessai.core.piece.Piece] = []
 
-        for file in self.pieces.keys():
-            for piece in self.pieces[file].values():
+        for (_, rank_dict) in self.pieces.items():
+            for (_, piece) in rank_dict.items():
                 pieces.append(piece)
 
         return pieces
@@ -124,8 +127,8 @@ class Board(edq.util.json.DictConverter):
 
         coordinates: list[chessai.core.coordinate.Coordinate] = []
 
-        for file in self.pieces.keys():
-            for rank in self.pieces[file].keys():
+        for (file, rank_dict) in self.pieces.items():
+            for (rank, _) in rank_dict.items():
                 coordinates.append(chessai.core.coordinate.Coordinate(file, rank))
 
         return coordinates
