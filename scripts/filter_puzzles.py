@@ -71,7 +71,7 @@ def generate_puzzle_files(
 def main(args) -> int:
     """ Handles command line argument parsing and script execution. """
 
-    generate_puzzle_files(args.input, args.output, args.theme, args.count)
+    generate_puzzle_files(args.input, args.output, args.theme, args.limit)
 
     return 0
 
@@ -91,7 +91,7 @@ def _load_args():
             help = "Puzzle theme to filter by (default: %(default)s)," \
             "refer to https://github.com/lichess-org/lila/blob/master/modules/puzzle/src/main/PuzzleTheme.scala for puzzle themes.")
 
-    parser.add_argument('--limit', dest = 'count',
+    parser.add_argument('--limit', dest = 'limit',
             action = 'store', type = int, default = DEFAULT_COUNT,
             help = 'Limit the number of puzzles to extract (default: %(default)s).')
 
