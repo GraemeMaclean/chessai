@@ -35,11 +35,11 @@ class GameState(chessai.chess.gamestate.GameState):
         """ The dummy player for the current game, which is the opponent to the puzzle's starting player. """
 
         if _capture_move_lines:
-            move_lines = kwargs.get(chessai.puzzle.parser.MOVE_LINES_KEY, None)
+            move_lines = kwargs.get(chessai.puzzle.parser.MOVE_LINES_KEY, [])
         else:
-            move_lines = None
+            move_lines = []
 
-        self._move_lines: str | None = move_lines
+        self._move_lines: list[list[chessai.core.action.Action]] = move_lines
         """ The move lines for the puzzle. """
 
     def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
@@ -74,11 +74,11 @@ class GameState(chessai.chess.gamestate.GameState):
         return new_state
 
     @classmethod
-    def from_fen(cls: type[chessai.core.gamestate.T],
+    def from_fen(cls,
                  fen: str | None = None,
                  previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  fen_parser: chessai.core.parser.GameStateParser = chessai.puzzle.parser.parse_puzzle,
-                 **kwargs: typing.Any) -> chessai.core.gamestate.T:
+                 **kwargs: typing.Any) -> 'GameState':
         return super().from_fen(fen, previous_action, seed, game_over, fen_parser, **kwargs)

@@ -3,7 +3,6 @@ The core actions that agents are allowed to take.
 Default actions are provided, but custom actions can be easily created.
 """
 
-import json
 import re
 import typing
 
@@ -213,34 +212,21 @@ def from_uci(uci: str) -> Action:
 
     return MoveAction(start_coordinate, end_coordinate)
 
-def actions_list_from_dict(data: dict[str, typing.Any]) -> list[list[Action]]:
-    """
-    Get a list of a list of actions from a dictionary.
-    The 'actions' key will be checked.
-    """
+def process_raw_action_list(raw_action_list: str | dict[str, typing.Any]) -> list[list[Action]]:
+    """ Convert raw move lines, from the CLI, into cleaned move lines. """
 
-    raw_actions = data.get(ACTION_KEY, None)
-    if (raw_actions is None):
-        return []
+    if (isinstance(raw_action_list, dict)):
+        raw_action_list = str(raw_action_list.get(ACTION_KEY, None))
 
-    str_actions_lists: list[list[str]] = json.loads(raw_actions)
+    parsed_move_lines = edq.util.json.loads(raw_action_list)
 
-    clean_actions: list[list[Action]] = []
-    for str_action_list in str_actions_lists:
-        clean_action_list = []
-        for str_action in str_action_list:
-            clean_action_list.append(from_uci(str_action))
+    clean_move_lines: list[list[Action]] = []
 
-        clean_actions.append(clean_action_list)
+    for line in parsed_move_lines:
+        move_line = []
+        for uci in line:
+            move_line.append(from_uci(uci))
 
-    return clean_actions
+        clean_move_lines.append(move_line)
 
-_ACTION_TYPE_ORDER: dict[typing.Type[Action], int] = {
-    NoneAction: 0,
-    MoveAction: 1,
-    PromotionAction: 2,
-    ProposeDrawAction: 3,
-    AcceptDrawAction: 4,
-    RejectDrawAction: 5,
-    ForfeitAction: 6,
-}
+    return clean_move_lines

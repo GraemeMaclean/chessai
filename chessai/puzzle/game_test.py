@@ -1,3 +1,4 @@
+import os
 import pathlib
 
 import edq.testing.unittest
@@ -20,6 +21,9 @@ class GameTest(edq.testing.unittest.BaseTest):
             if (not path.is_file()):
                 continue
 
+            if (os.path.splitext(path)[-1] != chessai.puzzle.parser.PUZZLE_FILE_EXTENSION):
+                continue
+
             board_paths.append(str(path))
 
         board_paths.sort()
@@ -32,7 +36,8 @@ class GameTest(edq.testing.unittest.BaseTest):
                 gamestate = chessai.puzzle.gamestate.GameState.from_fen(fen = board_path, _capture_move_lines = True)
 
                 # Puzzle boards must include the move lines, which will be parsed by the gamestate.
-                move_lines = gamestate._move_lines
+                move_lines = gamestate._move_lines # pylint: disable=no-member
+                move_lines = [[action.uci() for action in line] for line in move_lines]
                 agent_arg = f"{gamestate.turn.symbol()}::move_lines={move_lines}"
 
                 argv = [

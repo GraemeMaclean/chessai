@@ -193,7 +193,7 @@ def parse_fen(data: str,
     """
 
     # Check if this might be directly parseable.
-    if (accepts_raw_string and (' ' not in data.strip())):
+    if (accepts_raw_string and (' ' in data.strip())):
         # Parse the data directly.
         return string_parser(data, options = options, **kwargs)
 

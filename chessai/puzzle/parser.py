@@ -1,7 +1,8 @@
 import dataclasses
-import json
 import os
 import typing
+
+import edq.util.json
 
 import chessai.core.action
 import chessai.core.parser
@@ -9,7 +10,7 @@ import chessai.core.parser
 THIS_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 PUZZLES_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'puzzles')
 
-PUZZLE_FILE_EXTENSION = '.json'
+PUZZLE_FILE_EXTENSION: str = '.json'
 
 MOVE_LINES_KEY: str = 'move_lines'
 
@@ -20,23 +21,29 @@ class PuzzleInfo:
     fen: str
     """ The starting FEN for the puzzle. """
 
-    move_lines: list[list[chessai.core.action.Action]]
+    move_lines: list[list[str]]
     """ The expected move lines to solve the puzzle. """
 
 def parse_puzzle_from_string(text: str, **kwargs: typing.Any) -> chessai.core.parser.ParsedGameState:
     """ Load a puzzle from a string, which is expected to be JSON data. """
 
     # Extract the JSON data into the puzzle info.
-    data_dict = json.loads(text)
+    data_dict = edq.util.json.loads(text)
     puzzle_info = PuzzleInfo(**data_dict)
 
     # Use the default fen parsing.
     parsed_gamestate = chessai.core.parser.load_fen_from_string(text = puzzle_info.fen, **kwargs)
 
-    print(f"Parser found: {type(puzzle_info.move_lines)} {puzzle_info.move_lines}")
+    move_lines: list[list[chessai.core.action.Action]] = []
+    for line in puzzle_info.move_lines:
+        move_line: list[chessai.core.action.Action] = []
+        for uci in line:
+            move_line.append(chessai.core.action.from_uci(uci))
+
+        move_lines.append(move_line)
 
     # Add the move line information.
-    parsed_gamestate.options[MOVE_LINES_KEY] = puzzle_info.move_lines
+    parsed_gamestate.options[MOVE_LINES_KEY] = move_lines
 
     return parsed_gamestate
 

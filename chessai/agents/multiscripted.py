@@ -13,9 +13,12 @@ class MultiScriptedAgent(chessai.core.agent.Agent):
     """
 
     def __init__(self,
-                 move_lines: list[list[chessai.core.action.Action]] | None = None,
+                 move_lines: list[list[chessai.core.action.Action]] | str | dict[str, typing.Any] | None = None,
                  **kwargs: typing.Any) -> None:
         super().__init__(**kwargs)
+
+        if (isinstance(move_lines, (str, dict))):
+            move_lines = chessai.core.action.process_raw_action_list(move_lines)
 
         if (move_lines is None):
             move_lines = []

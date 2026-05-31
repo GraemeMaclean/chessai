@@ -27,22 +27,17 @@ class Game(chessai.chess.game.Game):
             game_info: chessai.core.game.GameInfo,
             save_path: str | None = None,
             is_replay: bool = False,
-            move_lines: list[list[chessai.core.action.Action]] | dict[str, typing.Any] | None = None) -> None:
+            move_lines: list[list[chessai.core.action.Action]] | str | dict[str, typing.Any] | None = None) -> None:
         super().__init__(game_info, save_path, is_replay)
 
         if (move_lines is None):
             move_lines = []
 
-        print(f"Game found: {type(move_lines)} {move_lines}")
-
-        # Convert the string case into the dict case.
-        if (isinstance(move_lines, str)):
-            move_lines = {
-                chessai.core.action.ACTION_KEY: move_lines
-            }
-
         if (isinstance(move_lines, dict)):
-            move_lines = chessai.core.action.actions_list_from_dict(move_lines)
+            move_lines = str(move_lines.get(chessai.puzzle.parser.MOVE_LINES_KEY, ""))
+
+        if (isinstance(move_lines, str)):
+            move_lines = chessai.core.action.process_raw_action_list(move_lines)
 
         self.move_lines: list[list[chessai.core.action.Action]] = move_lines
         """ The move lines of this puzzle. """
@@ -54,26 +49,19 @@ class Game(chessai.chess.game.Game):
         # Let the gamestate parse the FEN and determine the puzzle agent.
         initial_state = chessai.puzzle.gamestate.GameState.from_fen(fen = args.board, _capture_move_lines = True)
 
+        move_lines: list[list[chessai.core.action.Action]] = []
         if (args.move_lines is not None):
             # Override the move lines from the file if there are move lines from the CLI.
-            raw_move_lines = {
-                chessai.core.action.ACTION_KEY: args.move_lines
-            }
-        elif (initial_state._move_lines is not None):
+            move_lines = chessai.core.action.process_raw_action_list(args.move_lines)
+        elif (initial_state._move_lines is not None): # pylint: disable=no-member
             # If the game does not have move lines, use the move lines found in the file.
-            raw_move_lines = {
-                chessai.core.action.ACTION_KEY: initial_state._move_lines
-            }
-        else:
-            raw_move_lines = {}
+            move_lines = initial_state._move_lines # pylint: disable=no-member
 
-        print(f"\n\ngame process args found {type(initial_state._move_lines)} and {initial_state._move_lines}\n\n")
-
-        self.move_lines = raw_move_lines
+        self.move_lines = move_lines
         self.start_move_lines = self.move_lines.copy()
 
         # Override the dummy player with a scripted agent that follows the move lines.
-        self.game_info.agent_infos[initial_state.dummy_player].extra_arguments['move_lines'] = self.start_move_lines.copy()
+        self.game_info.agent_infos[initial_state.dummy_player].extra_arguments['move_lines'] = self.start_move_lines.copy() # pylint: disable=no-member
 
     def get_initial_state(self,
             rng: random.Random,

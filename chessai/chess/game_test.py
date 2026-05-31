@@ -245,6 +245,9 @@ class GameTest(edq.testing.unittest.BaseTest):
             if (not path.is_file()):
                 continue
 
+            if (os.path.splitext(path)[-1] == '.py'):
+                continue
+
             game_paths.append(str(path))
 
         game_paths.sort()

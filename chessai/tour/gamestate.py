@@ -4,6 +4,8 @@ import typing
 import chessai.core.action
 import chessai.core.board
 import chessai.core.gamestate
+import chessai.core.parser
+import chessai.tour.parser
 
 TIME_PENALTY: int = 1
 """ Number of points lost each round. """
@@ -19,8 +21,6 @@ LOSE_POINTS: int = -500
 
 CRASH_POINTS = -1000000
 """ Points for crashing the game. """
-
-SEARCH_TARGETS_KEY: str = 'search_targets'
 
 class GameState(chessai.core.gamestate.GameState):
     """ A game state specific to a Tour game. """
@@ -155,3 +155,13 @@ class GameState(chessai.core.gamestate.GameState):
         new_state.score = self.score
 
         return new_state
+
+    @classmethod
+    def from_fen(cls,
+                 fen: str | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
+                 seed: int = -1,
+                 game_over: bool = False,
+                 fen_parser: chessai.core.parser.GameStateParser = chessai.tour.parser.parse_tour,
+                 **kwargs: typing.Any) -> 'GameState':
+        return super().from_fen(fen, previous_action, seed, game_over, fen_parser, **kwargs)
