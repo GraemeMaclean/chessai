@@ -123,6 +123,7 @@ class GameStateStringParser(typing.Protocol):
                  text: str,
                  **kwargs: typing.Any) -> ParsedGameState:
         ...
+
 @typing.runtime_checkable
 class GameStateParser(typing.Protocol):
     """
