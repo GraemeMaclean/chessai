@@ -33,6 +33,8 @@ class Game(chessai.chess.game.Game):
         if (move_lines is None):
             move_lines = []
 
+        print(f"Game found: {type(move_lines)} {move_lines}")
+
         # Convert the string case into the dict case.
         if (isinstance(move_lines, str)):
             move_lines = {
@@ -65,7 +67,9 @@ class Game(chessai.chess.game.Game):
         else:
             raw_move_lines = {}
 
-        self.move_lines = chessai.core.action.actions_list_from_dict(raw_move_lines)
+        print(f"\n\ngame process args found {type(initial_state._move_lines)} and {initial_state._move_lines}\n\n")
+
+        self.move_lines = raw_move_lines
         self.start_move_lines = self.move_lines.copy()
 
         # Override the dummy player with a scripted agent that follows the move lines.

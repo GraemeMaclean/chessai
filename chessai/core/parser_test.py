@@ -359,7 +359,7 @@ class SerializeFENTest(edq.testing.unittest.BaseTest):
 
         try:
             # Load directly from the path.
-            loaded_fen = chessai.core.parser.load_fen_from_path(temp_path)
+            loaded_fen = chessai.core.parser.load_from_path(temp_path)
 
             # Check to make sure we get the same results as loading from a standard FEN.
             standard_parse = chessai.core.parser.parse_fen(fen_content)

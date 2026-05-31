@@ -708,13 +708,14 @@ class GameState(edq.util.json.DictConverter):
                  previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
+                 fen_parser: chessai.core.parser.GameStateParser = chessai.core.parser.parse_fen,
                  **kwargs: typing.Any) -> T:
         """ Create a gamestate from a starting FEN. """
 
         if (fen is None):
             fen = DEFAULT_FEN
 
-        parsed_fen = chessai.core.parser.parse_fen(fen)
+        parsed_fen = fen_parser(data = fen, **kwargs)
 
         board = chessai.core.board.Board(pieces = parsed_fen.pieces,
                                          num_files = parsed_fen.num_files,

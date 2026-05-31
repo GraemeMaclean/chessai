@@ -61,7 +61,7 @@ All puzzle boards are prefixed with `puzzle-`, to differentiate from standard ch
 
 For example, you can specify a mate-in-3 puzzle with:
 ```sh
-python3 -m chessai.puzzle --board chessai/resources/boards/puzzle-mate-3.board
+python3 -m chessai.puzzle --board chessai/resources/puzzles/puzzle-mate-3.json
 ```
 
 You can also specify the possible "move lines" (the potential solutions to the puzzle) directly with the `--move-lines` option.

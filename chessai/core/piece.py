@@ -1,5 +1,6 @@
 import dataclasses
 import enum
+import typing
 
 import edq.util.json
 
@@ -43,7 +44,7 @@ class MoveVector:
 class Piece(edq.util.json.DictConverter):
     """ A piece with a team color and movement rules. """
 
-    def __init_subclass__(cls, symbols: tuple[str, ...] = (), **kwargs):
+    def __init_subclass__(cls, symbols: tuple[str, ...] = (), **kwargs: typing.Any):
         """ Register piece subclasses so core functions can find them. """
 
         super().__init_subclass__(**kwargs)

@@ -6,6 +6,7 @@ import chessai.core.action
 import chessai.core.board
 import chessai.core.gamestate
 import chessai.core.types
+import chessai.puzzle.parser
 
 class GameState(chessai.chess.gamestate.GameState):
     """ A game state specific to a Puzzle game. """
@@ -34,7 +35,7 @@ class GameState(chessai.chess.gamestate.GameState):
         """ The dummy player for the current game, which is the opponent to the puzzle's starting player. """
 
         if _capture_move_lines:
-            move_lines = kwargs.get('move_lines', None)
+            move_lines = kwargs.get(chessai.puzzle.parser.MOVE_LINES_KEY, None)
         else:
             move_lines = None
 
@@ -71,3 +72,13 @@ class GameState(chessai.chess.gamestate.GameState):
         new_state._move_lines = self._move_lines
 
         return new_state
+
+    @classmethod
+    def from_fen(cls: type[chessai.core.gamestate.T],
+                 fen: str | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
+                 seed: int = -1,
+                 game_over: bool = False,
+                 fen_parser: chessai.core.parser.GameStateParser = chessai.puzzle.parser.parse_puzzle,
+                 **kwargs: typing.Any) -> chessai.core.gamestate.T:
+        return super().from_fen(fen, previous_action, seed, game_over, fen_parser, **kwargs)

@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None,
     """
     Invoke a game of Tour.
 
-    Will return the results of any training games followed by the results of any non-training games.
+    Will return the results of all of the games.
     """
 
     return chessai.util.bin.run_main(

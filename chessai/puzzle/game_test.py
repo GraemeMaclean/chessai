@@ -3,8 +3,8 @@ import pathlib
 import edq.testing.unittest
 import edq.util.dirent
 
-import chessai.core.parser
 import chessai.puzzle.bin
+import chessai.puzzle.parser
 
 class GameTest(edq.testing.unittest.BaseTest):
     """ Test specifics for puzzle games. """
@@ -15,7 +15,7 @@ class GameTest(edq.testing.unittest.BaseTest):
         expected_score = 1.0
 
         board_paths = []
-        boards_dir = pathlib.Path(chessai.core.parser.PUZZLES_DIR)
+        boards_dir = pathlib.Path(chessai.puzzle.parser.PUZZLES_DIR)
         for path in boards_dir.iterdir():
             if (not path.is_file()):
                 continue

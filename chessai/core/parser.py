@@ -13,20 +13,17 @@ import chessai.core.types
 
 THIS_DIR: str = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 BOARDS_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'boards')
-PUZZLES_DIR: str = os.path.join(THIS_DIR, '..', 'resources', 'puzzles')
 
 FEN_FILE_EXTENSION = '.fen'
-PUZZLE_FILE_EXTENSION = '.puzzle'
-
-# File parsing patterns.
-SEPARATOR_PATTERN: re.Pattern = re.compile(r'^\s*-{3,}\s*$')
 
 # FEN parsing patterns.
 DIMENSIONS_PATTERN: re.Pattern = re.compile(r'^#(\d+)x(\d+)$')
 
-class ParsedFEN:
+class ParsedGameState:
     """
-    The raw data extracted from a FEN string.
+    The parsed information that can be used to create a GameState.
+
+    By default, the gamestate is parsed from a FEN or a filepath that only contains a FEN.
 
     FEN format:
     [#<files>x<ranks>] <pieces> <turn> <castling> <en-passant> <halfmove-clock> <fullmove-number>
@@ -99,8 +96,8 @@ class ParsedFEN:
         """ Any additional options found in the FEN. """
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, ParsedFEN):
-            raise ValueError(f"Cannot compare equality of a ParsedFEN with an object of another type: '{type(other)}'.")
+        if not isinstance(other, ParsedGameState):
+            raise ValueError(f"Cannot compare equality of a ParsedGameState with an object of another type: '{type(other)}'.")
 
         return (
             self.pieces == other.pieces and
@@ -113,12 +110,53 @@ class ParsedFEN:
             self.num_ranks == other.num_ranks
         )
 
-def parse_fen(fen: str, options: dict[str, typing.Any] | None = None) -> ParsedFEN:
+@typing.runtime_checkable
+class GameStateStringParser(typing.Protocol):
     """
-    Parse a FEN string into a ParsedFEN.
+    A function that parses a filepath into the necessary information for a GameState to be constructed.
+
+    Not every game type will neeed a custom GameStateParser,
+    unless they do not conform to the defualt parser.
+    """
+
+    def __call__(self,
+                 text: str,
+                 **kwargs: typing.Any) -> ParsedGameState:
+        ...
+@typing.runtime_checkable
+class GameStateParser(typing.Protocol):
+    """
+    A function that parses a filepath into the necessary information for a GameState to be constructed.
+
+    Not every game type will neeed a custom GameStateParser,
+    unless they do not conform to the defualt parser.
+    """
+
+    def __call__(self,
+                 data: str,
+                 default_dir: str,
+                 default_extension: str,
+                 string_parser: GameStateStringParser,
+                 options: dict[str, typing.Any] | None = None,
+                 **kwargs: typing.Any) -> ParsedGameState:
+        ...
+
+def load_fen_from_string(text: str, **kwargs: typing.Any) -> ParsedGameState:
+    """ Load a FEN string from a string. """
+
+    return parse_fen(text, **kwargs)
+
+def parse_fen(data: str,
+              default_dir: str = BOARDS_DIR,
+              default_extension: str = FEN_FILE_EXTENSION,
+              string_parser: GameStateStringParser = load_fen_from_string,
+              options: dict[str, typing.Any] | None = None,
+              **kwargs: typing.Any) -> ParsedGameState:
+    """
+    Parse a FEN string into a ParsedGameState.
 
     Accepts standard 6-field FEN strings as well as the chessai extended
-    7-field format with an optional '<files>x<ranks>' dimensions field.
+    7-field format with an optional '#<files>x<ranks>' dimensions field.
 
     Raises ValueError if the FEN is malformed.
 
@@ -126,13 +164,13 @@ def parse_fen(fen: str, options: dict[str, typing.Any] | None = None) -> ParsedF
     """
 
     # Check if this might be a file path.
-    if (' ' not in fen.strip()):
+    if (' ' not in data.strip()):
         # Try to load from file.
-        return load_fen_from_path(fen)
+        return load_from_path(data, defualt_dir = default_dir, default_extension = default_extension)
 
-    fields = fen.strip().split()
+    fields = data.strip().split()
     if (len(fields) not in (6, 7)):
-        raise ValueError(f"FEN must have 6 or 7 fields, found '{len(fields)}': '{fen}'.")
+        raise ValueError(f"FEN must have 6 or 7 fields, found '{len(fields)}': '{data}'.")
 
     num_files = chessai.core.board.DEFAULT_BOARD_FILES
     num_ranks = chessai.core.board.DEFAULT_BOARD_RANKS
@@ -147,7 +185,7 @@ def parse_fen(fen: str, options: dict[str, typing.Any] | None = None) -> ParsedF
     halfmove_clock  = _parse_int_field(fields[4], 'halfmove clock', min_value = 0)
     fullmove_number = _parse_int_field(fields[5], 'fullmove number', min_value = 1)
 
-    return ParsedFEN(
+    return ParsedGameState(
         pieces                = pieces,
         turn                  = turn,
         castling_rights       = castling_rights,
@@ -209,7 +247,11 @@ def serialize_fen(
     # Produce a standard FEN.
     return f"{board_field}{piece_field} {turn_field} {castling_field} {ep_field} {halfmove_clock} {fullmove_number}"
 
-def load_fen_from_path(path: str, **kwargs: typing.Any) -> ParsedFEN:
+def load_from_path(path: str,
+                   default_dir: str = BOARDS_DIR,
+                   default_extension: str = FEN_FILE_EXTENSION,
+                   string_parser: GameStateStringParser = load_fen_from_string,
+                   **kwargs: typing.Any) -> ParsedGameState:
     """
     Load a FEN string from a file.
 
@@ -221,60 +263,17 @@ def load_fen_from_path(path: str, **kwargs: typing.Any) -> ParsedFEN:
 
     # If the path does not exist, try the boards directory.
     if (not os.path.exists(path)):
-        path = os.path.join(BOARDS_DIR, path)
+        path = os.path.join(default_dir, path)
 
         # If this path does not have a good extension, add one.
-        if (os.path.splitext(path)[-1] != FEN_FILE_EXTENSION):
-            path = path + FEN_FILE_EXTENSION
-
-    # If the path does not exist, try the puzzles directory.
-    if (not os.path.exists(path)):
-        path = os.path.join(PUZZLES_DIR, raw_path)
-
-        # If this path does not have a good extension, add one.
-        if (os.path.splitext(path)[-1] != PUZZLE_FILE_EXTENSION):
-            path = path + PUZZLE_FILE_EXTENSION
+        if (os.path.splitext(path)[-1] != default_extension):
+            path = path + default_extension
 
     if (not os.path.exists(path)):
-        raise ValueError(f"Could not find FEN file, path does not exist: '{raw_path}'.")
+        raise ValueError(f"Could not find {default_extension} file, path does not exist: '{raw_path}'.")
 
     text = edq.util.dirent.read_file(path, strip = False)
-    return load_fen_from_string(text, **kwargs)
-
-def load_fen_from_string(text: str, **kwargs: typing.Any) -> ParsedFEN:
-    """ Load a FEN string from a string. """
-
-    separator_index = -1
-    lines = text.split("\n")
-
-    for (i, line) in enumerate(lines):
-        if (SEPARATOR_PATTERN.match(line)):
-            separator_index = i
-            break
-
-    if (separator_index == -1):
-        # No separator was found.
-        options_text = ''
-        board_text = "\n".join(lines)
-    else:
-        options_text = "\n".join(lines[:separator_index])
-        board_text = "\n".join(lines[(separator_index + 1):])
-
-    options_text = options_text.strip()
-    if (len(options_text) == 0):
-        options = {}
-    else:
-        options = edq.util.json.loads(options_text)
-
-    options.update(kwargs)
-
-    target_coordinates = options.get(chessai.core.coordinate.COORDINATES_KEY, None)
-
-    # If search targets were given by the CLI, override the search targets found in the file.
-    if (target_coordinates is not None):
-        options['search_targets'] = target_coordinates
-
-    return parse_fen(board_text, options)
+    return string_parser(text, **kwargs)
 
 def _parse_fen_dimensions(dimensions_field: str) -> tuple[int, int]:
     """
