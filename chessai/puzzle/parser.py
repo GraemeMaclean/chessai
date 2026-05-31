@@ -31,7 +31,7 @@ def parse_puzzle_from_string(text: str, **kwargs: typing.Any) -> chessai.core.pa
     puzzle_info = PuzzleInfo(**data_dict)
 
     # Use the default fen parsing.
-    parsed_gamestate = chessai.core.parser.parse_fen(data = puzzle_info.fen)
+    parsed_gamestate = chessai.core.parser.load_fen_from_string(text = puzzle_info.fen, **kwargs)
 
     print(f"Parser found: {type(puzzle_info.move_lines)} {puzzle_info.move_lines}")
 
@@ -44,10 +44,11 @@ def parse_puzzle(data: str,
                  default_dir: str = PUZZLES_DIR,
                  default_extension: str = PUZZLE_FILE_EXTENSION,
                  string_parser: chessai.core.parser.GameStateStringParser = parse_puzzle_from_string,
+                 accepts_raw_string: bool = False,
                  options: dict[str, typing.Any] | None = None,
                  **kwargs: typing.Any) -> chessai.core.parser.ParsedGameState:
     """
-    Parse a Puzzle GameState from a file path, provided by data.
+    Parse a Puzzle GameState from a file path.
 
     If the filepath does not exist, the default directory and file extension are added.
     """
@@ -55,6 +56,5 @@ def parse_puzzle(data: str,
     return chessai.core.parser.load_from_path(data,
                                               default_dir = default_dir,
                                               default_extension = default_extension,
-                                              string_parser = parse_puzzle_from_string,
-                                              options = options,
+                                              string_parser = string_parser,
                                               **kwargs)

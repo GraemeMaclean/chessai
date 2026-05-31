@@ -107,13 +107,13 @@ class Game(chessai.chess.game.Game):
 
         action = action_record.get_action()
         if (action not in state.get_legal_actions()):
-            raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' of type '{type(action)}'.")
+            raise ValueError(f"Illegal action for agent {action_record.player}: '{action}' of type '{type(action)}'.")
 
         # Check whether the move follows any of the remaining move lines.
         if (action not in self._next_puzzle_moves()):
             logging.info(
                 "Incorrect action for agent '%s': '%s' of type '%s'.",
-                action_record.player, action.uci(), type(action),
+                action_record.player, action, type(action),
             )
 
             # The agent failed to solve the puzzle, so the game is over.

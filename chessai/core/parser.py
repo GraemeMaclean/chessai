@@ -137,6 +137,7 @@ class GameStateParser(typing.Protocol):
                  default_dir: str,
                  default_extension: str,
                  string_parser: GameStateStringParser,
+                 accepts_raw_string: bool = False,
                  options: dict[str, typing.Any] | None = None,
                  **kwargs: typing.Any) -> ParsedGameState:
         ...
@@ -144,33 +145,9 @@ class GameStateParser(typing.Protocol):
 def load_fen_from_string(text: str, **kwargs: typing.Any) -> ParsedGameState:
     """ Load a FEN string from a string. """
 
-    return parse_fen(text, **kwargs)
-
-def parse_fen(data: str,
-              default_dir: str = BOARDS_DIR,
-              default_extension: str = FEN_FILE_EXTENSION,
-              string_parser: GameStateStringParser = load_fen_from_string,
-              options: dict[str, typing.Any] | None = None,
-              **kwargs: typing.Any) -> ParsedGameState:
-    """
-    Parse a FEN string into a ParsedGameState.
-
-    Accepts standard 6-field FEN strings as well as the chessai extended
-    7-field format with an optional '#<files>x<ranks>' dimensions field.
-
-    Raises ValueError if the FEN is malformed.
-
-    See https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation .
-    """
-
-    # Check if this might be a file path.
-    if (' ' not in data.strip()):
-        # Try to load from file.
-        return load_from_path(data, defualt_dir = default_dir, default_extension = default_extension)
-
-    fields = data.strip().split()
+    fields = text.strip().split()
     if (len(fields) not in (6, 7)):
-        raise ValueError(f"FEN must have 6 or 7 fields, found '{len(fields)}': '{data}'.")
+        raise ValueError(f"FEN must have 6 or 7 fields, found '{len(fields)}': '{text}'.")
 
     num_files = chessai.core.board.DEFAULT_BOARD_FILES
     num_ranks = chessai.core.board.DEFAULT_BOARD_RANKS
@@ -194,8 +171,68 @@ def parse_fen(data: str,
         fullmove_number       = fullmove_number,
         num_files             = num_files,
         num_ranks             = num_ranks,
-        options               = options,
+        options               = kwargs,
     )
+
+def parse_fen(data: str,
+              default_dir: str = BOARDS_DIR,
+              default_extension: str = FEN_FILE_EXTENSION,
+              string_parser: GameStateStringParser = load_fen_from_string,
+              accepts_raw_string: bool = True,
+              options: dict[str, typing.Any] | None = None,
+              **kwargs: typing.Any) -> ParsedGameState:
+    """
+    Parse a FEN string into a ParsedGameState.
+
+    Accepts standard 6-field FEN strings as well as the chessai extended
+    7-field format with an optional '#<files>x<ranks>' dimensions field.
+
+    Raises ValueError if the FEN is malformed.
+
+    See https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation .
+    """
+
+    # Check if this might be directly parseable.
+    if (accepts_raw_string and (' ' not in data.strip())):
+        # Parse the data directly.
+        return string_parser(data, options = options, **kwargs)
+
+    # Otherwise, load from a path.
+    return load_from_path(
+        data,
+        default_dir       = default_dir,
+        default_extension = default_extension,
+        string_parser     = string_parser,
+        **kwargs,
+    )
+
+def load_from_path(path: str,
+                   default_dir: str = BOARDS_DIR,
+                   default_extension: str = FEN_FILE_EXTENSION,
+                   string_parser: GameStateStringParser = load_fen_from_string,
+                   **kwargs: typing.Any) -> ParsedGameState:
+    """
+    Load a FEN string from a file.
+
+    If the given path does not exist,
+    try to prefix the path with the standard board directory and suffix with the standard extension.
+    """
+
+    raw_path = path
+
+    # If the path does not exist, try the boards directory.
+    if (not os.path.exists(path)):
+        path = os.path.join(default_dir, path)
+
+        # If this path does not have a good extension, add one.
+        if (os.path.splitext(path)[-1] != default_extension):
+            path = path + default_extension
+
+    if (not os.path.exists(path)):
+        raise ValueError(f"Could not find {default_extension} file, path does not exist: '{raw_path}'.")
+
+    text = edq.util.dirent.read_file(path, strip = False)
+    return string_parser(text, **kwargs)
 
 def serialize_fen(
         board: chessai.core.board.Board,
@@ -246,34 +283,6 @@ def serialize_fen(
 
     # Produce a standard FEN.
     return f"{board_field}{piece_field} {turn_field} {castling_field} {ep_field} {halfmove_clock} {fullmove_number}"
-
-def load_from_path(path: str,
-                   default_dir: str = BOARDS_DIR,
-                   default_extension: str = FEN_FILE_EXTENSION,
-                   string_parser: GameStateStringParser = load_fen_from_string,
-                   **kwargs: typing.Any) -> ParsedGameState:
-    """
-    Load a FEN string from a file.
-
-    If the given path does not exist,
-    try to prefix the path with the standard board directory and suffix with the standard extension.
-    """
-
-    raw_path = path
-
-    # If the path does not exist, try the boards directory.
-    if (not os.path.exists(path)):
-        path = os.path.join(default_dir, path)
-
-        # If this path does not have a good extension, add one.
-        if (os.path.splitext(path)[-1] != default_extension):
-            path = path + default_extension
-
-    if (not os.path.exists(path)):
-        raise ValueError(f"Could not find {default_extension} file, path does not exist: '{raw_path}'.")
-
-    text = edq.util.dirent.read_file(path, strip = False)
-    return string_parser(text, **kwargs)
 
 def _parse_fen_dimensions(dimensions_field: str) -> tuple[int, int]:
     """
