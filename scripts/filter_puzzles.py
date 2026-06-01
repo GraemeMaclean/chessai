@@ -16,7 +16,10 @@ import edq.util.json
 DEFAULT_COUNT: typing.Optional[int] = None
 DEFAULT_OUTPUT_DIR: str = os.path.join('chessai', 'resources', 'puzzles')
 DEFAULT_THEME: str = 'mateIn1'
-PUZZLE_THEME_LIST_LINK: str = 'https://github.com/lichess-org/lila/blob/0d57c7f65ecf7492e159f56c451f9b7aabaa8850/modules/puzzle/src/main/PuzzleTheme.scala'
+PUZZLE_THEME_LIST_LINK: str = (
+    'https://github.com/lichess-org/lila/blob/'
+    '0d57c7f65ecf7492e159f56c451f9b7aabaa8850/modules/puzzle/src/main/PuzzleTheme.scala'
+    )
 
 def generate_puzzle_files(
         input_csv: str,
@@ -41,14 +44,19 @@ def generate_puzzle_files(
             themes = str(row.get('Themes', '')).split()
 
             if (target_theme in themes):
-                puzzle_id = str(row.get('PuzzleId', None))
-                fen = str(row.get('FEN', None))
-                raw_moves = str(row.get('Moves', None))
+                raw_puzzle_id = row.get('PuzzleId', None)
+                raw_fen = row.get('FEN', None)
+                raw_moves = row.get('Moves', None)
 
-                if (puzzle_id is None or fen is None or raw_moves is None):
+                if (raw_puzzle_id is None or raw_fen is None or raw_moves is None):
                     continue
 
-                moves_list: typing.List[str] = raw_moves.split()
+                puzzle_id = str(raw_puzzle_id).strip()
+                fen = str(raw_fen).strip()
+                moves_list: typing.List[str] = str(raw_moves).strip().split()
+
+                if (puzzle_id == "" or fen == "" or len(moves_list) == 0):
+                    continue
 
                 puzzle_data = {
                     "fen": f"{fen}",
@@ -69,14 +77,15 @@ def generate_puzzle_files(
     else:
         print(f"Successfully processed entire file. Generated {count} total puzzles for theme '{target_theme}'.")
 
-def main(args) -> int:
-    """ Handles command line argument parsing and script execution. """
+def main(args: argparse.Namespace) -> int:
+    """ Handles script execution. """
 
     generate_puzzle_files(args.input, args.output, args.theme, args.limit)
 
     return 0
 
-def _load_args():
+def _load_args() -> argparse.Namespace:
+    """ Handles command line argument parsing. """
     parser = argparse.ArgumentParser(
             description = 'Extract specific themes from Lichess puzzle CSV.',
             formatter_class = argparse.RawTextHelpFormatter)
