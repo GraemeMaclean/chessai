@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 A script to extract a specific number of puzzles of a certain theme from the Lichess database. 
-Outputs individual .board files for each match.
+Outputs individual .json files for each match.
 """
 
 import argparse
@@ -16,6 +16,7 @@ import edq.util.json
 DEFAULT_COUNT: typing.Optional[int] = None
 DEFAULT_OUTPUT_DIR: str = os.path.join('chessai', 'resources', 'puzzles')
 DEFAULT_THEME: str = 'mateIn1'
+PUZZLE_THEME_LIST_LINK: str = 'https://github.com/lichess-org/lila/blob/0d57c7f65ecf7492e159f56c451f9b7aabaa8850/modules/puzzle/src/main/PuzzleTheme.scala'
 
 def generate_puzzle_files(
         input_csv: str,
@@ -37,7 +38,6 @@ def generate_puzzle_files(
                 limit_reached = True
                 break
 
-            # Lichess themes are space-separated in the 'Themes' column.
             themes = str(row.get('Themes', '')).split()
 
             if (target_theme in themes):
@@ -51,15 +51,14 @@ def generate_puzzle_files(
                 moves_list: typing.List[str] = raw_moves.split()
 
                 puzzle_data = {
-                    "class": "chessai.puzzle.board.Board",
-                    "move_lines": edq.util.json.dumps([moves_list])
+                    "fen": f"{fen}",
+                    "move_lines": [moves_list]
                 }
 
-                puzzle_path = os.path.join(output_folder, f"{puzzle_id}.puzzle")
+                puzzle_path = os.path.join(output_folder, f"{puzzle_id}.json")
 
                 with open(puzzle_path, 'w', encoding = 'utf-8') as out_file:
                     edq.util.json.dump(puzzle_data, out_file, indent = 4)
-                    out_file.write(f"\n---\n{fen}")
 
                 count += 1
 
@@ -79,19 +78,20 @@ def main(args) -> int:
 
 def _load_args():
     parser = argparse.ArgumentParser(
-            description = 'Extract specific themes from Lichess puzzle CSV.')
+            description = 'Extract specific themes from Lichess puzzle CSV.',
+            formatter_class = argparse.RawTextHelpFormatter)
 
     parser.add_argument('input', metavar = 'INPUT_CSV', type = str,
             help = 'Path to the Lichess CSV file.')
 
     parser.add_argument('--output', dest = 'output',
             action = 'store', type = str, default = DEFAULT_OUTPUT_DIR,
-            help = 'Directory to save .board files (default: %(default)s).')
+            help = 'Directory to save the puzzle files (default: %(default)s).')
 
     parser.add_argument('--theme', dest = 'theme',
             action = 'store', type = str, default = DEFAULT_THEME,
-            help = "Puzzle theme to filter by (default: %(default)s)," \
-            "refer to https://github.com/lichess-org/lila/blob/master/modules/puzzle/src/main/PuzzleTheme.scala for puzzle themes.")
+            help = ("Puzzle theme to filter by (default: %(default)s).\n"
+            f"Themes list: {PUZZLE_THEME_LIST_LINK}"))
 
     parser.add_argument('--limit', dest = 'limit',
             action = 'store', type = int, default = DEFAULT_COUNT,
