@@ -63,7 +63,7 @@ class SearchProblemAgent(chessai.core.agent.Agent):
 
     def get_action(self, state: chessai.core.gamestate.GameState) -> chessai.core.action.Action:
         if (len(self._actions) == 0):
-            return chessai.core.action.Action()
+            return chessai.core.action.NoneAction()
 
         return self._actions.pop(0)
 

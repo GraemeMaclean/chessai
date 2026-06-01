@@ -61,7 +61,7 @@ All puzzle boards are prefixed with `puzzle-`, to differentiate from standard ch
 
 For example, you can specify a mate-in-3 puzzle with:
 ```sh
-python3 -m chessai.puzzle --board chessai/resources/boards/puzzle-mate-3.board
+python3 -m chessai.puzzle --board chessai/resources/puzzles/puzzle-mate-3.json
 ```
 
 You can also specify the possible "move lines" (the potential solutions to the puzzle) directly with the `--move-lines` option.
@@ -80,12 +80,16 @@ Note that puzzles do not have to end in a mate, they will end once the agent fin
 A great place to find puzzles is through [Lichess' Puzzles](https://lichess.org/training/themes),
 which are sorted by theme.
 You can also download a large number of puzzles from [Lichess' download link](https://database.lichess.org/#puzzles).
+For a complete list of valid puzzle themes,
+see the [PuzzleTheme.scala](https://github.com/lichess-org/lila/blob/0d57c7f65ecf7492e159f56c451f9b7aabaa8850/modules/puzzle/src/main/PuzzleTheme.scala) file in the official Lila repository.
 
-Using the large .csv file from the lichess database, use the following command with the path to the .csv file:
-For a complete list of valid puzzle themes, refer to the official Lichess source configuration in the
-[Lila](https://github.com/lichess-org/lila/blob/master/modules/puzzle/src/main/PuzzleTheme.scala).
+Using a .csv file from the lichess database, use the following command with the path to the .csv file:
 ```sh
-python3 -m scripts.filter_puzzles <file path to .csv> --output <file path> --theme <theme name> --count <desired number>
+# Make the script executable.
+chmod +x scripts/filter_puzzles.py
+
+# Run the script.
+./scripts/filter_puzzles.py <INPUT_CSV> --output <OUTPUT_DIR> --theme <THEME> --limit <LIMIT>
 ```
 
 #### Creating a Custom Puzzle

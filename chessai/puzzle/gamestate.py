@@ -1,29 +1,46 @@
 import typing
 
 import chessai.chess.piece
+import chessai.chess.gamestate
 import chessai.core.action
 import chessai.core.board
 import chessai.core.gamestate
 import chessai.core.types
+import chessai.puzzle.parser
 
-class GameState(chessai.core.gamestate.GameState):
+class GameState(chessai.chess.gamestate.GameState):
     """ A game state specific to a Puzzle game. """
 
     def __init__(self,
-                 fen: str | None = None,
-                 move_stack: list[chessai.core.action.Action] | None = None,
-                 board_stack: list[chessai.core.board.Board] | None = None,
+                 board: chessai.core.board.Board,
+                 turn: chessai.core.types.Color,
+                 castling_rights: chessai.core.castling.CastlingRights,
+                 en_passant_coordinate: chessai.core.coordinate.Coordinate | None = None,
+                 halfmove_clock: int = 0,
+                 fullmove_number: int = 1,
+                 previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  puzzle_solved: bool = False,
+                 _capture_move_lines: bool = False,
                  **kwargs: typing.Any) -> None:
-        super().__init__(fen, move_stack, board_stack, seed, game_over, **kwargs)
+        super().__init__(board, turn, castling_rights, en_passant_coordinate,
+                         halfmove_clock, fullmove_number, previous_action,
+                         seed, game_over, **kwargs)
 
         self.puzzle_solved: bool = puzzle_solved
         """ Set to True when the agent has successfully completed one of the move lines. """
 
         self.dummy_player: chessai.core.types.Color = self.turn.opposite()
         """ The dummy player for the current game, which is the opponent to the puzzle's starting player. """
+
+        if _capture_move_lines:
+            move_lines = kwargs.get(chessai.puzzle.parser.MOVE_LINES_KEY, [])
+        else:
+            move_lines = []
+
+        self._move_lines: list[list[chessai.core.action.Action]] = move_lines
+        """ The move lines for the puzzle. """
 
     def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
         """
@@ -39,3 +56,29 @@ class GameState(chessai.core.gamestate.GameState):
             return ([agent], 1.0)
 
         return ([self.dummy_player], 0.0)
+
+    def copy(self) -> 'GameState':
+        new_state = GameState(board           = self.board.copy(),
+                              turn            = self.turn,
+                              castling_rights = self.castling_rights,
+                              en_passant_coordinate = self.en_passant_coordinate,
+                              halfmove_clock  = self.halfmove_clock,
+                              fullmove_number = self.fullmove_number,
+                              previous_action = self.previous_action,
+                              seed            = self.seed,
+                              game_over       = self.game_over,
+                              puzzle_solved   = self.puzzle_solved)
+
+        new_state._move_lines = self._move_lines
+
+        return new_state
+
+    @classmethod
+    def from_fen(cls,
+                 fen: str | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
+                 seed: int = -1,
+                 game_over: bool = False,
+                 fen_parser: chessai.core.parser.GameStateParser = chessai.puzzle.parser.parse_puzzle,
+                 **kwargs: typing.Any) -> 'GameState':
+        return super().from_fen(fen, previous_action, seed, game_over, fen_parser, **kwargs)

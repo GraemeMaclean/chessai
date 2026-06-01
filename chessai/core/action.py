@@ -3,7 +3,6 @@ The core actions that agents are allowed to take.
 Default actions are provided, but custom actions can be easily created.
 """
 
-import json
 import re
 import typing
 
@@ -16,165 +15,218 @@ import chessai.core.types
 ACTION_PATTERN: re.Pattern = re.compile(r'^([a-z]+\d+)([a-z]+\d+)([a-zA-Z]?)$')
 ACTION_KEY: str = 'actions'
 
+UCI_ACCEPT_DRAW_ACTION: str = 'Accept Draw'
+UCI_FORFEIT_ACTION: str = 'Forfeit'
 UCI_NULL_ACTION: str = '0000'
 UCI_PROPOSE_DRAW_ACTION: str = 'Propose Draw'
-UCI_ACCEPT_DRAW_ACTION: str = 'Accept Draw'
 UCI_REJECT_DRAW_ACTION: str = 'Reject Draw'
-UCI_FORFEIT_ACTION: str = 'Forfeit'
 
 class Action(edq.util.json.DictConverter):
     """
-    The possible actions that an agent is allowed to take.
+    The base for all actions that an agent is allowed to take.
+
+    Actions are an immutable class, so do not change attributes after construction.
 
     Actions are strings in the Chess UCI format
     (https://en.wikipedia.org/wiki/Universal_Chess_Interface).
     """
 
-    def __init__(self,
-                 start_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE,
-                 end_coordinate: chessai.core.coordinate.Coordinate = chessai.core.coordinate.NULL_COORDINATE,
-                 promotion: chessai.core.piece.Piece | None = None,
-                 propose_draw: bool = False,
-                 accept_draw: bool | None = None,
-                 forfeit: bool = False) -> None:
+    _type_order: typing.ClassVar[int]
+    """
+    The ordering of this action type.
+    Child classes must choose a unique type number for their game.
+    """
 
+    # This function is meant to be an abc.abstractmethod,
+    # but for performance reasons it raises an error.
+    def uci(self) -> str:
+        """ Represent the agent action as a chess move in UCI format. """
+
+        raise NotImplementedError("Action.uci()")
+
+    # Comparing actions with non-action objects raises an error.
+    def __lt__(self, other: object) -> bool:
+        return bool(self._type_order < other._type_order)  # type: ignore[attr-defined]  # pylint: disable=no-member
+
+    # Comparing actions with non-action objects may raise an error.
+    def __eq__(self, other: object) -> bool:
+        return type(self) == type(other)
+
+    def __str__(self) -> str:
+        return self.uci()
+
+    def __repr__(self) -> str:
+        return self.uci()
+
+class NoneAction(Action):
+    """ An action that signifies nothing happened. """
+
+    _type_order = 0
+
+    def uci(self) -> str:
+        return UCI_NULL_ACTION
+
+class MoveAction(Action):
+    """ Actions that move a piece from one coordinate to another. """
+
+    _type_order = 1
+
+    def __init__(self,
+                 start_coordinate: chessai.core.coordinate.Coordinate,
+                 end_coordinate: chessai.core.coordinate.Coordinate,
+                 ) -> None:
         self.start_coordinate: chessai.core.coordinate.Coordinate = start_coordinate
         """ The starting coordinate for the action. """
 
         self.end_coordinate: chessai.core.coordinate.Coordinate = end_coordinate
         """ The ending coordinate for the action. """
 
-        self.promotion: chessai.core.piece.Piece | None = promotion
-        """ The piece to promote to, or None if this is not a promotion move. """
-
-        self.propose_draw: bool = propose_draw
-        """ Signal if the player is proposing a draw. """
-
-        self.accept_draw: bool | None = accept_draw
-        """ If present, signals acceptance or rejection a draw proposal. """
-
-        self.forfeit: bool = forfeit
-        """ Forfeit the game, which counts as a loss. """
-
     def uci(self) -> str:
-        """ Represent the agent action as a chess move in UCI format. """
-
-        # The null action in UCI is encoded as '0000'.
-        if (self == NULL_ACTION):
-            return UCI_NULL_ACTION
-
-        if (self.propose_draw):
-            return UCI_PROPOSE_DRAW_ACTION
-
-        if (self.accept_draw):
-            return UCI_ACCEPT_DRAW_ACTION
-
-        if ((self.accept_draw is not None) and (not self.accept_draw)):
-            return UCI_REJECT_DRAW_ACTION
-
-        if (self.forfeit):
-            return UCI_FORFEIT_ACTION
-
         start = self.start_coordinate.uci()
         end = self.end_coordinate.uci()
-        promotion = self.promotion.symbol() if (self.promotion is not None) else ''
 
-        return f"{start}{end}{promotion}"
-
-    @classmethod
-    def from_uci(cls, uci: str) -> 'Action':
-        """
-        Get an action from the UCI format.
-        Note that this project supports arbitrary sized boards.
-        """
-
-        # Check for the special actions.
-        if (uci == UCI_NULL_ACTION):
-            return cls()
-
-        if (uci == UCI_PROPOSE_DRAW_ACTION):
-            return cls(propose_draw = True)
-
-        if (uci == UCI_ACCEPT_DRAW_ACTION):
-            return cls(accept_draw = True)
-
-        if (uci == UCI_REJECT_DRAW_ACTION):
-            return cls(accept_draw = False)
-
-        if (uci == UCI_FORFEIT_ACTION):
-            return cls(forfeit = True)
-
-        match = ACTION_PATTERN.fullmatch(uci)
-        if (match is None):
-            raise ValueError('An action must be a pair of coordinates with an optional promotion piece:'
-                    + f" '{ACTION_PATTERN.pattern}',"
-                    + f" got: '{uci}'.")
-
-        start_coordinate = chessai.core.coordinate.Coordinate.from_uci(match.group(1))
-        end_coordinate = chessai.core.coordinate.Coordinate.from_uci(match.group(2))
-
-        # If there is a trailing character, try to parse it as a promotion piece type.
-        tail = match.group(3)
-        promotion: chessai.core.piece.Piece | None = None
-
-        if (len(tail) == 1):
-            if (tail not in chessai.core.piece.get_registered_piece_symbols()):
-                raise ValueError(f"Unknown promotion piece symbol '{tail}' in UCI string: '{uci}'.")
-
-            promotion = chessai.core.piece.get_registered_piece(tail)
-
-        return cls(start_coordinate, end_coordinate, promotion)
-
-    def __lt__(self, other: object) -> bool:
-        if (not isinstance(other, Action)):
-            raise ValueError(f"Cannot compare an action with an object of type '{type(other)}'.")
-
-        self_tuple = (
-                self.start_coordinate, self.end_coordinate, self.promotion, self.propose_draw,
-                (self.accept_draw is None), (self.accept_draw is True), self.forfeit)
-        other_tuple = (
-                other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw,
-                (other.accept_draw is None), (other.accept_draw is True), other.forfeit)
-
-        return (self_tuple < other_tuple)
+        return f"{start}{end}"
 
     def __eq__(self, other: object) -> bool:
-        if (not isinstance(other, Action)):
+        if (type(self) != type(other)):
             return False
 
-        self_tuple = (
-                self.start_coordinate, self.end_coordinate, self.promotion, self.propose_draw,
-                (self.accept_draw is None), (self.accept_draw is True), self.forfeit)
-        other_tuple = (
-                other.start_coordinate, other.end_coordinate, other.promotion, other.propose_draw,
-                (other.accept_draw is None), (other.accept_draw is True), other.forfeit)
+        return (self.start_coordinate, self.end_coordinate) == (other.start_coordinate, other.end_coordinate) # type: ignore[attr-defined]  # pylint: disable=no-member
 
-        return (self_tuple == other_tuple)
+    def __lt__(self, other: object) -> bool:
+        if isinstance(other, MoveAction):
+            return (self.start_coordinate, self.end_coordinate) < (other.start_coordinate, other.end_coordinate)
 
-def actions_list_from_dict(data: dict[str, typing.Any]) -> list[list[Action]]:
+        return bool(self._type_order < other._type_order)  # type: ignore[attr-defined]  # pylint: disable=no-member
+
+class PromotionAction(MoveAction):
+    """ Actions that move a piece and promote it to another piece type. """
+
+    _type_order = 2
+
+    def __init__(self,
+                 start_coordinate: chessai.core.coordinate.Coordinate,
+                 end_coordinate: chessai.core.coordinate.Coordinate,
+                 promotion: chessai.core.piece.Piece,
+                 ) -> None:
+        super().__init__(start_coordinate, end_coordinate)
+
+        self.promotion: chessai.core.piece.Piece = promotion
+        """ The piece to promote to, or None if this is not a promotion move. """
+
+    def uci(self) -> str:
+        movement_uci = super().uci()
+        promotion = self.promotion.symbol()
+
+        return f"{movement_uci}{promotion}"
+
+    def __eq__(self, other: object) -> bool:
+        if (not isinstance(other, PromotionAction)):
+            return False
+
+        return (self.start_coordinate, self.end_coordinate, self.promotion) == (other.start_coordinate, other.end_coordinate, other.promotion)
+
+    def __lt__(self, other: object) -> bool:
+        if isinstance(other, PromotionAction):
+            return (self.start_coordinate, self.end_coordinate, self.promotion) < (other.start_coordinate, other.end_coordinate, other.promotion)
+
+        return bool(self._type_order < other._type_order)  # type: ignore[attr-defined]  # pylint: disable=no-member
+
+class MetaAction(Action):
     """
-    Get a list of a list of actions from a dictionary.
-    The 'actions' key will be checked.
+    Meta actions for inter-agent communication regarding non-standard actions.
+
+    Meta actions include handling draws and forfeits.
     """
 
-    raw_actions = data.get(ACTION_KEY, None)
-    if (raw_actions is None):
-        return []
+    def uci(self) -> str:
+        raise NotImplementedError("MetaAction.uci()")
 
-    str_actions_lists: list[list[str]] = json.loads(raw_actions)
+class ProposeDrawAction(MetaAction):
+    """ A meta action signaling the agent is offering a draw. """
 
-    clean_actions: list[list[Action]] = []
-    for str_action_list in str_actions_lists:
-        clean_action_list = []
-        for str_action in str_action_list:
-            clean_action_list.append(Action.from_uci(str_action))
+    _type_order = 3
 
-        clean_actions.append(clean_action_list)
+    def uci(self) -> str:
+        return UCI_PROPOSE_DRAW_ACTION
 
-    return clean_actions
+class AcceptDrawAction(MetaAction):
+    """ A meta action responding to a draw proposal with an acceptance. """
 
-NULL_ACTION = Action()
-PROPOSE_DRAW_ACTION = Action(propose_draw = True)
-ACCEPT_DRAW_ACTION = Action(accept_draw = True)
-REJECT_DRAW_ACTION = Action(accept_draw = False)
-FORFEIT_ACTION = Action(forfeit = True)
+    _type_order = 4
+
+    def uci(self) -> str:
+        return UCI_ACCEPT_DRAW_ACTION
+
+class RejectDrawAction(MetaAction):
+    """ A meta action responding to a draw proposal with a rejection. """
+
+    _type_order = 5
+
+    def uci(self) -> str:
+        return UCI_REJECT_DRAW_ACTION
+
+class ForfeitAction(MetaAction):
+    """ A meta action signaling the agent is forfeiting the game. """
+
+    _type_order = 6
+
+    def uci(self) -> str:
+        return UCI_FORFEIT_ACTION
+
+def from_uci(uci: str) -> Action:
+    """
+    Parse a UCI string into the appropriate Action.
+    """
+
+    if (uci == UCI_NULL_ACTION):
+        return NoneAction()
+
+    if (uci == UCI_PROPOSE_DRAW_ACTION):
+        return ProposeDrawAction()
+
+    if (uci == UCI_ACCEPT_DRAW_ACTION):
+        return AcceptDrawAction()
+
+    if (uci == UCI_REJECT_DRAW_ACTION):
+        return RejectDrawAction()
+
+    if (uci == UCI_FORFEIT_ACTION):
+        return ForfeitAction()
+
+    match = ACTION_PATTERN.fullmatch(uci)
+    if (match is None):
+        raise ValueError("An action must be a pair of coordinates with an optional promotion piece:"
+                        + f" '{ACTION_PATTERN.pattern}', got: '{uci}'.")
+
+    start_coordinate = chessai.core.coordinate.Coordinate.from_uci(match.group(1))
+    end_coordinate = chessai.core.coordinate.Coordinate.from_uci(match.group(2))
+
+    tail = match.group(3)
+    if (len(tail) == 1):
+        if (tail not in chessai.core.piece.get_registered_piece_symbols()):
+            raise ValueError(f"Unknown promotion piece symbol '{tail}' in UCI string: '{uci}'.")
+
+        promotion = chessai.core.piece.get_registered_piece(tail)
+        return PromotionAction(start_coordinate, end_coordinate, promotion)
+
+    return MoveAction(start_coordinate, end_coordinate)
+
+def process_raw_action_list(raw_action_list: str | dict[str, typing.Any]) -> list[list[Action]]:
+    """ Convert raw move lines, from the CLI, into cleaned move lines. """
+
+    if (isinstance(raw_action_list, dict)):
+        raw_action_list = str(raw_action_list.get(ACTION_KEY, None))
+
+    parsed_move_lines = edq.util.json.loads(raw_action_list)
+
+    clean_move_lines: list[list[Action]] = []
+
+    for line in parsed_move_lines:
+        move_line = []
+        for uci in line:
+            move_line.append(from_uci(uci))
+
+        clean_move_lines.append(move_line)
+
+    return clean_move_lines

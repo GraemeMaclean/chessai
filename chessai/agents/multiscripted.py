@@ -13,18 +13,12 @@ class MultiScriptedAgent(chessai.core.agent.Agent):
     """
 
     def __init__(self,
-                 move_lines: list[list[chessai.core.action.Action]] | dict[str, typing.Any] | str | None = None,
+                 move_lines: list[list[chessai.core.action.Action]] | str | dict[str, typing.Any] | None = None,
                  **kwargs: typing.Any) -> None:
         super().__init__(**kwargs)
 
-        # Convert the string case into the dict case.
-        if (isinstance(move_lines, str)):
-            move_lines = {
-                chessai.core.action.ACTION_KEY: move_lines
-            }
-
-        if (isinstance(move_lines, dict)):
-            move_lines = chessai.core.action.actions_list_from_dict(move_lines)
+        if (isinstance(move_lines, (str, dict))):
+            move_lines = chessai.core.action.process_raw_action_list(move_lines)
 
         if (move_lines is None):
             move_lines = []
@@ -41,7 +35,7 @@ class MultiScriptedAgent(chessai.core.agent.Agent):
         # Choose an action out of the available move lines.
         possible_moves = self._next_move_options()
         if (len(possible_moves) == 0):
-            return chessai.core.action.NULL_ACTION
+            return chessai.core.action.NoneAction()
 
         chosen_move_list = self.rng.sample(possible_moves, 1)
         chosen_move = chosen_move_list[0]

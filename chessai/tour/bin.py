@@ -26,7 +26,7 @@ def set_cli_args(parser: argparse.ArgumentParser, **kwargs: typing.Any) -> argpa
             help = ('Select the agent type that the white side will use (default: %(default)s).'
                     + f' Builtin agents: {chessai.util.alias.AGENT_SHORT_NAMES}.'))
 
-    parser.add_argument('--target-squares', dest = 'target_squares',
+    parser.add_argument('--search-targets', dest = 'search_targets',
             action = 'store', type = str, default = None,
             help = ('The target squares for the search problem (default: %(default)s).'
                     + ' Separate multiple targets with commas (e.g., \'0,42,63\').'))
@@ -44,12 +44,7 @@ def init_from_args(args: argparse.Namespace) -> tuple[dict[chessai.core.types.Co
         chessai.core.types.Color.BLACK: chessai.core.agentinfo.AgentInfo(name = chessai.util.alias.AGENT_DUMMY.short),
     }
 
-    board_kwargs: dict[str, typing.Any] = {}
-
-    if (args.target_squares is not None):
-        board_kwargs[chessai.core.coordinate.COORDINATES_KEY] = args.target_squares
-
-    return base_agent_infos, [], board_kwargs
+    return base_agent_infos, [], {}
 
 def log_tour_results(results: list[chessai.core.game.GameResult], winning_agent_teams: set[chessai.core.types.Color], prefix: str = '') -> None:
     """
@@ -106,7 +101,7 @@ def main(argv: list[str] | None = None,
     """
     Invoke a game of Tour.
 
-    Will return the results of any training games followed by the results of any non-training games.
+    Will return the results of all of the games.
     """
 
     return chessai.util.bin.run_main(

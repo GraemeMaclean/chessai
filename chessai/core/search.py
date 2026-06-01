@@ -135,11 +135,14 @@ class SearchSolution(typing.Generic[NodeType]):
         path = []
 
         for action in self.actions:
+            if (not isinstance(action, chessai.core.action.MoveAction)):
+                continue
+
             path.append(action.start_coordinate)
             state.push(action)
 
         # Append the final square after all moves have been made.
-        if self.actions:
+        if (self.actions and isinstance(self.actions[-1], chessai.core.action.MoveAction)):
             path.append(self.actions[-1].end_coordinate)
 
         return path

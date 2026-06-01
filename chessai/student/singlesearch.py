@@ -110,7 +110,7 @@ class PieceTourSearchProblem(chessai.core.search.SearchProblem[PieceTourSearchNo
     For example, (0, 0) is a1, (7, 7) is h8.
 
     Note: A knight moves in an 'L' shape: two squares in one direction and one square perpendicular.
-    A knight on (r, c) can reach up to 8 squares.
+    A knight on (file, rank) can reach up to 8 squares.
     """
 
     def __init__(self,

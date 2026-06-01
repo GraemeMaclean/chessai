@@ -11,15 +11,14 @@
 ---
 <LOG_PREFIX> -- Using source seed for games: 2.
 <LOG_PREFIX> -- Starting a game with seed: 1043188731678011336.
-<LOG_PREFIX> -- Turn: 0, Minimax Score: 0, Chosen Action: e2e4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 0, Minimax Score: 0, Chosen Action: f2f4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 1, Minimax Score: 0, Chosen Action: f4f5, States Evaluated: 1, Nodes Visited: 5.
 <LOG_PREFIX> -- Turn: 2, Minimax Score: 0, Chosen Action: g1f3, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 4, Minimax Score: 0, Chosen Action: e1e2, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 6, Minimax Score: 0, Chosen Action: f3d4, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 8, Minimax Score: 0, Chosen Action: d4f5, States Evaluated: 1, Nodes Visited: 5.
-<LOG_PREFIX> -- Turn: 10, Minimax Score: 0, Chosen Action: Propose Draw, States Evaluated: 1, Nodes Visited: 3.
-<LOG_PREFIX> -- Minimax-like agent complete. Player: white, Ply Count: 2, Use Alpha-Beta Pruning: False, Use Expectimax: True, States Evaluated: 6, Nodes Visited: 28.
+<LOG_PREFIX> -- Turn: 3, Minimax Score: 0, Chosen Action: c2c4, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Turn: 4, Minimax Score: -3, Chosen Action: f3g5, States Evaluated: 1, Nodes Visited: 5.
+<LOG_PREFIX> -- Minimax-like agent complete. Player: white, Ply Count: 2, Use Alpha-Beta Pruning: False, Use Expectimax: True, States Evaluated: 5, Nodes Visited: 25.
 <LOG_PREFIX> -- Average Score: 1.00
 <LOG_PREFIX> -- Scores:        1.0
 <LOG_PREFIX> -- Record:        Win
-<LOG_PREFIX> -- Average Moves: 12.0
-<LOG_PREFIX> -- Move Counts:   12
+<LOG_PREFIX> -- Average Moves: 10.0
+<LOG_PREFIX> -- Move Counts:   10

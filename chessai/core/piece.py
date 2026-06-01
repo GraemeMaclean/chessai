@@ -1,5 +1,6 @@
 import dataclasses
 import enum
+import typing
 
 import edq.util.json
 
@@ -43,12 +44,19 @@ class MoveVector:
 class Piece(edq.util.json.DictConverter):
     """ A piece with a team color and movement rules. """
 
+    def __init_subclass__(cls, symbols: tuple[str, ...] = (), **kwargs: typing.Any):
+        """ Register piece subclasses so core functions can find them. """
+
+        super().__init_subclass__(**kwargs)
+        for symbol in symbols:
+            register_piece(symbol, cls)
+
     def __init__(self,
              color: chessai.core.types.Color) -> None:
         self.color: chessai.core.types.Color = color
         """ The team color that this piece belongs to. """
 
-    def move_vectors(self, origin: chessai.core.coordinate.Coordinate) -> list[MoveVector]:
+    def move_vectors(self) -> list[MoveVector]:
         """ Returns the movement vectors for this piece. """
 
         return []
