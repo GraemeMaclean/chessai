@@ -89,7 +89,7 @@ Using a .csv file from the lichess database, use the following command with the 
 chmod +x scripts/filter_puzzles.py
 
 # Run the script.
-./scripts/filter_puzzles.py <INPUT_CSV> --output <OUTPUT_DIR> --theme <THEME>
+./scripts/filter_puzzles.py <INPUT_CSV> --output <OUTPUT_DIR> --theme <THEME> --limit <LIMIT>
 ```
 
 #### Creating a Custom Puzzle
