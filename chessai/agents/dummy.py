@@ -10,4 +10,4 @@ class DummyAgent(chessai.core.agent.Agent):
     """
 
     def get_action(self, state: chessai.core.gamestate.GameState) -> chessai.core.action.Action:
-        return chessai.core.action.Action()
+        return chessai.core.action.NoneAction()

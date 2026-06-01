@@ -28,4 +28,4 @@ class ScriptedAgent(chessai.core.agent.Agent):
         if (len(self._actions) > 0):
             return self._actions.pop(0)
 
-        return chessai.core.action.NULL_ACTION
+        return chessai.core.action.NoneAction()

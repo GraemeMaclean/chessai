@@ -21,4 +21,4 @@ class AggressiveAgent(chessai.core.agent.Agent):
         if (len(legal_actions) > 0):
             return legal_actions[0]
 
-        return chessai.core.action.NULL_ACTION
+        return chessai.core.action.NoneAction()

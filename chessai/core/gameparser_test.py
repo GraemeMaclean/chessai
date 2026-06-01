@@ -39,12 +39,12 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "1/2-1/2",
                     }),
                     initial_actions = [
-                        chessai.core.action.Action.from_uci("e2e4"),
-                        chessai.core.action.Action.from_uci("e7e5"),
-                        chessai.core.action.Action.from_uci("g1f3"),
-                        chessai.core.action.Action.from_uci("b8c6"),
-                        chessai.core.action.PROPOSE_DRAW_ACTION,
-                        chessai.core.action.ACCEPT_DRAW_ACTION,
+                        chessai.core.action.from_uci("e2e4"),
+                        chessai.core.action.from_uci("e7e5"),
+                        chessai.core.action.from_uci("g1f3"),
+                        chessai.core.action.from_uci("b8c6"),
+                        chessai.core.action.ProposeDrawAction(),
+                        chessai.core.action.AcceptDrawAction(),
                     ],
                     result = chessai.core.gameparser.PGNResult('1/2-1/2'),
                 )
@@ -75,10 +75,10 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "*",
                     }),
                     initial_actions = [
-                        chessai.core.action.Action.from_uci("e2e4"),
-                        chessai.core.action.Action.from_uci("e7e5"),
-                        chessai.core.action.Action.from_uci("g1f3"),
-                        chessai.core.action.Action.from_uci("b8c6"),
+                        chessai.core.action.from_uci("e2e4"),
+                        chessai.core.action.from_uci("e7e5"),
+                        chessai.core.action.from_uci("g1f3"),
+                        chessai.core.action.from_uci("b8c6"),
                     ],
                     result = chessai.core.gameparser.PGNResult('*'),
                 )
@@ -109,10 +109,10 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "*",
                     }),
                     initial_actions = [
-                        chessai.core.action.Action.from_uci("e2e4"),
-                        chessai.core.action.Action.from_uci("e7e5"),
-                        chessai.core.action.Action.from_uci("g1f3"),
-                        chessai.core.action.Action.from_uci("b8c6"),
+                        chessai.core.action.from_uci("e2e4"),
+                        chessai.core.action.from_uci("e7e5"),
+                        chessai.core.action.from_uci("g1f3"),
+                        chessai.core.action.from_uci("b8c6"),
                     ],
                     result = chessai.core.gameparser.PGNResult('*'),
                 )
@@ -143,10 +143,10 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "*",
                     }),
                     initial_actions = [
-                        chessai.core.action.Action.from_uci("e2e4"),
-                        chessai.core.action.Action.from_uci("e7e5"),
-                        chessai.core.action.Action.from_uci("g1f3"),
-                        chessai.core.action.Action.from_uci("b8c6"),
+                        chessai.core.action.from_uci("e2e4"),
+                        chessai.core.action.from_uci("e7e5"),
+                        chessai.core.action.from_uci("g1f3"),
+                        chessai.core.action.from_uci("b8c6"),
                     ],
                     comments = ["Very interesting move!"],
                     result = chessai.core.gameparser.PGNResult('*'),
@@ -180,10 +180,10 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                         chessai.core.gameparser.StandardPGNHeaders.RESULT: "*",
                     }),
                     initial_actions = [
-                        chessai.core.action.Action.from_uci("e2e4"),
-                        chessai.core.action.Action.from_uci("e7e5"),
-                        chessai.core.action.Action.from_uci("g1f3"),
-                        chessai.core.action.Action.from_uci("b8c6"),
+                        chessai.core.action.from_uci("e2e4"),
+                        chessai.core.action.from_uci("e7e5"),
+                        chessai.core.action.from_uci("g1f3"),
+                        chessai.core.action.from_uci("b8c6"),
                     ],
                     comments = [
                         """This is a\nmulti-line\ncomment!"""
@@ -219,9 +219,9 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                     }),
                     optional_headers = {"FEN": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"},
                     initial_actions = [
-                        chessai.core.action.Action.from_uci("b8c6"),
-                        chessai.core.action.Action.from_uci("g1f3"),
-                        chessai.core.action.Action.from_uci("g8f6"),
+                        chessai.core.action.from_uci("b8c6"),
+                        chessai.core.action.from_uci("g1f3"),
+                        chessai.core.action.from_uci("g8f6"),
                     ],
                     result = "*",
                 )
@@ -277,10 +277,10 @@ class ParseSinglePGNTest(edq.testing.unittest.BaseTest):
                     },
                     comments = ["C00 French Defense", "The game is a draw."],
                     initial_actions = [
-                        chessai.core.action.Action.from_uci("e2e4"),
-                        chessai.core.action.Action.from_uci("e7e6"),
-                        chessai.core.action.PROPOSE_DRAW_ACTION,
-                        chessai.core.action.ACCEPT_DRAW_ACTION,
+                        chessai.core.action.from_uci("e2e4"),
+                        chessai.core.action.from_uci("e7e6"),
+                        chessai.core.action.ProposeDrawAction(),
+                        chessai.core.action.AcceptDrawAction(),
                     ],
                     result = "1/2-1/2",
                 )

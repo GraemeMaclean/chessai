@@ -16,19 +16,19 @@ class BoardTest(edq.testing.unittest.BaseTest):
         end_coordinate = chessai.core.coordinate.Coordinate(1, 2)
         piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
 
-        board = chessai.core.board.Board(pieces={
+        board = chessai.core.board.Board(pieces = {
             start_coordinate: piece
         })
 
-        action = chessai.core.action.Action(start_coordinate, end_coordinate)
+        action = chessai.core.action.MoveAction(start_coordinate, end_coordinate)
         was_capture = board.push(action)
 
         # Not a capture
         self.assertFalse(was_capture)
 
         # Piece moved correctly
-        self.assertIsNone(board.get(start_coordinate))
-        self.assertEqual(piece, board.get(end_coordinate))
+        self.assertIsNone(board.get(start_coordinate.file, start_coordinate.rank))
+        self.assertEqual(piece, board.get(end_coordinate.file, end_coordinate.rank))
 
     def test_push_with_capture(self):
         """ Test push with capture. """
@@ -39,20 +39,20 @@ class BoardTest(edq.testing.unittest.BaseTest):
         attacker_piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
         victim_piece = chessai.chess.piece.Knight(chessai.core.types.Color.BLACK)
 
-        board = chessai.core.board.Board(pieces={
+        board = chessai.core.board.Board(pieces = {
             start_coordinate: attacker_piece,
             end_coordinate: victim_piece,
         })
 
-        action = chessai.core.action.Action(start_coordinate, end_coordinate)
+        action = chessai.core.action.MoveAction(start_coordinate, end_coordinate)
         was_capture = board.push(action)
 
         # Was a capture
         self.assertTrue(was_capture)
 
         # Capture happened
-        self.assertIsNone(board.get(start_coordinate))
-        self.assertEqual(attacker_piece, board.get(end_coordinate))
+        self.assertIsNone(board.get(start_coordinate.file, start_coordinate.rank))
+        self.assertEqual(attacker_piece, board.get(end_coordinate.file, end_coordinate.rank))
 
     def test_push_with_promotion(self):
         """ Test push with pawn promotion. """
@@ -63,19 +63,19 @@ class BoardTest(edq.testing.unittest.BaseTest):
         pawn = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
         promotion_piece = chessai.chess.piece.Queen(chessai.core.types.Color.WHITE)
 
-        board = chessai.core.board.Board(pieces={
+        board = chessai.core.board.Board(pieces = {
             start_coordinate: pawn
         })
 
-        action = chessai.core.action.Action(start_coordinate, end_coordinate, promotion=promotion_piece)
+        action = chessai.core.action.PromotionAction(start_coordinate, end_coordinate, promotion_piece)
         was_capture = board.push(action)
 
         # Not a capture
         self.assertFalse(was_capture)
 
         # Promoted piece is on the board
-        self.assertIsNone(board.get(start_coordinate))
-        promoted = board.get(end_coordinate)
+        self.assertIsNone(board.get(start_coordinate.file, start_coordinate.rank))
+        promoted = board.get(end_coordinate.file, end_coordinate.rank)
         self.assertIsInstance(promoted, chessai.chess.piece.Queen)
         self.assertEqual(chessai.core.types.Color.WHITE, promoted.color)
 
@@ -86,7 +86,7 @@ class BoardTest(edq.testing.unittest.BaseTest):
         piece = chessai.chess.piece.Pawn(chessai.core.types.Color.WHITE)
 
         with self.assertRaises(ValueError):
-            chessai.core.board.Board(pieces={
+            chessai.core.board.Board(pieces = {
                 out_of_bounds: piece
             })
 
@@ -120,11 +120,11 @@ class BoardTest(edq.testing.unittest.BaseTest):
         })
 
         # Not a capture
-        action_no_capture = chessai.core.action.Action(start, end_empty)
+        action_no_capture = chessai.core.action.MoveAction(start, end_empty)
         self.assertFalse(board.is_capture(action_no_capture))
 
         # Is a capture
-        action_capture = chessai.core.action.Action(start, end_occupied)
+        action_capture = chessai.core.action.MoveAction(start, end_occupied)
         self.assertTrue(board.is_capture(action_capture))
 
     def test_copy_is_deep(self):
@@ -137,21 +137,17 @@ class BoardTest(edq.testing.unittest.BaseTest):
         board = chessai.core.board.Board(pieces={start: piece})
         board_copy = board.copy()
 
-        # Boards are independent
-        self.assertIsNot(board, board_copy)
-        self.assertIsNot(board.pieces, board_copy.pieces)
-
         # Modify the copy
-        action = chessai.core.action.Action(start, end)
+        action = chessai.core.action.MoveAction(start, end)
         board_copy.push(action)
 
         # Original unchanged
-        self.assertIsNotNone(board.get(start))
-        self.assertIsNone(board.get(end))
+        self.assertIsNotNone(board.get(start.file, start.rank))
+        self.assertIsNone(board.get(end.file, end.rank))
 
         # Copy changed
-        self.assertIsNone(board_copy.get(start))
-        self.assertIsNotNone(board_copy.get(end))
+        self.assertIsNone(board_copy.get(start.file, start.rank))
+        self.assertIsNotNone(board_copy.get(end.file, end.rank))
 
     def test_all_pieces_and_coordinates(self):
         """ Test iteration helpers. """
@@ -187,15 +183,15 @@ class BoardTest(edq.testing.unittest.BaseTest):
 
         # Set a piece
         board.set(piece, coord)
-        self.assertEqual(piece, board.get(coord))
+        self.assertEqual(piece, board.get(coord.file, coord.rank))
 
         # Remove the piece
         board.remove(coord)
-        self.assertIsNone(board.get(coord))
+        self.assertIsNone(board.get(coord.file, coord.rank))
 
         # Remove from empty coordinate (should not raise)
         board.remove(coord)
-        self.assertIsNone(board.get(coord))
+        self.assertIsNone(board.get(coord.file, coord.rank))
 
     def test_set_out_of_bounds_raises(self):
         """ Test that setting a piece out of bounds raises an error. """

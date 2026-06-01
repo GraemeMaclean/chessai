@@ -318,6 +318,7 @@ class Game(abc.ABC):
                  save_path: str | None = None,
                  is_replay: bool = False,
                  initial_actions: list[chessai.core.action.Action] | None = None,
+                 action_history: list[chessai.core.action.Action] | None = None,
                  expected_result: chessai.core.gameparser.PGNResult = chessai.core.gameparser.PGNResult.UNKNOWN,
                  ) -> None:
         self.game_info: GameInfo = game_info
@@ -336,7 +337,13 @@ class Game(abc.ABC):
             initial_actions = []
 
         self.initial_actions: list[chessai.core.action.Action] = initial_actions
-        """ The original SAN moves from the PGN, if loaded from PGN. """
+        """ The moves to be played at the beginning of the game. """
+
+        if (action_history is None):
+            action_history = []
+
+        self.action_history: list[chessai.core.action.Action] = action_history
+        """ The actions taken throughout the game. """
 
         self.expected_result: chessai.core.gameparser.PGNResult = expected_result
         """ The expected result from the PGN: '1-0', '0-1', '1/2-1/2', or '*'. """
@@ -416,7 +423,7 @@ class Game(abc.ABC):
                 })
 
         return chessai.core.gameparser.to_pgn(headers, self.game_info.extra_info, type(final_state),
-                                              self.game_info.start_fen, final_state.move_stack)
+                                              self.game_info.start_fen, self.action_history)
 
     def process_args(self, args: argparse.Namespace) -> None:
         """ Process any special arguments from the command-line. """
@@ -452,6 +459,9 @@ class Game(abc.ABC):
         action = action_record.get_action()
         if (action not in state.get_legal_actions()):
             raise ValueError(f"Illegal action for agent {action_record.player}: '{action.uci()}' of type '{type(action)}'.")
+
+        # Add the action to the action history.
+        self.action_history.append(action)
 
         self._call_state_process_turn_full(state, action, rng)
 

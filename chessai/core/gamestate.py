@@ -1,4 +1,4 @@
-import copy
+import logging
 import random
 import typing
 
@@ -17,6 +17,8 @@ DEFAULT_FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 _KNOWN_LEGAL_ACTIONS: dict[str, list[chessai.core.action.Action]] = {}
 
+T = typing.TypeVar('T', bound = 'GameState')
+
 class GameState(edq.util.json.DictConverter):
     """
     The base for all game states in chessai.
@@ -27,47 +29,36 @@ class GameState(edq.util.json.DictConverter):
     """
 
     def __init__(self,
-                 fen: str | None = None,
-                 move_stack: list[chessai.core.action.Action] | None = None,
-                 board_stack: list[chessai.core.board.Board] | None = None,
+                 board: chessai.core.board.Board,
+                 turn: chessai.core.types.Color,
+                 castling_rights: chessai.core.castling.CastlingRights,
+                 en_passant_coordinate: chessai.core.coordinate.Coordinate | None = None,
+                 halfmove_clock: int = 0,
+                 fullmove_number: int = 1,
+                 previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  **kwargs: typing.Any) -> None:
-        if (fen is None):
-            fen = DEFAULT_FEN
-
-        self.parsed_fen: chessai.core.parser.ParsedFEN = chessai.core.parser.parse_fen(fen)
-        """ The full information received from the augmented FEN. """
-
-        self.board: chessai.core.board.Board = chessai.core.board.Board(self.parsed_fen.pieces, self.parsed_fen.num_files, self.parsed_fen.num_ranks)
+        self.board: chessai.core.board.Board = board
         """ The board responsible for holding the position of pieces. """
 
-        self.turn: chessai.core.types.Color = self.parsed_fen.turn
+        self.turn: chessai.core.types.Color = turn
         """ The color of the current player. """
 
-        self.castling_rights: chessai.core.castling.CastlingRights = self.parsed_fen.castling_rights
+        self.castling_rights: chessai.core.castling.CastlingRights = castling_rights
         """ The available castling moves. """
 
-        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = self.parsed_fen.en_passant_coordinate
+        self.en_passant_coordinate: chessai.core.coordinate.Coordinate | None = en_passant_coordinate
         """ The en-passant target coordinate, or None. """
 
-        self.halfmove_clock: int = self.parsed_fen.halfmove_clock
+        self.halfmove_clock: int = halfmove_clock
         """ The number of plies since the last pawn move or capture (50-move rule). """
 
-        self.fullmove_number: int = self.parsed_fen.fullmove_number
+        self.fullmove_number: int = fullmove_number
         """ Increments after every black move, starting at 1. """
 
-        if (move_stack is None):
-            move_stack = []
-
-        self.move_stack: list[chessai.core.action.Action] = move_stack
+        self.previous_action: chessai.core.action.Action | None = previous_action
         """ The ordered history of all actions taken, starting with the oldest action. """
-
-        if (board_stack is None):
-            board_stack = []
-
-        self.board_stack: list[chessai.core.board.Board] = board_stack
-        """ The ordered history of all boards, starting with the oldest board. """
 
         self.seed: int = seed
         """ A utility seed that components using the game state may use to seed their own RNGs. """
@@ -83,14 +74,12 @@ class GameState(edq.util.json.DictConverter):
         """
 
         return chessai.core.parser.serialize_fen(
-            pieces            = self.board.pieces,
+            board             = self.board,
             turn              = self.turn,
             castling_rights   = self.castling_rights,
             en_passant_coordinate = self.en_passant_coordinate,
             halfmove_clock    = self.halfmove_clock,
             fullmove_number   = self.fullmove_number,
-            num_files         = self.board.num_files,
-            num_ranks         = self.board.num_ranks,
             partial           = partial,
         )
 
@@ -98,28 +87,25 @@ class GameState(edq.util.json.DictConverter):
     # Useful methods for students.
     # -----------------------------------------------
 
-    def get_move_count(self) -> int:
-        """ Returns the number of moves in the game. """
+    def get(self, coordinate: chessai.core.coordinate.Coordinate) -> chessai.core.piece.Piece | None:
+        """ Get the piece at the given coordinate, if it is present. """
 
-        return len(self.move_stack)
+        return self.board.get(coordinate.file, coordinate.rank)
 
     def get_previous_action(self) -> chessai.core.action.Action | None:
         """ Returns the most recent move taken. """
 
-        if (len(self.move_stack) == 0):
-            return None
-
-        return self.move_stack[-1]
+        return self.previous_action
 
     def get_legal_actions(self) -> list[chessai.core.action.Action]:
         """ Return the list of legal actions for the current player. """
 
         # If the most recent move was a draw proposal, the opponent must respond.
-        if (self.get_previous_action() == chessai.core.action.PROPOSE_DRAW_ACTION):
+        if (isinstance(self.get_previous_action(), chessai.core.action.ProposeDrawAction)):
             return [
-                chessai.core.action.ACCEPT_DRAW_ACTION,
-                chessai.core.action.REJECT_DRAW_ACTION,
-                chessai.core.action.FORFEIT_ACTION,
+                chessai.core.action.AcceptDrawAction(),
+                chessai.core.action.RejectDrawAction(),
+                chessai.core.action.ForfeitAction(),
             ]
 
         # Check if we have previously calculated the legal actions for this gamestate.
@@ -130,15 +116,19 @@ class GameState(edq.util.json.DictConverter):
 
         # Players can always propose a draw or forfeit.
         legal_actions: list[chessai.core.action.Action] = [
-            chessai.core.action.PROPOSE_DRAW_ACTION,
-            chessai.core.action.FORFEIT_ACTION,
+            chessai.core.action.ProposeDrawAction(),
+            chessai.core.action.ForfeitAction(),
         ]
+
+        # Check if the player is currently in check, so we cannot short-circuit work in is_check().
+        started_in_check = self.is_check(self.turn)
 
         pseudo_legal_moves = self._get_pseudo_legal_moves()
         for action in pseudo_legal_moves:
             # Get the piece before pushing (needed for special move processing).
-            piece = self.board.get(action.start_coordinate)
+            piece = self.get(action.start_coordinate)
             if piece is None:
+                logging.warning("Found a pseduo legal action without a piece at its start coordinate: %s", action)
                 continue
 
             # Generate a successor state to test if this move is legal.
@@ -151,8 +141,11 @@ class GameState(edq.util.json.DictConverter):
             # Advance the turn for checking for check.
             successor.turn = self.turn.opposite()
 
+            # Record the action to be able to short-circuit if it is in check.
+            successor.previous_action = action
+
             # Check if this move leaves our king in check (making it illegal).
-            if (not successor.is_check(self.turn)):
+            if (not successor.is_check(self.turn, started_in_check = started_in_check)):
                 legal_actions.append(action)
 
         # Sort the legal actions for consistency.
@@ -166,6 +159,9 @@ class GameState(edq.util.json.DictConverter):
     def is_capture(self, action: chessai.core.action.Action) -> bool:
         """ Return whether the given action captures a piece. """
 
+        if (not isinstance(action, chessai.core.action.MoveAction)):
+            return False
+
         return self.board.is_capture(action)
 
     def get_neighbors(self,
@@ -176,18 +172,18 @@ class GameState(edq.util.json.DictConverter):
         neighbors: list[tuple[chessai.core.action.Action, chessai.core.coordinate.Coordinate]] = []
 
         for action in self.get_legal_actions():
-            # Skip the legal moves that are not from the starting coordinate.
-            if (action.start_coordinate != start_coordinate):
+            if (not isinstance(action, chessai.core.action.MoveAction)):
                 continue
 
-            neighbors.append((action, action.end_coordinate))
+            # Skip the legal moves that are not from the starting coordinate.
+            if (action.start_coordinate != start_coordinate): # pylint: disable=no-member
+                continue
 
-        # Sort the neighbors for consistency.
-        neighbors.sort()
+            neighbors.append((action, action.end_coordinate)) # pylint: disable=no-member
 
         return neighbors
 
-    def is_check(self, color: chessai.core.types.Color) -> bool:
+    def is_check(self, color: chessai.core.types.Color, started_in_check: bool = True) -> bool:
         """ Determines if the given color, not the state's color, is in check. """
 
         return False
@@ -195,30 +191,28 @@ class GameState(edq.util.json.DictConverter):
     def is_checkmate(self) -> bool:
         """ Determines if the current player is in checkmate. """
 
+        # A draw proposal can never cause a checkmate.
+        if (isinstance(self.get_previous_action(), chessai.core.action.ProposeDrawAction)):
+            return False
+
         legal_actions = self.get_legal_actions()
 
-        # Do not count draw proposals or forfeits towards the check.
-        checkmate_escape_actions = [
-            action for action in legal_actions if action not in [
-                chessai.core.action.PROPOSE_DRAW_ACTION,
-                chessai.core.action.FORFEIT_ACTION,
-            ]
-        ]
+        # Only count move actions when checking checkmate.
+        checkmate_escape_actions = [action for action in legal_actions if isinstance(action, chessai.core.action.MoveAction)]
 
         return ((len(checkmate_escape_actions) == 0) and self.is_check(self.turn))
 
     def is_stalemate(self) -> bool:
         """ Determines if the current player is in stalemate. """
 
+        # A draw proposal can never cause a stalemate.
+        if (isinstance(self.get_previous_action(), chessai.core.action.ProposeDrawAction)):
+            return False
+
         legal_actions = self.get_legal_actions()
 
-        # Do not count draw proposals or forfeits towards the check.
-        checkmate_escape_actions = [
-            action for action in legal_actions if action not in [
-                chessai.core.action.PROPOSE_DRAW_ACTION,
-                chessai.core.action.FORFEIT_ACTION,
-            ]
-        ]
+        # Only count move actions when checking stalemate.
+        checkmate_escape_actions = [action for action in legal_actions if isinstance(action, chessai.core.action.MoveAction)]
 
         return ((len(checkmate_escape_actions) == 0) and (not self.is_check(self.turn)))
 
@@ -251,7 +245,7 @@ class GameState(edq.util.json.DictConverter):
         """
 
         # If the previous agent forfeited the game, the current agent won.
-        if (self.get_previous_action() == chessai.core.action.FORFEIT_ACTION):
+        if (isinstance(self.get_previous_action(), chessai.core.action.ForfeitAction)):
             return [self.turn]
 
         # If the agent is in checkmate, the opponent won.
@@ -272,10 +266,10 @@ class GameState(edq.util.json.DictConverter):
         if (self.is_insufficient_material()):
             return chessai.core.types.TerminationReason.INSUFFICIENT_MATERIAL
 
-        if (self.get_previous_action() == chessai.core.action.FORFEIT_ACTION):
+        if (isinstance(self.get_previous_action(), chessai.core.action.ForfeitAction)):
             return chessai.core.types.TerminationReason.FORFEIT
 
-        if (self.get_previous_action() == chessai.core.action.ACCEPT_DRAW_ACTION):
+        if (isinstance(self.get_previous_action(), chessai.core.action.AcceptDrawAction)):
             return chessai.core.types.TerminationReason.ACCEPTED_DRAW_PROPOSAL
 
         if (not self.is_game_over()):
@@ -305,17 +299,22 @@ class GameState(edq.util.json.DictConverter):
 
             # Find the king.
             king_coord: chessai.core.coordinate.Coordinate | None = None
-            for (coordinate, piece) in self.board.pieces.items():
-                if (piece.symbol() not in ['k', 'K']):
-                    continue
+            for (current_file, rank_dict) in self.board.pieces.items():
+                for (current_rank, piece) in rank_dict.items():
+                    if (piece.symbol() not in ['k', 'K']):
+                        continue
 
-                if (piece.color != self.turn):
-                    continue
+                    if (piece.color != self.turn):
+                        continue
 
-                king_coord = coordinate
+                    king_coord = chessai.core.coordinate.Coordinate(current_file, current_rank)
+                    break
 
+            # Could not find a king for the proper color.
             if ((king_coord is None) or (king_coord.rank != rank)):
-                return chessai.core.action.NULL_ACTION
+                logging.warning("Unable to find a king on the board when parsing a SAN castling move: '%s'.", san)
+
+                return chessai.core.action.NoneAction()
 
             start_file = king_coord.file
 
@@ -326,14 +325,14 @@ class GameState(edq.util.json.DictConverter):
                 # Queenside castling.
                 end_file = 2
 
-            return chessai.core.action.Action(
+            return chessai.core.action.MoveAction(
                 chessai.core.coordinate.Coordinate(start_file, rank),
                 chessai.core.coordinate.Coordinate(end_file, rank)
             )
 
-        # Parse promotion piece if present.
+        # Parse optional promotion piece.
         promotion_piece = None
-        if '=' in san_clean:
+        if ('=' in san_clean):
             parts = san_clean.split('=')
             san_clean = parts[0]
 
@@ -382,32 +381,39 @@ class GameState(edq.util.json.DictConverter):
         # Get the piece class for comparison.
         piece = chessai.core.piece.get_registered_piece(piece_symbol)
 
-        # Find matching legal action.
-        legal_actions = self.get_legal_actions()
         candidates = []
 
-        for legal_action in legal_actions:
-            if (legal_action.end_coordinate != dest_coord):
+        # Find matching legal action.
+        for legal_action in self.get_legal_actions():
+            # Skip actions that are not moves.
+            if (not isinstance(legal_action, chessai.core.action.MoveAction)):
                 continue
 
+            if (legal_action.end_coordinate != dest_coord): # pylint: disable=no-member
+                continue
+
+            # If there is a promotion, the action must be a promotion action with the matching piece type.
             if (promotion_piece is not None):
-                if ((legal_action.promotion is None) or (type(legal_action.promotion) != type(promotion_piece))):
-                    continue
-            else:
-                if (legal_action.promotion is not None):
+                if (not isinstance(legal_action, chessai.core.action.PromotionAction)):
                     continue
 
-            piece_at_start = self.board.pieces.get(legal_action.start_coordinate)
+                if (type(legal_action.promotion) != type(promotion_piece)): # pylint: disable=no-member
+                    continue
+            else:
+                if isinstance(legal_action, chessai.core.action.PromotionAction):
+                    continue
+
+            piece_at_start = self.get(legal_action.start_coordinate) # pylint: disable=no-member
             if (piece_at_start is None):
                 continue
 
             if (piece_at_start != piece):
                 continue
 
-            if ((disambig_file is not None) and (legal_action.start_coordinate.file != disambig_file)):
+            if ((disambig_file is not None) and (legal_action.start_coordinate.file != disambig_file)): # pylint: disable=no-member
                 continue
 
-            if ((disambig_rank is not None) and (legal_action.start_coordinate.rank != disambig_rank)):
+            if ((disambig_rank is not None) and (legal_action.start_coordinate.rank != disambig_rank)): # pylint: disable=no-member
                 continue
 
             candidates.append(legal_action)
@@ -416,7 +422,7 @@ class GameState(edq.util.json.DictConverter):
         if (len(candidates) == 1):
             return candidates[0]
 
-        return chessai.core.action.NULL_ACTION
+        return chessai.core.action.NoneAction()
 
     # -----------------------------------------------
     # State mutation
@@ -425,20 +431,22 @@ class GameState(edq.util.json.DictConverter):
     def push(self, action: chessai.core.action.Action) -> None:
         """ Apply action to the game state and update all metadata. """
 
-        previous_board = self.board.copy()
-
         # If the agent forfeits the game or accepts a draw, end the game.
-        if action in [chessai.core.action.FORFEIT_ACTION, chessai.core.action.ACCEPT_DRAW_ACTION]:
-            self._progress_state(action, previous_board, False)
+        if (isinstance(action, (chessai.core.action.ForfeitAction, chessai.core.action.AcceptDrawAction))):
+            self._progress_state(action, False)
             self.game_over = True
             return
 
         # If the agent proposes a draw offer or rejects a draw offer, progress the state to the opponent.
-        if action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.REJECT_DRAW_ACTION]:
-            self._progress_state(action, previous_board, False)
+        if (isinstance(action, (chessai.core.action.ProposeDrawAction, chessai.core.action.RejectDrawAction))):
+            self._progress_state(action, False)
             return
 
-        piece = self.board.get(action.start_coordinate)
+        if (not isinstance(action, chessai.core.action.MoveAction)):
+            self._progress_state(action, False)
+            return
+
+        piece = self.get(action.start_coordinate)
         if (piece is None):
             raise ValueError(f"Cannot push an action from an empty coordinate: '{action.uci()}'.")
 
@@ -452,10 +460,9 @@ class GameState(edq.util.json.DictConverter):
         reset_clock = self._should_reset_halfmove_clock(action, piece)
 
         # Update the clocks.
-        self._progress_state(action, previous_board, (reset_clock or is_capture or is_special_capture))
-        return
+        self._progress_state(action, (reset_clock or is_capture or is_special_capture))
 
-    def _progress_state(self, action: chessai.core.action.Action, board: chessai.core.board.Board, reset_clock: bool) -> None:
+    def _progress_state(self, action: chessai.core.action.Action, reset_clock: bool) -> None:
         """ A helper function to update the basic state of the game. """
 
         if (reset_clock):
@@ -469,65 +476,66 @@ class GameState(edq.util.json.DictConverter):
         # Advance the turn.
         self.turn = self.turn.opposite()
 
-        self.board_stack.append(board)
-        self.move_stack.append(action)
+        self.previous_action = action
 
-    def _get_pseudo_legal_moves(self) -> list[chessai.core.action.Action]:
+    def _get_pseudo_legal_moves(self) -> list[chessai.core.action.MoveAction]:
         """ Get all of the actions that can be taken on this gamestate, regardless if it violates pins or checks. """
 
-        return self._expand_movement_vectors()
+        return self._get_base_move_actions()
 
-    def _expand_movement_vectors(self) -> list[chessai.core.action.Action]:
+    def _get_base_move_actions(self) -> list[chessai.core.action.MoveAction]:
         """
         Expands all movement vectors from the pieces on the board.
         Pieces will move until they can capture or reach the end of the board.
         There are no other special rules applied.
         """
 
-        actions: list[chessai.core.action.Action] = []
+        actions: list[chessai.core.action.MoveAction] = []
 
-        for (coordinate, piece) in self.board.pieces.items():
-            if (piece.color != self.turn):
-                continue
+        for (file, rank_dict) in self.board.pieces.items():
+            for (rank, piece) in rank_dict.items():
+                if (piece.color != self.turn):
+                    continue
 
-            movement_vectors = piece.move_vectors(coordinate)
-            for movement_vector in movement_vectors:
-                current_coordinate = coordinate
+                for movement_vector in piece.move_vectors():
+                    current_rank = rank
+                    current_file = file
 
-                num_repetitions = movement_vector.num_repetitions
-                while ((num_repetitions == -1) or (num_repetitions > 0)):
-                    current_coordinate = current_coordinate.offset(movement_vector.file_delta, movement_vector.rank_delta)
-                    if (not self.board._is_within_bounds(current_coordinate)):
-                        break
+                    coordinate = chessai.core.coordinate.Coordinate(file, rank)
 
-                    occupant = self.board.get(current_coordinate)
+                    num_repetitions = movement_vector.num_repetitions
+                    while (num_repetitions != 0):
+                        current_file += movement_vector.file_delta
+                        current_rank += movement_vector.rank_delta
+                        if (not self.board.is_within_bounds(current_file, current_rank)):
+                            break
 
-                    is_occupied = occupant is not None
-                    is_enemy    = (occupant is not None) and (occupant.color != piece.color)
-                    is_ally     = (occupant is not None) and (occupant.color == piece.color)
+                        occupant = self.board.get(current_file, current_rank)
 
-                    # No movement type can move on top of an ally.
-                    if (is_ally):
-                        break
+                        is_occupied = occupant is not None
+                        is_enemy    = (occupant is not None) and (occupant.color != piece.color)
+                        is_ally     = (occupant is not None) and (occupant.color == piece.color)
 
-                    # Push movement types cannot capture.
-                    if ((movement_vector.kind == chessai.core.piece.MoveKind.PUSH) and is_occupied):
-                        break
+                        # No movement type can move on top of an ally.
+                        if (is_ally):
+                            break
 
-                    # Capture movement types must target an enemy.
-                    if ((movement_vector.kind == chessai.core.piece.MoveKind.CAPTURE) and (not is_enemy)):
-                        break
+                        # Push movement types cannot capture.
+                        if ((movement_vector.kind == chessai.core.piece.MoveKind.PUSH) and is_occupied):
+                            break
 
-                    actions.append(chessai.core.action.Action(coordinate, current_coordinate))
+                        # Capture movement types must target an enemy.
+                        if ((movement_vector.kind == chessai.core.piece.MoveKind.CAPTURE) and (not is_enemy)):
+                            break
 
-                    if (is_occupied):
-                        break
+                        current_coordinate = chessai.core.coordinate.Coordinate(current_file, current_rank)
 
-                    if (num_repetitions != -1):
+                        actions.append(chessai.core.action.MoveAction(coordinate, current_coordinate))
+
+                        if (is_occupied):
+                            break
+
                         num_repetitions -= 1
-
-        # Sort the movement vectors for consistency.
-        actions.sort()
 
         return actions
 
@@ -550,12 +558,15 @@ class GameState(edq.util.json.DictConverter):
         Child classes are responsible for making any deep copies they need to.
         """
 
-        new_state = copy.copy(self)
-
-        new_state.castling_rights = self.castling_rights.copy()
-        new_state.move_stack      = list(self.move_stack)
-        new_state.board_stack     = list(self.board_stack)
-        new_state.board           = self.board.copy()
+        new_state = GameState(board           = self.board.copy(),
+                              turn            = self.turn,
+                              castling_rights = self.castling_rights,
+                              en_passant_coordinate = self.en_passant_coordinate,
+                              halfmove_clock  = self.halfmove_clock,
+                              fullmove_number = self.fullmove_number,
+                              previous_action = self.previous_action,
+                              seed            = self.seed,
+                              game_over       = self.game_over)
 
         return new_state
 
@@ -654,31 +665,75 @@ class GameState(edq.util.json.DictConverter):
 
     def to_dict(self) -> dict[str, typing.Any]:
         return {
-            'fen':         self.get_fen(),
-            'move_stack':  [action.to_dict() for action in self.move_stack],
-            'board_stack': [board.to_dict() for board in self.board_stack],
-            'seed':        self.seed,
-            'game_over':   self.game_over,
+            'board':            self.board.to_dict(),
+            'turn':             self.turn,
+            'castling_rights':  self.castling_rights,
+            'en_passant_coordinate': self.en_passant_coordinate.to_dict() if (self.en_passant_coordinate is not None) else None,
+            'halfmove_clock':   self.halfmove_clock,
+            'fullmove_number':  self.fullmove_number,
+            'previous_action':  self.previous_action.to_dict() if (self.previous_action is not None) else None,
+            'seed':             self.seed,
+            'game_over':        self.game_over,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> typing.Any:
-        raw_move_stack = data.get('move_stack', [])
-        move_stack = []
-        for move in raw_move_stack:
-            move_stack.append(move.from_dict())
+        raw_en_passant_coordinate = data.get('en_passant_coordinate', None)
+        if (raw_en_passant_coordinate is not None):
+            en_passant_coordinate = raw_en_passant_coordinate.from_dict()
+        else:
+            en_passant_coordinate = None
 
-        raw_board_stack = data.get('board_stack', [])
-        board_stack = []
-        for board in raw_board_stack:
-            board_stack.append(board.from_dict())
+        raw_previous_action = data.get('previous_action', None)
+        if (raw_previous_action is not None):
+            previous_action = raw_previous_action.from_dict()
+        else:
+            previous_action = None
 
         return cls(
-            fen         = data.get('fen', None),
-            move_stack  = move_stack,
-            board_stack = board_stack,
-            seed        = data.get('seed', -1),
-            game_over   = data.get('game_over', False),
+            board            = data['board'].from_dict(),
+            turn             = data['turn'],
+            castling_rights  = data['castling_rights'],
+            en_passant_coordinate = en_passant_coordinate,
+            halfmove_clock   = data.get('halfmove_clock', 0),
+            fullmove_number  = data.get('fullmove_number', 1),
+            previous_action  = previous_action,
+            seed             = data.get('seed', -1),
+            game_over        = data.get('game_over', False),
+        )
+
+    @classmethod
+    def from_fen(cls: type[T],
+                 fen: str | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
+                 seed: int = -1,
+                 game_over: bool = False,
+                 fen_parser: chessai.core.parser.GameStateParser = chessai.core.parser.parse_fen,
+                 **kwargs: typing.Any) -> T:
+        """ Create a gamestate from a starting FEN. """
+
+        if (fen is None):
+            fen = DEFAULT_FEN
+
+        parsed_fen = fen_parser(data = fen, **kwargs)
+
+        board = chessai.core.board.Board(pieces = parsed_fen.pieces,
+                                         num_files = parsed_fen.num_files,
+                                         num_ranks = parsed_fen.num_ranks)
+
+        if (kwargs is not None):
+            parsed_fen.options.update(kwargs)
+
+        return cls(board          = board,
+            turn                  = parsed_fen.turn,
+            castling_rights       = parsed_fen.castling_rights,
+            en_passant_coordinate = parsed_fen.en_passant_coordinate,
+            halfmove_clock        = parsed_fen.halfmove_clock,
+            fullmove_number       = parsed_fen.fullmove_number,
+            previous_action       = previous_action,
+            seed                  = seed,
+            game_over             = game_over,
+            **parsed_fen.options,
         )
 
 @typing.runtime_checkable

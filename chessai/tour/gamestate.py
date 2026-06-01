@@ -4,6 +4,8 @@ import typing
 import chessai.core.action
 import chessai.core.board
 import chessai.core.gamestate
+import chessai.core.parser
+import chessai.tour.parser
 
 TIME_PENALTY: int = 1
 """ Number of points lost each round. """
@@ -24,23 +26,27 @@ class GameState(chessai.core.gamestate.GameState):
     """ A game state specific to a Tour game. """
 
     def __init__(self,
-                 fen: str | None = None,
-                 move_stack: list[chessai.core.action.Action] | None = None,
-                 board_stack: list[chessai.core.board.Board] | None = None,
+                 board: chessai.core.board.Board,
+                 turn: chessai.core.types.Color,
+                 castling_rights: chessai.core.castling.CastlingRights,
+                 en_passant_coordinate: chessai.core.coordinate.Coordinate | None = None,
+                 halfmove_clock: int = 0,
+                 fullmove_number: int = 1,
+                 previous_action: chessai.core.action.Action | None = None,
                  seed: int = -1,
                  game_over: bool = False,
                  search_targets: list[chessai.core.coordinate.Coordinate] | dict[str, typing.Any] | None = None,
+                 _validate_search_targets: bool = True,
                  **kwargs: typing.Any) -> None:
-        super().__init__(fen, move_stack, board_stack, seed, game_over, **kwargs)
+        super().__init__(board, turn, castling_rights, en_passant_coordinate,
+                         halfmove_clock, fullmove_number, previous_action,
+                         seed, game_over, **kwargs)
 
         self.score: int = 0
         """ The score for the Tour. """
 
         if (search_targets is None):
             search_targets = []
-
-        if ((len(search_targets) == 0) and (len(self.parsed_fen.search_targets) > 0)):
-            search_targets = self.parsed_fen.search_targets
 
         # Convert the string case into the dict case.
         if (isinstance(search_targets, str)):
@@ -55,7 +61,7 @@ class GameState(chessai.core.gamestate.GameState):
         """ The targets of the piece tour search. """
 
         # A Tour problem must have at least one search target.
-        if (len(self.search_targets) == 0):
+        if (_validate_search_targets and (len(self.search_targets) == 0)):
             raise ValueError("Cannot create a Tour game state without at least one search target.")
 
     def is_game_over(self) -> bool:
@@ -68,7 +74,7 @@ class GameState(chessai.core.gamestate.GameState):
         legal_actions = super().get_legal_actions()
 
         # Tour agents cannot propose a draw or forfeit the game.
-        for action in [chessai.core.action.PROPOSE_DRAW_ACTION, chessai.core.action.FORFEIT_ACTION]:
+        for action in [chessai.core.action.ProposeDrawAction(), chessai.core.action.ForfeitAction()]:
             if (action in legal_actions):
                 legal_actions.remove(action)
 
@@ -95,24 +101,22 @@ class GameState(chessai.core.gamestate.GameState):
         To get a copy of a potential successor state, use generate_successor().
         """
 
-        previous_board = self.board.copy()
-
         # Simply progress the turn with the null action.
         if (self.turn == chessai.core.types.Color.BLACK):
-            self._progress_state(action, previous_board, False)
+            self._progress_state(action, False)
             return
 
         self.push(action)
 
-        destination_coordinate = action.end_coordinate
-        if (destination_coordinate in self.search_targets):
-            # Get points for reaching a search target.
-            self.remove_search_target(destination_coordinate)
-            self.score += POSITION_POINTS
+        if isinstance(action, chessai.core.action.MoveAction):
+            destination_coordinate = action.end_coordinate
+            if (destination_coordinate in self.search_targets):
+                # Get points for reaching a search target.
+                self.remove_search_target(destination_coordinate)
+                self.score += POSITION_POINTS
 
         # The agent always loses a point each turn.
         self.score -= TIME_PENALTY
-        return
 
     def process_agent_timeout(self, player: chessai.core.types.Color) -> None:
         # Treat timeouts like crashes.
@@ -125,13 +129,39 @@ class GameState(chessai.core.gamestate.GameState):
             self.score += CRASH_POINTS
 
     def game_complete(self) -> tuple[list[chessai.core.types.Color], float]:
-        search_targets = self.search_targets
-
         # The agent wins if they reach all of the search targets.
-        if (len(search_targets) == 0):
-
+        if (len(self.search_targets) == 0):
             self.score += BOARD_CLEAR_POINTS
 
             return ([chessai.core.types.Color.WHITE], self.score)
 
+        self.score += LOSE_POINTS
+
         return ([chessai.core.types.Color.BLACK], self.score)
+
+    def copy(self) -> 'GameState':
+        new_state = GameState(board           = self.board.copy(),
+                              turn            = self.turn,
+                              castling_rights = self.castling_rights,
+                              en_passant_coordinate = self.en_passant_coordinate,
+                              halfmove_clock  = self.halfmove_clock,
+                              fullmove_number = self.fullmove_number,
+                              previous_action = self.previous_action,
+                              seed            = self.seed,
+                              game_over       = self.game_over,
+                              search_targets  = self.search_targets.copy(),
+                              _validate_search_targets = False)
+
+        new_state.score = self.score
+
+        return new_state
+
+    @classmethod
+    def from_fen(cls,
+                 fen: str | None = None,
+                 previous_action: chessai.core.action.Action | None = None,
+                 seed: int = -1,
+                 game_over: bool = False,
+                 fen_parser: chessai.core.parser.GameStateParser = chessai.tour.parser.parse_tour,
+                 **kwargs: typing.Any) -> 'GameState':
+        return super().from_fen(fen, previous_action, seed, game_over, fen_parser, **kwargs)

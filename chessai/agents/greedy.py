@@ -13,9 +13,13 @@ class GreedyAgent(chessai.core.agent.Agent):
         if (len(legal_actions) == 1):
             return legal_actions[0]
 
-        # Don't consider stopping unless we can do nothing else.
-        if (chessai.core.action.Action() in legal_actions):
-            legal_actions.remove(chessai.core.action.Action())
+        # Don't consider forfeiting unless we can do nothing else.
+        if (chessai.core.action.ForfeitAction() in legal_actions):
+            legal_actions.remove(chessai.core.action.ForfeitAction())
+
+        # Don't consider proposing a draw unless we can do nothing else.
+        if (chessai.core.action.ProposeDrawAction() in legal_actions):
+            legal_actions.remove(chessai.core.action.ProposeDrawAction())
 
         successors = [(state.generate_successor(action, self.rng), action) for action in legal_actions]
         scores = [(self.evaluate_state(successor, action = action), action) for (successor, action) in successors]

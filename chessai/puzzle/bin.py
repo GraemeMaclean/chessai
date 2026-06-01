@@ -12,6 +12,7 @@ import chessai.core.board
 import chessai.core.types
 import chessai.puzzle.game
 import chessai.puzzle.gamestate
+import chessai.puzzle.parser
 import chessai.util.bin
 import chessai.util.alias
 
@@ -70,7 +71,7 @@ def _detect_solver_color(args: argparse.Namespace) -> chessai.core.types.Color:
 
     board_arg = typing.cast(str, board_arg)
 
-    parsed_fen = chessai.core.parser.parse_fen(board_arg)
+    parsed_fen = chessai.puzzle.parser.parse_puzzle(board_arg)
     return parsed_fen.turn
 
 def log_puzzle_results(results: list[chessai.core.game.GameResult], winning_agent_teams: set[chessai.core.types.Color], prefix: str = '') -> None:

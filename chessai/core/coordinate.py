@@ -1,13 +1,11 @@
 import re
 import typing
 
-import edq.util.json
-
 COORDINATES_KEY: str = 'coordinates'
 
 COORDINATE_PATTERN: re.Pattern = re.compile(r'([a-z]+)(\d+)')
 
-class Coordinate(edq.util.json.DictConverter):
+class Coordinate:
     """
     An immutable chess coordinate on a board.
 
@@ -15,23 +13,35 @@ class Coordinate(edq.util.json.DictConverter):
     Rank increases bottom-to-top (1=0, 8=7).
     """
 
-    MAX_SIZE: int = 1000000
+    __slots__ = ('file', 'rank')
 
-    def __init__(self,
-                 file: int,
-                 rank: int) -> None:
-        """ Construct a Coordinate from the file and rank. """
-
+    def __init__(self, file: int, rank: int) -> None:
         self.file: int = file
         """ The file of the coordinate. """
 
         self.rank: int = rank
         """ The rank of the coordinate. """
 
-        self._hash: int = (file * Coordinate.MAX_SIZE) + rank
-        """ 
-        This hash value is accurate as long as the board dimensions are under one million.
-        """
+    def __eq__(self, other: object) -> bool:
+        if (not isinstance(other, Coordinate)):
+            return False
+
+        return (self.file == other.file) and (self.rank == other.rank)
+
+    def __lt__(self, other: object) -> bool:
+        if (not isinstance(other, Coordinate)):
+            return False
+
+        if (self.file < other.file):
+            return True
+
+        if (self.file == other.file):
+            return self.rank < other.rank
+
+        return False
+
+    def __hash__(self) -> int:
+        return hash((self.file, self.rank))
 
     @classmethod
     def from_uci(cls, uci: str) -> 'Coordinate':
@@ -117,18 +127,6 @@ class Coordinate(edq.util.json.DictConverter):
 
         return self.file_distance(other) + self.rank_distance(other)
 
-    def __lt__(self, other: 'Coordinate') -> bool:  # type: ignore[override]
-        return (self._hash < other._hash)
-
-    def __eq__(self, other: object) -> bool:
-        if (not isinstance(other, Coordinate)):
-            return False
-
-        return (self._hash == other._hash)
-
-    def __hash__(self) -> int:
-        return self._hash
-
     def __str__(self) -> str:
         return f"({self.file}, {self.rank})"
 
@@ -136,6 +134,8 @@ class Coordinate(edq.util.json.DictConverter):
         return str(self)
 
     def to_dict(self) -> dict[str, typing.Any]:
+        """ Convert the coordinate into a dictionary. """
+
         return {
             'file': self.file,
             'rank': self.rank,
@@ -143,6 +143,8 @@ class Coordinate(edq.util.json.DictConverter):
 
     @classmethod
     def from_dict(cls, data: dict[str, typing.Any]) -> 'Coordinate':
+        """ Create a coordinate from a dictionary of data. """
+
         return Coordinate(file = data['file'], rank = data['rank'])
 
 def coordinates_from_dict(data: dict[str, typing.Any]) -> list[Coordinate]:

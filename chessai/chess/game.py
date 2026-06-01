@@ -16,4 +16,4 @@ class Game(chessai.core.game.Game):
     def get_initial_state(self,
             rng: random.Random,
             fen: str | None = None) -> chessai.core.gamestate.GameState:
-        return chessai.chess.gamestate.GameState(fen = fen)
+        return chessai.chess.gamestate.GameState.from_fen(fen = fen)

@@ -4,13 +4,14 @@ import random
 import typing
 
 import chessai.agents.multiscripted
+import chessai.chess.game
 import chessai.core.agentinfo
 import chessai.core.board
 import chessai.core.game
 import chessai.core.gamestate
 import chessai.puzzle.gamestate
 
-class Game(chessai.core.game.Game):
+class Game(chessai.chess.game.Game):
     """
     A game following the rules of a chess puzzle.
 
@@ -26,20 +27,17 @@ class Game(chessai.core.game.Game):
             game_info: chessai.core.game.GameInfo,
             save_path: str | None = None,
             is_replay: bool = False,
-            move_lines: list[list[chessai.core.action.Action]] | dict[str, typing.Any] | None = None) -> None:
+            move_lines: list[list[chessai.core.action.Action]] | str | dict[str, typing.Any] | None = None) -> None:
         super().__init__(game_info, save_path, is_replay)
 
         if (move_lines is None):
             move_lines = []
 
-        # Convert the string case into the dict case.
-        if (isinstance(move_lines, str)):
-            move_lines = {
-                chessai.core.action.ACTION_KEY: move_lines
-            }
-
         if (isinstance(move_lines, dict)):
-            move_lines = chessai.core.action.actions_list_from_dict(move_lines)
+            move_lines = str(move_lines.get(chessai.puzzle.parser.MOVE_LINES_KEY, ""))
+
+        if (isinstance(move_lines, str)):
+            move_lines = chessai.core.action.process_raw_action_list(move_lines)
 
         self.move_lines: list[list[chessai.core.action.Action]] = move_lines
         """ The move lines of this puzzle. """
@@ -49,33 +47,26 @@ class Game(chessai.core.game.Game):
 
     def process_args(self, args: argparse.Namespace) -> None:
         # Let the gamestate parse the FEN and determine the puzzle agent.
-        initial_state = chessai.puzzle.gamestate.GameState(fen = args.board)
+        initial_state = chessai.puzzle.gamestate.GameState.from_fen(fen = args.board, _capture_move_lines = True)
 
-        # If the game does not have move lines, use the move lines found in the file.
-        if (initial_state.parsed_fen.options is not None):
-            raw_move_lines = {
-                chessai.core.action.ACTION_KEY: initial_state.parsed_fen.options.get('move_lines', None)
-            }
-
-            self.move_lines = chessai.core.action.actions_list_from_dict(raw_move_lines)
-            self.start_move_lines = self.move_lines.copy()
-
-        # Override the move lines from the file if there are move lines from the CLI.
+        move_lines: list[list[chessai.core.action.Action]] = []
         if (args.move_lines is not None):
-            move_lines = {
-                chessai.core.action.ACTION_KEY: args.move_lines
-            }
+            # Override the move lines from the file if there are move lines from the CLI.
+            move_lines = chessai.core.action.process_raw_action_list(args.move_lines)
+        elif (initial_state._move_lines is not None): # pylint: disable=no-member
+            # If the game does not have move lines, use the move lines found in the file.
+            move_lines = initial_state._move_lines # pylint: disable=no-member
 
-            self.move_lines = chessai.core.action.actions_list_from_dict(move_lines)
-            self.start_move_lines = self.move_lines.copy()
+        self.move_lines = move_lines
+        self.start_move_lines = self.move_lines.copy()
 
         # Override the dummy player with a scripted agent that follows the move lines.
-        self.game_info.agent_infos[initial_state.dummy_player].extra_arguments['move_lines'] = self.start_move_lines.copy()
+        self.game_info.agent_infos[initial_state.dummy_player].extra_arguments['move_lines'] = self.start_move_lines.copy() # pylint: disable=no-member
 
     def get_initial_state(self,
             rng: random.Random,
             fen: str | None = None) -> chessai.core.gamestate.GameState:
-        return chessai.puzzle.gamestate.GameState(fen = fen)
+        return chessai.puzzle.gamestate.GameState.from_fen(fen = fen)
 
     def process_turn(self,
             state: chessai.core.gamestate.GameState,
@@ -103,19 +94,14 @@ class Game(chessai.core.game.Game):
             return state
 
         action = action_record.get_action()
-
         if (action not in state.get_legal_actions()):
-            raise ValueError(
-                f"Illegal action for agent {action_record.player}: "
-                f"'{action.uci()}' of type '{type(action)}'."
-            )
+            raise ValueError(f"Illegal action for agent {action_record.player}: '{action}' of type '{type(action)}'.")
 
         # Check whether the move follows any of the remaining move lines.
         if (action not in self._next_puzzle_moves()):
-            logging.debug("Found puzzle moves: '%s'.", self._next_puzzle_moves())
             logging.info(
                 "Incorrect action for agent '%s': '%s' of type '%s'.",
-                action_record.player, action.uci(), type(action),
+                action_record.player, action, type(action),
             )
 
             # The agent failed to solve the puzzle, so the game is over.
@@ -132,8 +118,6 @@ class Game(chessai.core.game.Game):
     def check_end(self, state: chessai.core.gamestate.GameState) -> bool:
         if state.game_over:
             return True
-
-        state = typing.cast(chessai.puzzle.gamestate.GameState, state)
 
         return (len(self.move_lines) == 0)
 
@@ -179,7 +163,7 @@ class Game(chessai.core.game.Game):
         self.move_lines = new_move_lines
 
         # If the action matched a move line and there are no remaining move lines, the puzzle is solved.
-        if matched_move_line and len(self.move_lines) == 0:
+        if (matched_move_line and (len(self.move_lines) == 0)):
             state.puzzle_solved = True
 
         return matched_move_line
