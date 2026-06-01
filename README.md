@@ -85,7 +85,6 @@ see the [PuzzleTheme.xml](https://github.com/lichess-org/lila/blob/0d57c7f6/tran
 
 Using a Lichess puzzle database file, use the following command with the path to the file:
 ```sh
-# Run the script.
 ./scripts/filter_puzzles.py <INPUT_CSV> --output puzzles --theme queenEndgame --limit 100
 ```
 Use the `--help` flag for more information.

@@ -24,7 +24,7 @@ def generate_puzzle_files(
         input_csv: str,
         output_folder: str = DEFAULT_OUTPUT_DIR,
         target_theme: str = DEFAULT_THEME,
-        limit: typing.Optional[int] = DEFAULT_COUNT
+        limit: int = DEFAULT_COUNT
         ) -> bool:
     """
     Filters a Lichess CSV for a specific theme and outputs a set number of files. 
@@ -110,7 +110,7 @@ def _load_args() -> argparse.Namespace:
     parser.add_argument('--theme', dest = 'theme',
             action = 'store', type = str, default = DEFAULT_THEME,
             help = ("Puzzle theme to filter by (default: %(default)s).\n"
-            f"Themes list: https://github.com/lichess-org/lila/blob/0d57c7f6/translation/source/puzzleTheme.xml"))
+            "Themes list: https://github.com/lichess-org/lila/blob/0d57c7f6/translation/source/puzzleTheme.xml"))
 
     parser.add_argument('--limit', dest = 'limit',
             action = 'store', type = int, default = DEFAULT_COUNT,
