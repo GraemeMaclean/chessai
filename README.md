@@ -81,16 +81,13 @@ A great place to find puzzles is through [Lichess' Puzzles](https://lichess.org/
 which are sorted by theme.
 You can also download a large number of puzzles from [Lichess' download link](https://database.lichess.org/#puzzles).
 For a complete list of valid puzzle themes,
-see the [PuzzleTheme.scala](https://github.com/lichess-org/lila/blob/0d57c7f65ecf7492e159f56c451f9b7aabaa8850/modules/puzzle/src/main/PuzzleTheme.scala) file in the official Lila repository.
+see the [PuzzleTheme.xml](https://github.com/lichess-org/lila/blob/0d57c7f6/translation/source/puzzleTheme.xml) file in the official Lila repository.
 
-Using a .csv file from the lichess database, use the following command with the path to the .csv file:
+Using a Lichess puzzle database file, use the following command with the path to the file:
 ```sh
-# Make the script executable.
-chmod +x scripts/filter_puzzles.py
-
-# Run the script.
-./scripts/filter_puzzles.py <INPUT_CSV> --output <OUTPUT_DIR> --theme <THEME> --limit <LIMIT>
+./scripts/filter_puzzles.py <INPUT_CSV> --output puzzles --theme queenEndgame --limit 100
 ```
+Use the `--help` flag for more information.
 
 #### Creating a Custom Puzzle
 
