@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Extract a specific number of puzzles of a specified theme from a Lichess puzzle database file.
+Extract up-to a specific number of puzzles of a specified theme from a Lichess puzzle database file.
 Outputs an individual puzzle file for each match found.
 """
 
@@ -17,7 +17,7 @@ import edq.util.json
 THIS_DIR: str = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
 DEFAULT_COUNT: int = -1
-DEFAULT_OUTPUT_DIR: str = os.path.join(THIS_DIR, '..', 'chessai', 'resources', 'puzzles')
+DEFAULT_OUTPUT_DIR: str = os.path.abspath(os.path.join(THIS_DIR, '..', 'chessai', 'resources', 'puzzles'))
 DEFAULT_THEME: str = 'mateIn1'
 
 def generate_puzzle_files(
@@ -27,7 +27,7 @@ def generate_puzzle_files(
         limit: int = DEFAULT_COUNT
         ) -> bool:
     """
-    Filters a Lichess CSV for a specific theme and outputs a set number of files. 
+    Filter a Lichess CSV for a specific theme and outputs a set number of files. 
     Returns True if at least one matching puzzle was found, False otherwise.
     """
 
@@ -43,7 +43,7 @@ def generate_puzzle_files(
                 limit_reached = True
                 break
 
-            themes = str(row.get('Themes', '')).split()
+            themes = str(row.get('Themes', '')).strip().split()
 
             if (target_theme not in themes):
                 continue
